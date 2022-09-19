@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+
+
+	<meta name="http-equiv" content="Content-type: text/html; charset=windows-1251">
+
+	<script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-analytics.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.2.10/firebase-database.js"></script>
+
+<style>
+
+	table {
+	  font-family: arial, sans-serif;
+	  border-collapse: collapse;
+	  width: 100%;
+	  margin: 0px 0px 20px;
+	}
+
+	td, th {
+	  border: 1px solid #dddddd;
+	  text-align: left;
+	  height: 4px;
+	  width: 50px;
+	  padding: 8px;  
+	}
+
+</style>
+
+<table id="players_table">
+  <tr>
+	<th>ID</th>
+	<th>FirstName</th>
+	<th>Rating</th>
+	<th>tm</th>
+	<th>Keep Alive</th>
+  </tr>
+</table>
+
+<table id="online_table">
+  <tr>
+	<th>ID</th>
+	<th>FirstName</th>
+	<th>Rating</th>
+	<th>state</th>
+	<th>Keep Alive</th>
+  </tr>
+</table>
+
+<table id="results_table">
+  <tr>
+	<th>player1</th>
+	<th>player2</th>
+	<th>Result</th>
+	<th>time</th>
+  </tr>
+</table>
+
+
+
+<script>
+
+	var online_array=[];
+	var online_table = document.getElementById('online_table');
+	var players_table = document.getElementById('players_table');
+	
+	
+
+	online_table.addEventListener('click', function (e) {
+		const cell = e.target;
+		let suid=e.target.parentElement.cells[0].innerHTML;
+		let name=e.target.parentElement.cells[1].innerHTML;
+		
+		
+		for (let key in online_array) {		
+			if (key.includes(suid)=== true)
+			{			
+				if (confirm("Удалить "+name +" ?")) {
+					firebase.database().ref("states/"+key).remove();
+					return;
+				} else {
+					return;
+				}
+			}
+		}
+		
+	});
+
+	function get_state_tint(s) {
+		
+		switch(s) {
+			
+			case "o":
+				return "rgb(85,153,85)";					
+			break;
+			
+			case "b":
+				return "rgb(55,111,55)";
+			break;
+			
+			case "p":
+				return "rgb(52,68,114)";
+			break;	
+			case "h":
+				return "rgb(255,255,255)";
+			break;	
+		}		
+	}
+		
+	//это обновление данных в онлайн таблице
+	function update_player_data(uid) {
+	
+		let t_len=online_table.rows.length;
+	
+		firebase.database().ref("players/"+uid + "/tm").once('value').then((snapshot) => {
+			
+			let data=snapshot.val();
+			for (let r=0;r<t_len;r++) {
+				if (online_table.rows[r].cells[0].innerHTML===uid.substring(0,15)) {
+				
+					online_table.rows[r].cells[3].innerHTML=new Date(data).toLocaleString();					
+				
+				}
+			}
+		});	
+
+		window.scrollTo(0,document.body.scrollHeight);	
+	}
+		
+	//обновление состояний
+	function states_updated(data) {
+				
+		online_array=data;
+		let row_cnt=online_table.rows.length;
+		online_table.innerHTML='';
+					
+		for (let key in data) {
+			let r=online_table.insertRow();
+			r.insertCell(0).appendChild(document.createTextNode(key.substring(0,15)));
+			r.insertCell(1).appendChild(document.createTextNode(data[key].name));
+			r.insertCell(2).appendChild(document.createTextNode(data[key].rating));
+			r.insertCell(3).appendChild(document.createTextNode("-"));
+			r.insertCell(4).appendChild(document.createTextNode(data[key].opp_id));
+			let s=data[key].state;
+			if (data[key].hidden===1)
+				s="h";
+			r.style.backgroundColor = get_state_tint(s);		
+			update_player_data(key);
+		}	
+		
+		window.scrollTo(0,document.body.scrollHeight);			
+	}
+
+	var firebaseConfig = {
+		apiKey: "AIzaSyBZnSsCdbCve-tYjiH9f5JbGUDaGKWy074",
+		authDomain: "m-game-27669.firebaseapp.com",
+		projectId: "m-game-27669",
+		storageBucket: "m-game-27669.appspot.com",
+		messagingSenderId: "571786945826",
+		appId: "1:571786945826:web:7e8bd49c963bbea117317b",
+		measurementId: "G-XFJD615P3L"
+	};
+	firebase.initializeApp(firebaseConfig);
+	firebase.analytics();
+	
+	
+	
+	//загружаем таблицу с данными всех игроков
+	let row_cnt=1;
+	let cur_ts=Date.now();
+	
+	firebase.database().ref().child("players").get().then((snapshot) => {		
+	
+		var data=snapshot.val();
+		data = Object.keys(data).map((key) => [key, data[key].name,data[key].rating,data[key].tm,new Date(data[key].tm).toLocaleString()]);
+		data.sort(function(a, b){return a[3] - b[3]});
+	
+		let total_removed=0;
+		data.forEach(p=>{
+		
+			var newRow = players_table.insertRow();
+			newRow.insertCell(0).appendChild(document.createTextNode(p[0].substring(0,15)));
+			newRow.insertCell(1).appendChild(document.createTextNode(p[1]));
+			newRow.insertCell(2).appendChild(document.createTextNode(p[2]));
+			newRow.insertCell(3).appendChild(document.createTextNode(p[3]));
+			newRow.insertCell(4).appendChild(document.createTextNode(p[4]));
+			
+		
+			
+			let  days_without_visit=(cur_ts-p[3])/86400000;
+			let days_without_allowed=10+35*(Math.max(Math.min(p[2],1800),1400)-1400)/400;
+			if (days_without_visit>days_without_allowed) {
+				firebase.database().ref("players/"+p[0]).remove();
+				total_removed++;
+			}
+			
+			row_cnt++;			
+		})
+		alert("Total removed: "+total_removed);
+		window.scrollTo(0,document.body.scrollHeight);
+		
+		//подписываемся на изменения состояний пользователей
+		firebase.database().ref("states").on('value', (snapshot) => {states_updated(snapshot.val());});
+	})
+	
+	
+	//загружаем данные результатов игр
+	firebase.database().ref("finishes").orderByChild('ts').limitToLast(5).on('value',(snapshot) => {
+	
+		results_table.innerHTML='';
+		var data=snapshot.val();
+		data = Object.keys(data).map((key) => [data[key].player1,data[key].player2,data[key].res,new Date(data[key].ts).toLocaleString(),data[key].ts]);
+		
+		
+		data.sort(function(a, b) {	return b[4] - a[4];});
+		
+		data.forEach(p=>{
+
+			var newRow = results_table.insertRow();
+			let p_0=newRow.insertCell(0);
+			let p_1=newRow.insertCell(1);
+			p_0.appendChild(document.createTextNode(p[0]));
+			p_1.appendChild(document.createTextNode(p[1]));
+			newRow.insertCell(2).appendChild(document.createTextNode(p[3]));
+			if (p[2]===1)	p_0.style.backgroundColor = "green";
+			if (p[2]===-1)	p_1.style.backgroundColor = "green";  
+		})
+		
+		
+		
+	});
+		
+</script>
+
+
+
+</html>

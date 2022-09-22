@@ -817,11 +817,11 @@ var mini_dialog = {
 		sound.play('mini_dialog');
 		
 		if (type === 'giveup')
-			objects.t5.text = 'Сдаетесь?'
+			objects.t5.text = ['Сдаетесь?','Give Up?'][LANG];
 		if (type === 'draw')
-			objects.t5.text = 'Предложить ничью?'
+			objects.t5.text = ['Предложить ничью?','Offer a draw?'][LANG]
 		if (type === 'draw_request')
-			objects.t5.text = 'Согласны на ничью?'
+			objects.t5.text = ['Согласны на ничью?','Agree to a draw?'][LANG];
 		
 		anim2.add(objects.mini_dialog,{y:[450,objects.mini_dialog.sy]}, true, 0.3,'linear');
 	},
@@ -1016,19 +1016,19 @@ var online_player = {
 		objects.game_buttons_cont.visible=false;
 				
 		let res_db = {
-			'my_no_connection' 		: ['Потеряна связь!\nИспользуйте надежное интернет соединение.', LOSE],
-			'stalemate_to_opponent' : ['Пат!\nИгра закончилась ничьей.', DRAW],
-			'stalemate_to_player' 	: ['Пат!\nИгра закончилась ничьей.', DRAW],
-			'draw' 					: ['Игра закончилась ничьей.', DRAW],
-			'checkmate_to_opponent' : ['Победа!\nВы поставили мат!', WIN],
-			'checkmate_to_player' 	: ['Поражение!\nВам поставили мат!', LOSE],
-			'opponent_gave_up' 		: ['Победа!\nСоперник сдался.', WIN],
-			'player_gave_up' 		: ['Поражение!\nВы сдались.', LOSE],
-			'opp_timeout' 			: ['Победа!\nСоперник не сделал ход.', WIN],
-			'my_timeout' 			: ['Поражение!\nУ вас закончилось время.', LOSE],
-			'opp_no_sync' 			: ['Похоже соперник не смог начать игру', NOSYNC],
-			'my_no_sync' 			: ['Похоже Вы не смогли начать игру', NOSYNC],
-			'draw_50' 				: ['Ничья!\nЗа последние 50 ходов не было взятий фигур и продвижения пешек', NOSYNC]	
+			'my_no_connection' 		: [['Потеряна связь!\nИспользуйте надежное интернет соединение.','Lost connection!\nuse a reliable internet connection'], LOSE],
+			'stalemate_to_opponent' : [['Пат!\nИгра закончилась ничьей.','Stalemate!\nthe game ended in a draw'], DRAW],
+			'stalemate_to_player' 	: [['Пат!\nИгра закончилась ничьей.','Stalemate!\nthe game ended in a draw'], DRAW],
+			'draw' 					: [['Игра закончилась ничьей.','The game ended in a draw'], DRAW],
+			'checkmate_to_opponent' : [['Победа!\nВы поставили мат!','Victory!\nYou checkmated'], WIN],
+			'checkmate_to_player' 	: [['Поражение!\nВам поставили мат!','Defeat!\nYou have been checkmated'], LOSE],
+			'opponent_gave_up' 		: [['Победа!\nСоперник сдался.','Victory!\nThe opponent gave up'], WIN],
+			'player_gave_up' 		: [['Поражение!\nВы сдались.','Defeat!\nyou gave up'], LOSE],
+			'opp_timeout' 			: [['Победа!\nСоперник не сделал ход.','Victory!\nthe opponent did not make a move'], WIN],
+			'my_timeout' 			: [['Поражение!\nУ вас закончилось время.','Defeat!\nyou have run out of time'], LOSE],
+			'opp_no_sync' 			: [['Похоже соперник не смог начать игру','It looks like the opponent could not start the game'], NOSYNC],
+			'my_no_sync' 			: [['Похоже Вы не смогли начать игру','It looks like you could not start the game'], NOSYNC],
+			'draw_50' 				: [['Ничья!\nЗа последние 50 ходов не было взятий фигур и продвижения пешек','A draw!\nfor the last 50 moves there have been no taking of pieces and pawn promotion'], NOSYNC]	
 		}
 		
 		let res_info = res_db[final_state];
@@ -1085,7 +1085,7 @@ var online_player = {
 		
 		}
 		
-		await big_message.show(res_info[0], `Рейтинг: ${old_rating} > ${my_data.rating}`, true);
+		await big_message.show(res_info[0][LANG], `${['Рейтинг:','Rating:'][LANG]} ${old_rating} > ${my_data.rating}`, true);
 				
 		//останавливаем все остальное
 		game.stop();		
@@ -1149,7 +1149,7 @@ var bot_player = {
 		opp_data.uid = 'BOT';
 		
 		//обновляем на табло
-		objects.timer.text = 'Мой ход';
+		objects.timer.text = ['Мой ход','My move'][LANG];
 		
 		//устанавливаем статус в базе данных а если мы не видны то установливаем только скрытое состояние
 		set_state({state : 'b'});
@@ -1216,22 +1216,22 @@ var bot_player = {
 		objects.stop_bot_button.visible = false;
 		
 
-		let t = ['Вы отменили игру',999]		
+		let t = [['Вы отменили игру','You canceled the game'],999]		
 		
 		if ( final_state === 'stalemate_to_opponent' || final_state === 'stalemate_to_player')
-			t = ['Пат!\nИгра закончилась ничьей.',DRAW]		
+			t = [['Пат!\nИгра закончилась ничьей.','Stalemate!\nthe game ended in a draw'],DRAW]		
 				
 		if (final_state === 'checkmate_to_opponent')
-			t = ['Победа!\nВы поставили мат!',WIN]				
+			t = [['Победа!\nВы поставили мат!','Victory!\nYou checkmated'],WIN]				
 		
 		if (final_state === 'checkmate_to_player')			
-			t = ['Поражение!\nВам поставили мат!',LOSE]		
+			t = [['Поражение!\nВам поставили мат!','Defeat!\nYou have been checkmated'],LOSE]		
 		
 		if (final_state === 'draw_50')			
-			t = ['Ничья!',DRAW]		
+			t = [['Ничья!','Draw!'],DRAW]		
 		
 		game.play_finish_sound(t[1]);
-		await big_message.show(t[0],'---)))---', true);
+		await big_message.show(t[0][LANG],'---)))---', true);
 		
 		game.stop();		
 	},
@@ -1340,7 +1340,7 @@ var game={
 		//обозначаем какой сейчас ход
 		move=0;
 		objects.cur_move_text.visible=true;
-		objects.cur_move_text.text="Ход: "+move;
+		objects.cur_move_text.text=['Ход: ','Move: '][LANG]+move;
 		
 		//включаем взаимодейтсвие с доской
 		objects.board.pointerdown=game.mouse_down_on_board.bind(game);
@@ -1368,7 +1368,7 @@ var game={
 
 		//проверяем что моя очередь
 		if (my_turn === 0) {
-			add_message("не твоя очередь");
+			add_message(["Не твоя очередь",'Not your turn'][LANG]);
 			return;
 		}
 		
@@ -1448,21 +1448,22 @@ var game={
 				//если король не делал ход
 				let c4 = game.move_made[1] === 0;				
 				if (c4 === false) {
-					add_message("Рокировка невозможна. Король уже сделал ход.");				
+					add_message(['Рокировка невозможна. Король уже сделал ход.','Castling is impossible. The King has already made a move.'][LANG]);				
 					return;
 				}					
 			
 				//если ладья не делала ход
 				let c5 = game.move_made[new_x] === 0;	
 				if (c5 === false) {
-					add_message("Рокировка невозможна. Ладья уже сделала ход.");				
+					add_message(['Рокировка невозможна. Ладья уже сделала ход.','Castling is impossible. The rook has already made a move.'][LANG]);
+		
 					return;
 				}				
 				
 				//если нет шаха
 				let c6 = game.player_under_check === 0;		
 				if (c6 === false) {
-					add_message("Рокировка невозможна. Вам Шах.");				
+					add_message(['Рокировка невозможна. Вам Шах.','Castling is impossible. Check!'][LANG]);	
 					return;
 				}
 				
@@ -1472,7 +1473,7 @@ var game={
 					//проверяем длинную рокировку
 					if (new_x === 0) {
 						if (!(g_board[7][1] === 'x' && g_board[7][2] === 'x' && g_board[7][3] === 'x')) {
-							add_message("Рокировка невозможна. Поле не свободно.");				
+							add_message(['Рокировка невозможна. Поле не свободно.','Castling is impossible. The field is not free.'][LANG]);	
 							return;
 						}							
 					}			
@@ -1480,7 +1481,7 @@ var game={
 					//проверяем короткую рокировку
 					if (new_x === 7) {
 						if (!(g_board[7][5] === 'x' && g_board[7][6] === 'x')) {
-							add_message("Рокировка невозможна. Поле не свободно.");				
+							add_message(['Рокировка невозможна. Поле не свободно.','Castling is impossible. The field is not free.'][LANG]);			
 							return;
 						}								
 					}			
@@ -1490,7 +1491,7 @@ var game={
 					//проверяем длинную рокировку
 					if (new_x === 7) {
 						if (!(g_board[7][4] === 'x' && g_board[7][5] === 'x' && g_board[7][6] === 'x')){
-							add_message("Рокировка невозможна. Поле не свободно.");				
+							add_message(['Рокировка невозможна. Поле не свободно.','Castling is impossible. The field is not free.'][LANG]);			
 							return;
 						}										
 					}			
@@ -1498,7 +1499,7 @@ var game={
 					//проверяем короткую рокировку
 					if (new_x === 0) {
 						if (!(g_board[7][1] === 'x' && g_board[7][2] === 'x')){
-							add_message("Рокировка невозможна. Поле не свободно.");				
+							add_message(['Рокировка невозможна. Поле не свободно.','Castling is impossible. The field is not free.'][LANG]);			
 							return;
 						}								
 					}				
@@ -1514,7 +1515,7 @@ var game={
 				
 				let _is_check = board_func.is_check(_new_board, 'K');
 				if (_is_check === true) {
-					add_message("Рокировка невозможна. Битое поле на пути короля.");				
+					add_message(['Рокировка невозможна. Битое поле на пути короля.','Castling is impossible. The field is under attack.'][LANG]);
 					return;
 				}			
 				
@@ -1523,8 +1524,8 @@ var game={
 			}
 			
 			
-			if (game.valid_moves.includes(new_x+'_'+new_y) === false && castling === 0) {				
-				add_message("так ходить нельзя");
+			if (game.valid_moves.includes(new_x+'_'+new_y) === false && castling === 0) {	
+				add_message(['Так ходить нельзя','Invalid move'][LANG]);	
 				return;
 			}	
 			
@@ -1548,7 +1549,7 @@ var game={
 			
 			let is_check = board_func.is_check(new_board, 'K');
 			if (is_check === true) {
-				castling === 1 ? add_message("Рокировка невозможна.Так вам шах") : add_message("Так вам шах");				
+				castling === 1 ? add_message(['Рокировка невозможна.Так вам шах','Castling is impossible. Check!'][LANG]) : add_message(['Так вам шах','There will be a check'][LANG]);				
 				return;
 			}		
 						
@@ -1583,7 +1584,7 @@ var game={
 
 		//обновляем счетчик хода
 		move++;
-		objects.cur_move_text.text="Ход: "+move;
+		objects.cur_move_text.text=['Ход: ','Move: '][LANG]+move;
 		let {x1,y1,x2,y2}=move_data;
 					
 		
@@ -1615,7 +1616,7 @@ var game={
 		let final_state = board_func.check_fin(g_board,'b');		
 					
 		if (final_state === 'check')
-			add_message("Вы объявили шах!");
+			add_message(['Вы объявили шах!','You have declared a check!'][LANG]);	
 		
 		if (final_state === 'checkmate' || final_state === 'stalemate' )
 			this.opponent.stop(final_state + '_to_opponent');		
@@ -1631,7 +1632,7 @@ var game={
 			}		
 
 			if (moves_notaken_nopawnmove === 30 || moves_notaken_nopawnmove === 35 || moves_notaken_nopawnmove === 40 || moves_notaken_nopawnmove >= 45)
-				add_message(`Ходов до ничьи: ${50-moves_notaken_nopawnmove}. Если не будет взятий или движения пешек.`)
+				add_message([`Ходов до ничьи: ${50-moves_notaken_nopawnmove}. Если не будет взятий или движения пешек.`,`Moves to a draw: ${50-moves_notaken_nopawnmove}. If there are no takeaways or pawn movements.`][LANG])
 		}
 		
 		
@@ -1871,13 +1872,14 @@ var game={
 			}		
 
 			if (moves_notaken_nopawnmove === 30 || moves_notaken_nopawnmove === 35 || moves_notaken_nopawnmove === 40 || moves_notaken_nopawnmove >= 45)
-				add_message(`Ходов до ничьи: ${50-moves_notaken_nopawnmove}. Если не будет взятий или движения пешек.`)
+				add_message([`Ходов до ничьи: ${50-moves_notaken_nopawnmove}. Если не будет взятий или движения пешек.`,`Moves to a draw: ${50-moves_notaken_nopawnmove}. If there are no takeaways or pawn movements.`][LANG])
+
 			
 		}
 		
 		//поверяем шах
 		if (final_state === 'check') {
-			add_message("Шах!");			
+			add_message(['Шах!','Check!'][LANG]);			
 			this.player_under_check = 1;			
 		} else {
 			this.player_under_check = 0;
@@ -2021,8 +2023,9 @@ var feedback = {
 			if (objects.feedback_msg.text === '') return;
 			
 			//если нашли ненормативную лексику то закрываем
-			let mats = /[её]б[ауиёелн]|у[её]б|п[иёе]зд|пзд|сук[аи]|сучк|ху[йяиеё]|г[ао]нд|сос[ауиёе]|пид[ор]|педер|педр|трах|шлю[чш]|письк|хули|чурк|жоп[ауе]|манд|бля[дт]|г[ао]вн|др[ао]ч|жоп|лох|минет|мудак|мудил|залуп|мудо|[оау]срал|шалав/i;
-			if (objects.feedback_msg.text.match(mats)) {
+			let mats = /(?<=^|[^а-я])(([уyu]|[нзnz3][аa]|(хитро|не)?[вvwb][зz3]?[ыьъi]|[сsc][ьъ']|(и|[рpr][аa4])[зсzs]ъ?|([оo0][тбtb6]|[пp][оo0][дd9])[ьъ']?|(.\B)+?[оаеиeo])?-?([еёe][бb6](?!о[рй])|и[пб][ае][тц]).*?|([нn][иеаaie]|([дпdp]|[вv][еe3][рpr][тt])[оo0]|[рpr][аa][зсzc3]|[з3z]?[аa]|с(ме)?|[оo0]([тt]|дно)?|апч)?-?[хxh][уuy]([яйиеёюuie]|ли(?!ган)).*?|([вvw][зы3z]|(три|два|четыре)жды|(н|[сc][уuy][кk])[аa])?-?[бb6][лl]([яy](?!(х|ш[кн]|мб)[ауеыио]).*?|[еэe][дтdt][ь']?)|([рp][аa][сзc3z]|[знzn][аa]|[соsc]|[вv][ыi]?|[пp]([еe][рpr][еe]|[рrp][оиioеe]|[оo0][дd])|и[зс]ъ?|[аоao][тt])?[пpn][иеёieu][зz3][дd9].*?|([зz3][аa])?[пp][иеieu][дd][аоеaoe]?[рrp](ну.*?|[оаoa][мm]|([аa][сcs])?([иiu]([лl][иiu])?[нщктлtlsn]ь?)?|([оo](ч[еиei])?|[аa][сcs])?[кk]([оo]й)?|[юu][гg])[ауеыauyei]?|[мm][аa][нnh][дd]([ауеыayueiи]([лl]([иi][сзc3щ])?[ауеыauyei])?|[оo][йi]|[аоao][вvwb][оo](ш|sh)[ь']?([e]?[кk][ауеayue])?|юк(ов|[ауи])?)|[мm][уuy][дd6]([яyаиоaiuo0].*?|[еe]?[нhn]([ьюия'uiya]|ей))|мля([тд]ь)?|лять|([нз]а|по)х|м[ао]л[ао]фь([яию]|[её]й))(?=($|[^а-я]))/i;
+			let text_no_spaces = objects.feedback_msg.text.replace(/ /g,'');
+			if (text_no_spaces.match(mats)) {
 				this.close();
 				this.p_resolve(['close','']);	
 				key ='';
@@ -2126,7 +2129,7 @@ var process_new_message=function(msg) {
 				
 			//отказ от ничьи
 			if (msg.message==="DRAWNO" )
-				add_message("Соперник отказался от ничьи");
+				add_message(['Соперник отказался от ничьи','The opponent refused to draw'][LANG]);
 				
 			//получение сообщение с ходом игорка
 			if (msg.message==="MOVE")
@@ -2248,9 +2251,8 @@ var req_dialog = {
 	reject_all_game: function() {
 
 		if (objects.req_cont.ready===false)
-			return;
-		
-		add_message("Приглашения отключены до конца игры");
+			return;		
+		add_message(['Приглашения отключены до конца игры','Invitations are disabled until the end of the game'][LANG]);
 		req_dialog.reject_all_game_val = 1;
 		anim2.add(objects.req_cont,{y:[objects.req_cont.y, -260]},false,0.4,'easeInBack');
 		firebase.database().ref("inbox/"+req_dialog._opp_data.uid).set({sender:my_data.uid,message:"REJECT_ALL",tm:Date.now()});
@@ -2720,7 +2722,7 @@ var cards_menu={
 		for (let uid in players)
 			if (players[uid].hidden===0)
 				num++
-		objects.players_online.text='Игроков онлайн: ' + num + '   ( комната: ' +room_name +' )';
+		objects.players_online.text=['Игроков онлайн: ','Players online: '][LANG] + num + ['   ( комната: ','   ( room: '][LANG] +room_name +' )';
 		
 		
 		//считаем сколько одиночных игроков и сколько столов
@@ -3044,8 +3046,7 @@ var cards_menu={
 		objects.mini_cards[0].bcg.tint=0x777777;
 		objects.mini_cards[0].visible=true;
 		objects.mini_cards[0].uid="BOT";
-		objects.mini_cards[0].name="Бот";
-		objects.mini_cards[0].name_text.text="Бот";
+		objects.mini_cards[0].name=objects.mini_cards[0].name_text.text=['Бот','Bot'][LANG];
 		objects.mini_cards[0].rating_text.text="1400";
 		objects.mini_cards[0].rating=1400;
 		objects.mini_cards[0].avatar.texture=game_res.resources.pc_icon.texture;
@@ -3173,23 +3174,28 @@ var cards_menu={
 
 	show_feedbacks: async function(uid) {
 		
+		//позвращаем текст на начальное положение
+		objects.invite_feedback.text = '';
+		objects.invite_feedback.y = objects.invite_feedback.sy;
+		
 		//получаем фидбэки
 		let _fb = await firebase.database().ref("fb/" + uid).once('value');
 		let fb_obj =_fb.val();
 		if (fb_obj === null) {
-			objects.invite_feedback.text = '***нет отзывов***'
+			objects.invite_feedback.text = ['***нет отзывов***','***no feedbacks'][LANG]	
 			return;
 		}
 		var fb = Object.keys(fb_obj).map((key) => [fb_obj[key][0],fb_obj[key][1],fb_obj[key][2]]);
 		
 		//выбираем последние отзывы
 		fb.sort(function(a,b) {
-			return b[1]-a[1]
-		});
+			return a[1]-b[1]
+		});		
+		
+		//очищаем фидбэки
+		objects.invite_feedback.text ='';
 		
 		let fb_cnt = fb.length;
-		
-		fb_cnt = Math.min(fb_cnt, 7);
 				
 		for (let i = 0 ; i < fb_cnt;i++) {
 			let sender_name =  fb[i][2] || 'Неизв.';
@@ -3278,13 +3284,13 @@ var cards_menu={
 	fb_delete_down : async function() {		
 		
 		
-		if (await confirm_dialog.show('Удалить коменты?\nбудет показана реклама')==='no')
+		if (await confirm_dialog.show(['Удалить коменты?\nбудет показана реклама','Delete comments?'][LANG])==='no')
 			return;
 		
 		let res = await ad.show2();
 		if (res !== 'err') {			
 			firebase.database().ref("fb/" + my_data.uid).remove();
-			objects.invite_feedback.text = '***нет отзывов***'			
+			objects.invite_feedback.text = ['***нет отзывов***','***no feedbacks'][LANG]			
 		}
 		
 	},
@@ -3433,7 +3439,8 @@ var stickers={
 		this.hide_panel();
 
 		firebase.database().ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"MSG",tm:Date.now(),data:id});
-		add_message("Стикер отправлен сопернику");
+		add_message(['Стикер отправлен сопернику','The sticker was sent to the opponent'][LANG]);
+		
 
 		//показываем какой стикер мы отправили
 		objects.sent_sticker_area.texture=game_res.resources['sticker_texture_'+id].texture;
@@ -3699,7 +3706,7 @@ async function load_resources() {
 	
 	document.getElementById("m_progress").style.display = 'flex';
 
-	//let git_src="https://akukamil.github.io/chess/"
+	//let git_src="https://akukamil.github.io/chess_gp/"
 	let git_src=""
 
 	//подпапка с ресурсами

@@ -3782,7 +3782,10 @@ async function init_game_env(lang) {
 		}
 
 	} else {		
-		lang = 0;		
+		if (window.location.href.includes('lang=en') === true)
+			lang = 1;	
+		else
+			lang = 0;	
 	}
 		
 		

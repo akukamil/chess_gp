@@ -3919,8 +3919,6 @@ async function init_game_env(lang) {
 		room_name= 'states2';			
 	else
 		room_name= 'states';
-
-	room_name= 'states3';
 	
 	//устанавливаем рейтинг в попап
 	objects.id_rating.text=objects.my_card_rating.text=my_data.rating;

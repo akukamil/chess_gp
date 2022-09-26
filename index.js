@@ -3474,6 +3474,90 @@ var stickers={
 
 }
 
+auth1 = {
+		
+	load_script : function(src) {
+	  return new Promise((resolve, reject) => {
+		const script = document.createElement('script')
+		script.type = 'text/javascript'
+		script.onload = resolve
+		script.onerror = reject
+		script.src = src
+		document.head.appendChild(script)
+	  })
+	},
+		
+	get_random_name : function(e_str) {
+		
+		let rnd_names = ['Gamma','Жираф','Зебра','Тигр','Ослик','Мамонт','Волк','Лиса','Мышь','Сова','Hot','Енот','Кролик','Бизон','Super','ZigZag','Magik','Alpha','Beta','Foxy','Fazer','King','Kid','Rock'];
+		let chars = '+0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+		if (e_str !== undefined) {
+			
+			let e_num1 = chars.indexOf(e_str[0]) + chars.indexOf(e_str[1]) + chars.indexOf(e_str[2]) +	chars.indexOf(e_str[3]);
+			e_num1 = Math.abs(e_num1) % (rnd_names.length - 1);					
+			let e_num2 = chars.indexOf(e_str[4]).toString()  + chars.indexOf(e_str[5]).toString()  + chars.indexOf(e_str[6]).toString() ;	
+			e_num2 = e_num2.substring(0, 3);
+			return rnd_names[e_num1] + e_num2;					
+			
+		} else {
+
+			let rnd_num = irnd(0, rnd_names.length - 1);
+			let rand_uid = irnd(0, 999999)+ 100;
+			let name_postfix = rand_uid.toString().substring(0, 3);
+			let name =	rnd_names[rnd_num] + name_postfix;				
+			return name;
+		}							
+
+	},		
+	
+	init : async function() {	
+			
+		if (game_platform === 'YANDEX') {
+			
+			
+			try {await this.load_script('https://yandex.ru/games/sdk/v2')} catch (e) {alert(e)};									
+					
+			let _player;
+			
+			try {
+				window.ysdk = await YaGames.init({});			
+				_player = await window.ysdk.getPlayer();
+			} catch (e) { alert(e)};
+			
+			my_data.name 	= _player.getName();
+			my_data.uid 	= _player.getUniqueID().replace(/\//g, "Z");
+			my_data.pic_url = _player.getPhoto('medium');						
+			my_data.name = my_data.name || this.get_random_name(my_data.uid);
+			
+			return;
+		}
+		
+		if (game_platform === 'VK') {
+			
+			game_platform = 'VK';
+			
+			try {await this.load_script('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')} catch (e) {alert(e)};
+			
+			let _player;
+			
+			try {
+				await vkBridge.send('VKWebAppInit');
+				_player = await vkBridge.send('VKWebAppGetUserInfo');				
+			} catch (e) {alert(e)};
+
+			
+			my_data.name 	= _player.first_name + ' ' + _player.last_name;
+			my_data.uid 	= "vk"+_player.id;
+			my_data.pic_url = _player.photo_100;
+			
+			return;
+			
+		}
+		
+	}
+	
+}
+
 auth2 = {
 		
 	load_script : function(src) {
@@ -3561,11 +3645,6 @@ auth2 = {
 	
 	init : async function() {	
 	
-		//смотрим что есть в локальном хранилище
-		for (var key in localStorage){
-			console.log(key + ': ' + localStorage.getItem( key ))
-		}
-		
 		let s = window.location.href;
 		
 		if (s.includes("yandex")) {
@@ -3769,36 +3848,89 @@ async function load_resources() {
 	document.getElementById("m_progress").outerHTML = "";	
 }
 
+language_dialog = {
+	
+	p_resolve : {},
+	
+	show : function() {
+				
+		return new Promise(function(resolve, reject){
+
+
+			document.body.innerHTML='<style>		html,		body {		margin: 0;		padding: 0;		height: 100%;	}		body {		display: flex;		align-items: center;		justify-content: center;		background-color: rgba(24,24,64,1);		flex-direction: column	}		.two_buttons_area {	  width: 70%;	  height: 50%;	  margin: 20px 20px 0px 20px;	  display: flex;	  flex-direction: row;	}		.button {		margin: 5px 5px 5px 5px;		width: 50%;		height: 100%;		color:white;		display: block;		background-color: rgba(44,55,100,1);		font-size: 10vw;		padding: 0px;	}  	#m_progress {	  background: rgba(11,255,255,0.1);	  justify-content: flex-start;	  border-radius: 100px;	  align-items: center;	  position: relative;	  padding: 0 5px;	  display: none;	  height: 50px;	  width: 70%;	}	#m_bar {	  box-shadow: 0 10px 40px -10px #fff;	  border-radius: 100px;	  background: #fff;	  height: 70%;	  width: 0%;	}	</style><div id ="two_buttons" class="two_buttons_area">	<button class="button" id ="but_ref1" onclick="language_dialog.p_resolve(0)">RUS</button>	<button class="button" id ="but_ref2"  onclick="language_dialog.p_resolve(1)">ENG</button></div><div id="m_progress">  <div id="m_bar"></div></div>';
+			
+			language_dialog.p_resolve = resolve;	
+						
+		})
+		
+	}
+	
+}
+
+async function define_platform_and_language() {
+	
+	let s = window.location.href;
+	
+	if (s.includes('yandex')) {
+		
+		game_platform = 'YANDEX';
+		
+		if (s.match(/yandex\.ru|yandex\.by|yandex\.kg|yandex\.kz|yandex\.tj|yandex\.ua|yandex\.uz/))
+			LANG = 0;
+		else 
+			LANG = 1;		
+		return;
+	}
+	
+	if (s.includes('vk.com')) {
+		game_platform = 'VK';	
+		LANG = 0;	
+		return;
+	}
+	
+	if (s.includes('google_play')) {
+			
+		game_platform = 'GOOGLE_PLAY';	
+		LANG = await language_dialog.show();
+		return;
+	}	
+
+	if (s.includes('google_play')) {
+			
+		game_platform = 'GOOGLE_PLAY';	
+		LANG = await language_dialog.show();
+		return;	
+	}	
+	
+	if (s.includes('192.168')) {
+			
+		game_platform = 'DEBUG';	
+		LANG = await language_dialog.show();
+		return;	
+	}	
+	
+	game_platform = 'UNKNOWN';	
+	LANG = await language_dialog.show();
+	
+	
+
+}
+
 async function init_game_env(lang) {
 	
 	
-	//если это гугл плей то показываем выбор языка
-	if (window.location.href.includes('google_play') === true || window.location.href.includes('crazygames') === true ) {
-		
-		if (lang === undefined) {
-			
-			document.body.innerHTML='<style>		html,		body {		margin: 0;		padding: 0;		height: 100%;	}		body {		display: flex;		align-items: center;		justify-content: center;		background-color: rgba(24,24,64,1);		flex-direction: column	}		.two_buttons_area {	  width: 70%;	  height: 50%;	  margin: 20px 20px 0px 20px;	  display: flex;	  flex-direction: row;	}		.button {		margin: 5px 5px 5px 5px;		width: 50%;		height: 100%;		color:white;		display: block;		background-color: rgba(44,55,100,1);		font-size: 10vw;		padding: 0px;	}  	#m_progress {	  background: rgba(11,255,255,0.1);	  justify-content: flex-start;	  border-radius: 100px;	  align-items: center;	  position: relative;	  padding: 0 5px;	  display: none;	  height: 50px;	  width: 70%;	}	#m_bar {	  box-shadow: 0 10px 40px -10px #fff;	  border-radius: 100px;	  background: #fff;	  height: 70%;	  width: 0%;	}	</style><div id ="two_buttons" class="two_buttons_area">	<button class="button" id ="but_ref1" onclick="init_game_env(0)">RUS</button>	<button class="button" id ="but_ref2"  onclick="init_game_env(1)">ENG</button></div><div id="m_progress">  <div id="m_bar"></div></div>';
-			return;			
-		}
-
-	} else {		
-		if (window.location.href.includes('lang=en') === true)
-			lang = 1;	
-		else
-			lang = 0;	
-	}
-		
-		
+	await define_platform_and_language();
+	console.log(game_platform, LANG);
+						
 	//отображаем шкалу загрузки
 	document.body.innerHTML='<style>html,body {margin: 0;padding: 0;height: 100%;	}body {display: flex;align-items: center;justify-content: center;background-color: rgba(41,41,41,1);flex-direction: column	}#m_progress {	  background: #1a1a1a;	  justify-content: flex-start;	  border-radius: 5px;	  align-items: center;	  position: relative;	  padding: 0 5px;	  display: none;	  height: 50px;	  width: 70%;	}	#m_bar {	  box-shadow: 0 1px 0 rgba(255, 255, 255, .5) inset;	  border-radius: 5px;	  background: rgb(119, 119, 119);	  height: 70%;	  width: 0%;	}	</style></div><div id="m_progress">  <div id="m_bar"></div></div>';
-
 			
-	//устанаваем язык
-	LANG = lang;
-	
 	await load_resources();
 	
-	await auth2.init();
+	if ((game_platform === 'YANDEX' || game_platform === 'VK') && LANG === 0)
+		await auth1.init();
+	else
+		await auth2.init();
 
 	//инициируем файербейс
 	if (firebase.apps.length===0) {

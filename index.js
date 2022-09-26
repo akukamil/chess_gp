@@ -3644,13 +3644,9 @@ auth2 = {
 	},
 	
 	init : async function() {	
-	
-		let s = window.location.href;
+				
+		if (game_platform === 'YANDEX') {			
 		
-		if (s.includes("yandex")) {
-			
-			game_platform = 'YANDEX';
-			
 			try {await this.load_script('https://yandex.ru/games/sdk/v2')} catch (e) {alert(e)};										
 					
 			let _player;
@@ -3670,12 +3666,16 @@ auth2 = {
 			if (my_data.name === '')
 				my_data.name = this.get_random_name(my_data.uid);
 			
+			//если английский яндекс до добавляем к имени страну
+			let country_code = await this.get_country_code();
+			my_data.name = my_data.name + ' (' + country_code + ')';			
+
+
+			
 			return;
 		}
 		
-		if (s.includes("vk.com")) {
-			
-			game_platform = 'VK';
+		if (game_platform === 'VK') {
 			
 			try {await this.load_script('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')} catch (e) {alert(e)};
 			
@@ -3695,28 +3695,25 @@ auth2 = {
 			
 		}
 		
-		if (s.includes("google_play")) {	
+		if (game_platform === 'GOOGLE_PLAY') {	
 
 			let country_code = await this.get_country_code();
-			game_platform = 'GOOGLE_PLAY';	
 			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('GP_');
 			my_data.name = this.get_random_name(my_data.uid) + ' (' + country_code + ')';
 			my_data.pic_url = 'https://avatars.dicebear.com/api/adventurer/' + my_data.uid + '.svg';	
 			return;
 		}
 		
-		if (s.includes("192.168")) {		
+		if (game_platform === 'DEBUG') {		
 
-			game_platform = 'DEBUG';
 			my_data.name = my_data.uid = 'debug' + prompt('Отладка. Введите ID', 100);
 			my_data.pic_url = 'https://avatars.dicebear.com/api/adventurer/' + my_data.uid + '.svg';		
 			return;
 		}
 		
-		if (s.includes("crazygames")) {
+		if (game_platform === 'CRAZYGAMES') {
 			
 			let country_code = await this.get_country_code();
-			game_platform = 'CRAZYGAMES';				
 			try {await this.load_script('https://sdk.crazygames.com/crazygames-sdk-v1.js')} catch (e) {alert(e)};			
 			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('CG_');
 			my_data.name = this.get_random_name(my_data.uid) + ' (' + country_code + ')';
@@ -3726,17 +3723,18 @@ auth2 = {
 			return;
 		}
 		
-		//если не нашли платформу
-		alert('Неизвестная платформа. Кто Вы?')
-		game_platform = 'UNKNOWN';
-		my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('LS_');
-		my_data.name = this.get_random_name(my_data.uid);
-		my_data.pic_url = 'https://avatars.dicebear.com/api/adventurer/' + my_data.uid + '.svg';	
-
-
+		if (game_platform === 'UNKNOWN') {
+			
+			//если не нашли платформу
+			alert('Неизвестная платформа. Кто Вы?')
+			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('LS_');
+			my_data.name = this.get_random_name(my_data.uid);
+			my_data.pic_url = 'https://avatars.dicebear.com/api/adventurer/' + my_data.uid + '.svg';	
+		}
 	}
 	
 }
+
 
 function resize() {
     const vpw = window.innerWidth;  // Width of the viewport
@@ -3785,8 +3783,8 @@ async function load_resources() {
 	
 	document.getElementById("m_progress").style.display = 'flex';
 
-	//let git_src="https://akukamil.github.io/chess_gp/"
-	let git_src=""
+	let git_src="https://akukamil.github.io/chess_gp/"
+	//let git_src=""
 
 	//подпапка с ресурсами
 	let lang_pack = ['RUS','ENG'][LANG];

@@ -3735,7 +3735,6 @@ auth2 = {
 	
 }
 
-
 function resize() {
     const vpw = window.innerWidth;  // Width of the viewport
     const vph = window.innerHeight; // Height of the viewport
@@ -3791,7 +3790,6 @@ async function load_resources() {
 
 	game_res=new PIXI.Loader();
 	game_res.add("m2_font", git_src+"fonts/MS_Comic_Sans/font.fnt");
-
 
 	game_res.add('receive_move',git_src+'sounds/receive_move.mp3');
 	game_res.add('note',git_src+'sounds/note.mp3');
@@ -4045,10 +4043,13 @@ async function init_game_env(lang) {
 		my_data.games = data.games || 0;
 
 	//номер комнаты
-	if (my_data.rating >= 1500)
-		room_name= 'states2';			
-	else
-		room_name= 'states';
+	if (my_data.rating > 0 && my_data.rating < 1410)
+		room_name = 'states'		
+	if (my_data.rating >= 1410 && my_data.rating < 1520)
+		room_name = 'states2'		
+	if (my_data.rating >= 1520)
+		room_name= 'states3';			
+
 	
 	//устанавливаем рейтинг в попап
 	objects.id_rating.text=objects.my_card_rating.text=my_data.rating;

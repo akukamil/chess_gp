@@ -408,7 +408,13 @@ var big_message = {
 
 		anim2.add(objects.big_message_cont,{y:[objects.big_message_cont.sy,450]}, false, 0.4,'easeInBack');	
 		
-		await feedback.show();
+		//пишем отзыв и отправляем его		
+		let fb = await feedback.show(opp_data.uid);		
+		if (fb[0] === 'sent') {
+			let fb_id = irnd(0,50);			
+			await firebase.database().ref("fb/"+opp_data.uid+"/"+fb_id).set([fb[1], firebase.database.ServerValue.TIMESTAMP, my_data.name]);
+		
+		}
 		
 		this.p_resolve("close");
 				
@@ -1938,14 +1944,20 @@ var game={
 
 }
 
-var feedback = {
+feedback = {
 		
-	keys_data : [[50,180,80,218.33,'1'],[90,180,120,218.33,'2'],[130,180,160,218.33,'3'],[170,180,200,218.33,'4'],[210,180,240,218.33,'5'],[250,180,280,218.33,'6'],[290,180,320,218.33,'7'],[330,180,360,218.33,'8'],[370,180,400,218.33,'9'],[410,180,440,218.33,'0'],[450,180,550,218.33,'<'],[70,227.9,100,266.23,'Й'],[110,227.9,140,266.23,'Ц'],[150,227.9,180,266.23,'У'],[190,227.9,220,266.23,'К'],[230,227.9,260,266.23,'Е'],[270,227.9,300,266.23,'Н'],[310,227.9,340,266.23,'Г'],[350,227.9,380,266.23,'Ш'],[390,227.9,420,266.23,'Щ'],[430,227.9,460,266.23,'З'],[470,227.9,500,266.23,'Х'],[510,227.9,540,266.23,'Ъ'],[90,275.8,120,314.13,'Ф'],[130,275.8,160,314.13,'Ы'],[170,275.8,200,314.13,'В'],[210,275.8,240,314.13,'А'],[250,275.8,280,314.13,'П'],[290,275.8,320,314.13,'Р'],[330,275.8,360,314.13,'О'],[370,275.8,400,314.13,'Л'],[410,275.8,440,314.13,'Д'],[450,275.8,480,314.13,'Ж'],[490,275.8,520,314.13,'Э'],[70,323.8,100,362.13,'!'],[110,323.8,140,362.13,'Я'],[150,323.8,180,362.13,'Ч'],[190,323.8,220,362.13,'С'],[230,323.8,260,362.13,'М'],[270,323.8,300,362.13,'И'],[310,323.8,340,362.13,'Т'],[350,323.8,380,362.13,'Ь'],[390,323.8,420,362.13,'Б'],[430,323.8,460,362.13,'Ю'],[470,323.8,500,362.13,')'],[510,323.8,540,362.13,'?'],[30,371.7,180,410.03,'ЗАКРЫТЬ'],[190,371.7,420,410.03,'_'],[430,371.7,570,410.03,'ОТПРАВИТЬ']],
+	rus_keys : [[50,176,80,215.07,'1'],[90,176,120,215.07,'2'],[130,176,160,215.07,'3'],[170,176,200,215.07,'4'],[210,176,240,215.07,'5'],[250,176,280,215.07,'6'],[290,176,320,215.07,'7'],[330,176,360,215.07,'8'],[370,176,400,215.07,'9'],[410,176,440,215.07,'0'],[491,176,541,215.07,'<'],[70,224.9,100,263.97,'Й'],[110,224.9,140,263.97,'Ц'],[150,224.9,180,263.97,'У'],[190,224.9,220,263.97,'К'],[230,224.9,260,263.97,'Е'],[270,224.9,300,263.97,'Н'],[310,224.9,340,263.97,'Г'],[350,224.9,380,263.97,'Ш'],[390,224.9,420,263.97,'Щ'],[430,224.9,460,263.97,'З'],[470,224.9,500,263.97,'Х'],[510,224.9,540,263.97,'Ъ'],[90,273.7,120,312.77,'Ф'],[130,273.7,160,312.77,'Ы'],[170,273.7,200,312.77,'В'],[210,273.7,240,312.77,'А'],[250,273.7,280,312.77,'П'],[290,273.7,320,312.77,'Р'],[330,273.7,360,312.77,'О'],[370,273.7,400,312.77,'Л'],[410,273.7,440,312.77,'Д'],[450,273.7,480,312.77,'Ж'],[490,273.7,520,312.77,'Э'],[70,322.6,100,361.67,'!'],[110,322.6,140,361.67,'Я'],[150,322.6,180,361.67,'Ч'],[190,322.6,220,361.67,'С'],[230,322.6,260,361.67,'М'],[270,322.6,300,361.67,'И'],[310,322.6,340,361.67,'Т'],[350,322.6,380,361.67,'Ь'],[390,322.6,420,361.67,'Б'],[430,322.6,460,361.67,'Ю'],[511,322.6,541,361.67,')'],[451,176,481,215.07,'?'],[30,371.4,180,410.47,'ЗАКРЫТЬ'],[190,371.4,420,410.47,'_'],[430,371.4,570,410.47,'ОТПРАВИТЬ'],[531,273.7,561,312.77,','],[471,322.6,501,361.67,'('],[30,273.7,80,312.77,'EN']],	
+	eng_keys : [[50,176,80,215.07,'1'],[90,176,120,215.07,'2'],[130,176,160,215.07,'3'],[170,176,200,215.07,'4'],[210,176,240,215.07,'5'],[250,176,280,215.07,'6'],[290,176,320,215.07,'7'],[330,176,360,215.07,'8'],[370,176,400,215.07,'9'],[410,176,440,215.07,'0'],[491,176,541,215.07,'<'],[110,224.9,140,263.97,'Q'],[150,224.9,180,263.97,'W'],[190,224.9,220,263.97,'E'],[230,224.9,260,263.97,'R'],[270,224.9,300,263.97,'T'],[310,224.9,340,263.97,'Y'],[350,224.9,380,263.97,'U'],[390,224.9,420,263.97,'I'],[430,224.9,460,263.97,'O'],[470,224.9,500,263.97,'P'],[130,273.7,160,312.77,'A'],[170,273.7,200,312.77,'S'],[210,273.7,240,312.77,'D'],[250,273.7,280,312.77,'F'],[290,273.7,320,312.77,'G'],[330,273.7,360,312.77,'H'],[370,273.7,400,312.77,'J'],[410,273.7,440,312.77,'K'],[450,273.7,480,312.77,'L'],[471,322.6,501,361.67,'('],[70,322.6,100,361.67,'!'],[150,322.6,180,361.67,'Z'],[190,322.6,220,361.67,'X'],[230,322.6,260,361.67,'C'],[270,322.6,300,361.67,'V'],[310,322.6,340,361.67,'B'],[350,322.6,380,361.67,'N'],[390,322.6,420,361.67,'M'],[511,322.6,541,361.67,')'],[451,176,481,215.07,'?'],[30,371.4,180,410.47,'CLOSE'],[190,371.4,420,410.47,'_'],[430,371.4,570,410.47,'SEND'],[531,273.7,561,312.77,','],[30,273.7,80,312.77,'RU']],
+	keyboard_layout : [],
+	lang : '',
 	p_resolve : 0,
 	MAX_SYMBOLS : 50,
+	uid:0,
 	
-	show : function() {
+	show : function(uid) {
 		
+		this.set_keyboard_layout(['RU','EN'][LANG]);				
+		this.uid = uid;
 		objects.feedback_msg.text ='';
 		objects.feedback_control.text = `0/${this.MAX_SYMBOLS}`
 				
@@ -1953,6 +1965,22 @@ var feedback = {
 		return new Promise(function(resolve, reject){					
 			feedback.p_resolve = resolve;	  		  
 		});
+		
+	},
+	
+	set_keyboard_layout(lang) {
+		
+		this.lang = lang;
+		
+		if (lang === 'RU') {
+			this.keyboard_layout = this.rus_keys;
+			objects.feedback_bcg.texture = gres.feedback_bcg_rus.texture;
+		} 
+		
+		if (lang === 'EN') {
+			this.keyboard_layout = this.eng_keys;
+			objects.feedback_bcg.texture = gres.feedback_bcg_eng.texture;
+		}
 		
 	},
 	
@@ -1964,28 +1992,62 @@ var feedback = {
 	
 	get_texture_for_key (key) {
 		
-		if (key === '<') return gres.hl_key1.texture;
-		if (key === 'ЗАКРЫТЬ' || key === 'ОТПРАВИТЬ') return gres.hl_key2.texture;
+		if (key === '<' || key === 'EN' || key === 'RU') return gres.hl_key1.texture;
+		if (key === 'ЗАКРЫТЬ' || key === 'ОТПРАВИТЬ' || key === 'SEND' || key === 'CLOSE') return gres.hl_key2.texture;
 		if (key === '_') return gres.hl_key3.texture;
 		return gres.hl_key0.texture;
 	},
 	
-	pointerdown : function(e) {
+	key_down : function(key) {
 		
-		let mx = e.data.global.x/app.stage.scale.x - objects.feedback_cont.x;
-		let my = e.data.global.y/app.stage.scale.y- objects.feedback_cont.y;;
+		
+		if (objects.feedback_cont.visible === false || objects.feedback_cont.ready === false) return;
+		
+		key = key.toUpperCase();
+		
+		if (key === 'ESCAPE') key = {'RU':'ЗАКРЫТЬ','EN':'CLOSE'}[this.lang];			
+		if (key === 'ENTER') key = {'RU':'ОТПРАВИТЬ','EN':'SEND'}[this.lang];	
+		if (key === 'BACKSPACE') key = '<';
+		if (key === ' ') key = '_';
+			
+		var result = this.keyboard_layout.find(k => {
+			return k[4] === key
+		})
+		
+		if (result === undefined) return;
+		this.pointerdown(null,result)
+		
+	},
+	
+	pointerdown : function(e, inp_key) {
+		
 		let key = -1;
 		let key_x = 0;
-		let key_y = 0;
-		let margin = 5;
-		for (let k of this.keys_data) {			
-			if (mx > k[0] - margin && mx <k[2] + margin  && my > k[1] - margin && my < k[3] + margin) {
-				key = k[4];
-				key_x = k[0];
-				key_y = k[1];
-				break;
-			}
+		let key_y = 0;		
+		
+		if (e !== null) {
+			
+			let mx = e.data.global.x/app.stage.scale.x - objects.feedback_cont.x;
+			let my = e.data.global.y/app.stage.scale.y - objects.feedback_cont.y;;
+
+			let margin = 5;
+			for (let k of this.keyboard_layout) {			
+				if (mx > k[0] - margin && mx <k[2] + margin  && my > k[1] - margin && my < k[3] + margin) {
+					key = k[4];
+					key_x = k[0];
+					key_y = k[1];
+					break;
+				}
+			}			
+			
+		} else {
+			
+			key = inp_key[4];
+			key_x = inp_key[0];
+			key_y = inp_key[1];			
 		}
+		
+		
 		
 		//не нажата кнопка
 		if (key === -1) return;			
@@ -1995,30 +2057,27 @@ var feedback = {
 		objects.hl_key.y = key_y - 10;		
 		objects.hl_key.texture = this.get_texture_for_key(key);
 		anim2.add(objects.hl_key,{alpha:[1, 0]}, false, 0.5,'linear');
-				
-		
+						
 		if (key === '<') {
 			objects.feedback_msg.text=objects.feedback_msg.text.slice(0, -1);
 			key ='';
 		}			
 		
-		if (objects.feedback_msg.text.length >= this.MAX_SYMBOLS)  {
-			sound.play('locked');
-			return;			
-		}
 		
-		if (key === '_') {
-			objects.feedback_msg.text += ' ';	
-			key ='';
-		}			
-		
-		if (key === 'ЗАКРЫТЬ') {
-			this.close();
-			this.p_resolve("close");	
-			key ='';
+		if (key === 'EN' || key === 'RU') {
+			this.set_keyboard_layout(key)
+			return;	
 		}	
 		
-		if (key === 'ОТПРАВИТЬ') {
+		if (key === 'ЗАКРЫТЬ' || key === 'CLOSE') {
+			this.close();
+			this.p_resolve(['close','']);	
+			key ='';
+			sound.play('keypress');
+			return;	
+		}	
+		
+		if (key === 'ОТПРАВИТЬ' || key === 'SEND') {
 			
 			if (objects.feedback_msg.text === '') return;
 			
@@ -2032,12 +2091,24 @@ var feedback = {
 				return;
 			}
 			
-			let fb_id = irnd(0,35);
-			firebase.database().ref("fb/"+opp_data.uid+"/"+fb_id).set([objects.feedback_msg.text, firebase.database.ServerValue.TIMESTAMP, my_data.name]);
 			this.close();
-			this.p_resolve("sent");	
+			this.p_resolve(['sent',objects.feedback_msg.text]);	
 			key ='';
+			sound.play('keypress');
+			return;	
 		}	
+		
+		
+		
+		if (objects.feedback_msg.text.length >= this.MAX_SYMBOLS)  {
+			sound.play('locked');
+			return;			
+		}
+		
+		if (key === '_') {
+			objects.feedback_msg.text += ' ';	
+			key ='';
+		}			
 		
 
 		sound.play('keypress');
@@ -3276,8 +3347,11 @@ var cards_menu={
 		let fb = await feedback.show(this._opp_data.uid);
 		
 		//перезагружаем отзывы если добавили один
-		if (fb[0] === 'sent')
-			this.show_feedbacks(this._opp_data.uid);
+		if (fb[0] === 'sent') {
+			let fb_id = irnd(0,50);			
+			await firebase.database().ref("fb/"+this._opp_data.uid+"/"+fb_id).set([fb[1], firebase.database.ServerValue.TIMESTAMP, my_data.name]);
+			this.show_feedbacks(this._opp_data.uid);			
+		}
 		
 	},
 	
@@ -4098,8 +4172,9 @@ async function init_game_env(lang) {
 	  }
 	});
 	
-	//событие ролика мыши в карточном меню
+	//событие ролика мыши в карточном меню и нажатие кнопки
 	window.addEventListener("wheel", event => cards_menu.wheel_event(Math.sign(event.deltaY)));
+	window.addEventListener('keydown', function(event) { feedback.key_down(event.key)});
 
 	
 	//показыаем основное меню

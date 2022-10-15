@@ -1926,12 +1926,8 @@ var game={
 				
 		opp_data.uid = '';
 		
-		move=0;		
+		move=0;	
 		
-		//показываем социальную панель
-		if (game_platform === 'VK')
-			if (Math.random()>0.75)
-				social_dialog.show();
 		
 		show_ad();
 		

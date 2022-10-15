@@ -4113,11 +4113,11 @@ async function init_game_env(lang) {
 		my_data.games = data.games || 0;
 
 	//номер комнаты
-	if (my_data.rating > 0 && my_data.rating < 1410)
+	if (my_data.rating > 0 && my_data.rating < 1420)
 		room_name = 'states'		
-	if (my_data.rating >= 1410 && my_data.rating < 1520)
+	if (my_data.rating >= 1420 && my_data.rating < 1540)
 		room_name = 'states2'		
-	if (my_data.rating >= 1520)
+	if (my_data.rating >= 1540)
 		room_name= 'states3';			
 
 	

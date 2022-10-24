@@ -1822,6 +1822,17 @@ var game={
 	
 	receive_move : async function (move_data) {
 		
+		
+		
+		//проверка ошибок
+		try {
+			if (my_figs.includes(g_board[y1][x1]) === true) {			
+				firebase.database().ref("errors").push([my_data.name, opp_data.name, g_board, move_data, move]);
+			}			
+		} catch (e) {}
+		
+
+		
 		//защита от двойных ходов
 		if (my_turn === 1) return
 		
@@ -4120,7 +4131,7 @@ async function init_game_env(lang) {
 	if (my_data.rating >= 1540)
 		room_name= 'states3';			
 
-	
+	//room_name= 'states4';	
 	//устанавливаем рейтинг в попап
 	objects.id_rating.text=objects.my_card_rating.text=my_data.rating;
 

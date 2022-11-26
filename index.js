@@ -2395,7 +2395,14 @@ var	show_ad=function(){
 		vkBridge.send("VKWebAppShowNativeAds", {ad_format:"interstitial"})
 		.then(data => console.log(data.result))
 		.catch(error => console.log(error));	
-	}		
+	}	
+	
+	if (game_platform==='GOOGLE_PLAY') {
+		if (Android) {
+			Android.showAdFromJs();
+		}			
+	}
+	
 }
 
 var social_dialog = {

@@ -2398,7 +2398,7 @@ var	show_ad=function(){
 	}	
 	
 	if (game_platform==='GOOGLE_PLAY') {
-		if (Android) {
+		if (typeof Android !== 'undefined') {
 			Android.showAdFromJs();
 		}			
 	}

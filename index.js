@@ -1162,7 +1162,15 @@ var bot_player = {
 		
 		//сначала скрываем все шашки
 		g_board = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
-		//g_board = [['x','x','x','x','k','x','x','x'],['x','x','x','x','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
+		/*g_board = [
+		['x','Q','x','x','x','x','x','x'],
+		['x','x','x','x','x','x','p','x'],
+		['x','x','x','x','x','k','x','x'],
+		['N','R','x','x','x','P','x','x'],
+		['x','x','x','x','x','K','P','x'],
+		['x','x','x','x','x','x','x','x'],
+		['x','x','x','x','x','x','x','P'],
+		['x','x','x','x','x','x','x','x']];*/
 
 
 
@@ -1540,18 +1548,21 @@ var game={
 			let old_new_x = new_x;
 			if (castling === 1)
 				new_x = selected_figure.ix + castling_dir * 2;				
-
-			
-
+		
 			//формируем объект содержащий информацию о ходе
 			let m_data={x1:selected_figure.ix,y1:selected_figure.iy,x2:new_x, y2:new_y};	
 			
-
 			//проверяем на шах
 			let {x1,y1,x2,y2}=m_data;
-			let new_board = JSON.parse(JSON.stringify(g_board));			
+			let new_board = JSON.parse(JSON.stringify(g_board));
+
+			//если взяли пешку на проходе то убираем ее
+			if (new_board[y1][x1]==='P' && new_board[y2][x2]==='x' && x1!==x2)
+				new_board[y1][x2] = 'x';
+						
 			new_board[y2][x2] = new_board[y1][x1];
 			new_board[y1][x1] = 'x';
+						
 			
 			let is_check = board_func.is_check(new_board, 'K');
 			if (is_check === true) {

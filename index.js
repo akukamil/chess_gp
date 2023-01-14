@@ -1015,7 +1015,7 @@ online_player={
 
 		if (this.move_time_left < -5 && !my_turn)	{
 						
-			if (this.op_conf_play === 1)
+			if (this.op_conf_play)
 				this.stop('opp_timeout');
 			else
 				this.stop('opp_no_sync');

@@ -2608,6 +2608,7 @@ req_dialog = {
 		if (objects.req_cont.ready===false)
 			return;
 		
+		sound.play('click');
 		
 		anim2.add(objects.req_cont,{y:[objects.req_cont.y, -260]},false,0.4,'easeInBack');
 		firebase.database().ref("inbox/"+req_dialog._opp_data.uid).set({sender:my_data.uid,message:"REJECT",tm:Date.now()});
@@ -2622,6 +2623,8 @@ req_dialog = {
 	
 		add_message(['Приглашения отключены','Invitations are disabled'][LANG]);
 		no_invite = true;
+		
+		sound.play('click');
 		
 		anim2.add(objects.req_cont,{y:[objects.req_cont.y, -260]},false,0.4,'easeInBack');
 		

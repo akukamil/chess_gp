@@ -1186,7 +1186,7 @@ mk={
 	{name:'Liu Kang',rating:1770,pic_res:'lukang_img',depth:5,skill_level:9,sounds:0},
 	{name:'Sub_Zero',rating:1710,pic_res:'subzero_img',depth:4,skill_level:8,sounds:11},
 	{name:'Sonya_Blade',rating:1650,pic_res:'sonya_img',depth:4,skill_level:7,sounds:10},
-	{name:'Kenshi',rating:1570,pic_res:'kenshi_img',depth:3,skill_level:6,sounds:0},
+	{name:'Kenshi',rating:1570,pic_res:'kenshi_img',depth:3,skill_level:6,sounds:11},
 	{name:'Johnny_Cage',rating:1510,pic_res:'jonycage_img',depth:3,skill_level:5,sounds:8},
 	{name:'Mileena',rating:1455,pic_res:'kenshi_img',depth:3,skill_level:4,sounds:9},
 	{name:'Robocop',rating:1412,pic_res:'robocop_img',depth:1,skill_level:2,sounds:12},	

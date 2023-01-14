@@ -1055,7 +1055,7 @@ online_player={
 		this.reset_timer(true);
 		const final_state=await game.receive_move(move_data);
 		
-		if (['checkmate','stalemate','draw_50'].includes(final_state))
+		if (['checkmate_to_player','stalemate_to_player','draw_50'].includes(final_state))
 			this.stop(final_state);
 		
 	},

@@ -4392,12 +4392,14 @@ async function init_game_env(lang) {
 	my_data.mk_sback_num=(other_data && other_data.mk_sback_num) || 0;
 	
 	//номер комнаты
-	if (my_data.rating > 0 && my_data.rating < 1420)
+	if (my_data.rating > 0 && my_data.rating < 1400)
 		room_name = 'states'		
-	if (my_data.rating >= 1420 && my_data.rating < 1540)
+	if (my_data.rating >= 1400 && my_data.rating < 1463)
 		room_name = 'states2'		
-	if (my_data.rating >= 1540)
-		room_name= 'states3';			
+	if (my_data.rating >= 1463 && my_data.rating < 1668)
+		room_name = 'states3'		
+	if (my_data.rating >= 1668)
+		room_name= 'states4';			
 
 	//room_name= 'states4';	
 	//устанавливаем рейтинг в попап

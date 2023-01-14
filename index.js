@@ -1506,18 +1506,7 @@ mk={
 		
 		//доска для смертельной битвы
 		g_board = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
-		/*g_board = [
-			["r","n","x","x","x","k","x","r"],
-			["p","x","x","x","x","p","p","p"],
-			["x","x","x","x","x","n","x","x"],
-			["x","q","b","P","N","b","x","x"],
-			["N","x","p","x","x","B","x","x"],
-			["x","x","x","x","x","x","x","x"],
-			["x","P","x","x","Q","P","P","P"],
-			["R","x","x","x","x","R","K","x"]
-
-		];*/
-		
+	
 		//инициируем общие ресурсы игры
 		game.activate('master',mk);
 		
@@ -4424,7 +4413,7 @@ async function init_game_env(lang) {
 	firebase.database().ref("inbox/"+my_data.uid).on('value', (snapshot) => { process_new_message(snapshot.val());});
 
 	//обновляем данные в файербейс так как могли поменяться имя или фото
-	firebase.database().ref("players/"+my_data.uid).set({name:my_data.name, pic_url: my_data.pic_url, rating : my_data.rating, games : my_data.games, tm:firebase.database.ServerValue.TIMESTAMP});
+	firebase.database().ref("players/"+my_data.uid).set({name:my_data.name, pic_url: my_data.pic_url, rating : my_data.rating, games : my_data.games, games : my_data.games, mk_level : my_data.mk_level,mk_sback_num:my_data.mk_sback_num, tm:firebase.database.ServerValue.TIMESTAMP});
 
 	//устанавливаем мой статус в онлайн
 	set_state({state : 'o'});

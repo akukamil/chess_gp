@@ -195,7 +195,7 @@ function all_players() {
 		let _data = [];
 		for (let i = 0 ; i < uids.length ; i++) {
 					
-			_data.push([uids[i], data[uids[i]].name, data[uids[i]].rating, data[uids[i]].games, data[uids[i]].mk_level, data[uids[i]].mk_sback_num, data[uids[i]].tm])		
+			_data.push([uids[i].substring(0, 8), data[uids[i]].name, data[uids[i]].rating, data[uids[i]].games, data[uids[i]].mk_level, data[uids[i]].mk_sback_num, data[uids[i]].tm])		
 			
 		}	
 		
@@ -432,10 +432,6 @@ var my_table = {
 				
 				if (param_name === 'state')				{
 					row.style.backgroundColor = get_state_tint(c);	
-				} else if (param_name ==='uid'){
-					var cell = row.insertCell();
-					cell.style.paddingLeft = '5px';
-					cell.textContent = c//.substring(0, 10);	
 				} else {
 					var cell = row.insertCell();
 					cell.style.paddingLeft = '5px';

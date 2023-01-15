@@ -2595,8 +2595,10 @@ req_dialog = {
 
 	reject: function() {
 
-		if (objects.req_cont.ready===false)
-			return;
+		if (objects.req_cont.ready===false){
+			sound.play('locked')
+			return;				
+		}
 		
 		sound.play('click');
 		
@@ -2606,7 +2608,7 @@ req_dialog = {
 	
 	reject_all_game: function() {
 
-		if (anim2.any_on()===true){
+		if (objects.req_cont.ready===false){
 			sound.play('locked')
 			return;				
 		}

@@ -1177,7 +1177,7 @@ mk={
 	played_num:0,
 
 	fighters_data:[
-	{name:'Shang Tsung',rating:1990,pic_res:'shangtsung_img',depth:8,skill_level:15,sounds:0},
+	{name:'Shang_Tsung',rating:1990,pic_res:'shangtsung_img',depth:8,skill_level:15,sounds:11},
 	{name:'Raiden',rating:1950,pic_res:'raiden_img',depth:7,skill_level:14,sounds:12},
 	{name:'Sindel',rating:1920,pic_res:'sindel_img',depth:7,skill_level:13,sounds:12},
 	{name:'Nightwolf',rating:1910,pic_res:'nightwolf_img',depth:6,skill_level:12,sounds:12},
@@ -4478,5 +4478,4 @@ function main_loop() {
 
 	requestAnimationFrame(main_loop);
 }
-
 

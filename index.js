@@ -2430,14 +2430,14 @@ keep_alive= function() {
 		//убираем из списка если прошло время с момента перехода в скрытое состояние		
 		let cur_ts = Date.now();	
 		let sec_passed = (cur_ts - hidden_state_start)/1000;		
-		if ( sec_passed > 100 )	firebase.database().ref(room_name +"/"+my_data.uid).remove();
+		if ( sec_passed > 70 )	firebase.database().ref(room_name +"/"+my_data.uid).remove();
 		return;		
 	}
 
 
 	firebase.database().ref("players/"+my_data.uid+"/tm").set(firebase.database.ServerValue.TIMESTAMP);
 	firebase.database().ref("inbox/"+my_data.uid).onDisconnect().remove();
-	
+	firebase.database().ref(room_name+"/"+my_data.uid).onDisconnect().remove();
 	set_state({});
 }
 
@@ -4393,7 +4393,7 @@ async function init_game_env(lang) {
 	my_data.games = (other_data && other_data.games) || 0;
 	my_data.mk_level=(other_data && other_data.mk_level) || 14;
 	my_data.mk_sback_num=(other_data && other_data.mk_sback_num) || 0;
-	
+
 	//номер комнаты
 	if (my_data.rating > 0 && my_data.rating < 1400)
 		room_name = 'states'		

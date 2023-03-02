@@ -3,7 +3,7 @@ var app, game_res, game, objects={}, state="",my_role="", game_tick=0, my_turn=f
 var any_dialog_active=0, some_process = {}, h_state=0, game_platform="", hidden_state_start = 0;
 var WIN = 1, DRAW = 0, LOSE = -1, NOSYNC = 2,no_invite=false;
 g_board=[];
-var pending_player="";
+var pending_player="", opponent=null;
 var my_data={opp_id : ''},opp_data={};
 var g_process=function(){};
 const op_pieces = ['p','r','n','b','k','q'];
@@ -132,7 +132,6 @@ class lb_player_card_class extends PIXI.Container{
 
 		this.addChild(this.bcg,this.place, this.avatar, this.name, this.rating);
 	}
-
 
 }
 
@@ -391,21 +390,54 @@ sound = {
 	
 }
 
-add_message=function(text) {
+message =  {
+	
+	promise_resolve :0,
+	
+	async add(text, timeout) {
+		
+		if (this.promise_resolve!==0)
+			this.promise_resolve('forced');
+		
+		if (timeout === undefined) timeout = 3000;
+		
+		//воспроизводим звук
+		sound.play('message');
 
-	//воспроизводим звук
-	sound.play('message');
+		objects.message_text.text=text;
 
-	objects.message_text.text=text;
+		await anim2.add(objects.message_cont,{x:[-200,objects.message_cont.sx]}, true, 0.25,'easeOutBack');
 
-	anim2.add(objects.message_cont,{x:[-200, objects.message_cont.sx]},true,0.4,'easeOutBack');
+		let res = await new Promise((resolve, reject) => {
+				message.promise_resolve = resolve;
+				setTimeout(resolve, timeout)
+			}
+		);
+		
+		
+		message.promise_resolve=0;
+		if (res === "forced")
+			return;
 
-	if (objects.message_cont.timer_id!==undefined)	clearTimeout(objects.message_cont.timer_id);
-
-	//убираем сообщение через определенное время
-	objects.message_cont.timer_id=setTimeout(()=>{
-		anim2.add(objects.message_cont,{x:[objects.message_cont.x,-200]},false,0.4,'easeInBack');
-	}, 6000);
+		anim2.add(objects.message_cont,{x:[objects.message_cont.sx, -200]}, false, 0.25,'easeInBack');			
+	},
+	
+	close(){
+		
+		if(this.promise_resolve!==0){
+			message.promise_resolve('forced');
+			objects.message_cont.visible=false;
+		}
+			
+		
+	},
+	
+	clicked() {
+		
+		
+		message.promise_resolve();
+		
+	}
 
 }
 
@@ -489,7 +521,7 @@ board_func={
 				if (piece==='x') continue
 				
 				const is_my_piece = my_pieces.includes(piece);
-				const piece_texture_name=[game.op_color,game.my_color][+is_my_piece]+piece.toLowerCase();
+				const piece_texture_name=[board.op_color,board.my_color][+is_my_piece]+piece.toLowerCase();
 												
 				objects.figures[i].texture = gres[piece_texture_name].texture;
 
@@ -542,6 +574,33 @@ board_func={
 		
 		return fen;
 		
+	},
+
+	fen_to_board(fen){
+		
+		const rows = fen.split(' ')[0].split('/');
+		const board = [];
+
+		for (let i = 0; i < 8; i++) {
+			const row = rows[i];
+			const boardRow = [];
+
+			for (let j = 0; j < row.length; j++) {
+				const char = row[j];
+
+				if (isNaN(char)) {
+					boardRow.push(char);
+				} else {
+					for (let k = 0; k < parseInt(char); k++) {
+					boardRow.push('x');
+					}
+				}
+			}
+
+			board.push(boardRow);
+		}
+
+		return board;		
 	},
 
 	get_checker_by_pos(x,y) {
@@ -633,14 +692,14 @@ board_func={
 							
 			
 			//проверяем возможность взятия пешки на проходе
-			if (f.piece === 'P' && f.iy === 3 && pass_take !== -1) {
+			if (f.piece === 'P' && f.iy === 3 && board.pass_take_flag !== -1) {
 				
 				tx = cx - 1;
-				if (tx === pass_take)
+				if (tx === board.pass_take_flag)
 					valid_moves.push(tx+'_'+2);				
 				
 				tx = cx + 1;
-				if (tx === pass_take)
+				if (tx === board.pass_take_flag)
 					valid_moves.push(tx+'_'+2);				
 			}
 			
@@ -799,10 +858,10 @@ board_func={
 				
 		if (is_checkmate === true)
 			return 'checkmate';		
+		if (is_stalemate === true)
+			return 'stalemate';		
 		if (is_check === true)
 			return 'check';
-		if (is_stalemate === true)
-			return 'stalemate';
 		return '';
 	}
 }
@@ -882,18 +941,19 @@ mini_dialog={
 		
 		sound.play('click');
 		
-		if (this.type === 'giveup') {			
-			firebase.database().ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"GIVEUP",tm:Date.now(),data:{}});		
-			online_player.stop('player_gave_up');
-		}
-		
+		if (this.type === 'giveup')		
+			online_player.giveup();
+
+		//отправить запрос на ничью
 		if (this.type === 'draw')
 			firebase.database().ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"DRAWREQ",tm:Date.now(),data:{}});
 		
-		if (this.type === 'draw_request') {
-			firebase.database().ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"DRAWOK",tm:Date.now(),data:{}});		
-			online_player.stop('draw');		
+		//согласиться на ничью
+		if (this.type === 'draw_request'){
+			firebase.database().ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"DRAWOK",tm:Date.now(),data:{}});
+			online_player.draw();				
 		}
+	
 		
 		this.close();
 	},
@@ -912,13 +972,15 @@ online_player={
 	start_time:0,
 	disconnect_time:0,
 	move_time_left:0,
-	timer_id:0,
-	me_conf_play:0,
-	op_conf_play:0,
+	timer:0,
+	time_for_move:0,
+	move_resolver:0,
+	timer_start_time:0,
+	conf_play_flag:false,
 		
-	send_move : function  (move_data) {
+	send_move : function (move_data) {
 		
-		this.reset_timer(false);
+		//this.reset_timer(false);
 		
 		this.me_conf_play=true;
 		
@@ -950,20 +1012,20 @@ online_player={
 	
 	activate : function (role) {
 				
-		//очищаем на всякий случай мк
+		//очищаем на всякий случай мк и квизы
 		mk.switch_stop();	
+		quiz.close();
 			
 		objects.board.texture=gres.board.texture;
 		objects.desktop.texture=gres.desktop.texture;
 		anim2.add(objects.desktop,{alpha:[0,1]}, true, 0.5,'linear');	
 		
 		//ни я ни оппонент пока не подтвердили игру
-		this.me_conf_play=false;
-		this.op_conf_play=false;		
-				
- 		//положение таймера
+		my_player.conf_play_flag=false;
+		online_player.conf_play_flag=false;
+
+		//таймер
 		objects.timer.visible=true;
-		objects.timer.x=[575,225][+(role==='master')];
 		
 		anim2.add(objects.game_buttons_cont,{x:[900, objects.game_buttons_cont.sx]},true,0.5,'linear');
 		
@@ -986,80 +1048,104 @@ online_player={
 		else
 			g_board = [['r','n','b','k','q','b','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','K','Q','B','N','R']];
 
-		//начинаем ежесекунжные проверки
-		this.second_tick(15);
 		
 		game.activate(role,online_player)
 
 	},
 	
-	second_tick (t) {
+	giveup(){
+		//это когда я сдаюсь
+		firebase.database().ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"GIVEUP",tm:Date.now(),data:{}});		
+		if(this.move_resolver!==0)
+			this.move_resolver('player_gave_up');
+		if(my_player.move_resolver!==0)
+			my_player.move_resolver(['player_gave_up']);
 		
-		if (state !== 'p')
-			return;
+	},
+	
+	draw(){
+		//это когда ничья согласована
+		if(this.move_resolver!==0)
+			this.move_resolver('draw');
 		
-		this.move_time_left--;		
+		if(my_player.move_resolver!==0)
+			my_player.move_resolver(['draw']);
 		
-		if (t!==undefined)
-			this.move_time_left = t;			
-						
-		if (this.move_time_left < 0 && my_turn)	{
+	},
+	
+	opp_giveup(){
+		//это когда я сдаюсь
+		if(this.move_resolver!==0)
+			this.move_resolver('op_gave_up');
+		
+		if(my_player.move_resolver!==0)
+			my_player.move_resolver(['op_gave_up']);		
+	},
+	
+	activate_timer(){
 			
-			if (this.me_conf_play)
-				this.stop('my_timeout');
-			else
-				this.stop('my_no_sync');
+		if(objects.timer.visible===false) return;
+		
+		this.timer_start_time=Date.now();
+		
+		this.timer=setInterval(online_player.time_tick.bind(online_player),1000);
+		
+		this.conf_play_flag
+			? this.time_for_move=35
+			: this.time_for_move=15
 			
-			return;
-		}
-
-		if (this.move_time_left < -5 && !my_turn)	{
-						
-			if (this.op_conf_play)
-				this.stop('opp_timeout');
-			else
-				this.stop('opp_no_sync');
-			
-			return;
-		}
+		objects.timer.text = '0:'+this.time_for_move;
+		objects.timer.x=575;
+		objects.timer.tint=0xffffff;	
+		
+	},
+	
+	async wait_move(){		
+		
+ 		// таймер
+		this.activate_timer();
+		
+		const move_data=await new Promise(resolver=>{
+			this.move_resolver=resolver;
+		})
 				
-		if (connected === 0) {
-			this.disconnect_time ++;
-			if (this.disconnect_time > 6) {
-				this.stop('my_no_connection');
-				return;				
-			}
-		}		
+		clearTimeout(this.timer);	
+		
+		if(['draw','op_timeout','op_no_sync','op_gave_up','player_gave_up'].includes(move_data))
+			return [move_data];
+		
+		this.conf_play_flag=true;
+		
+		return await board.process_op_move(move_data);
+		
+	},
+		
+	time_tick(){
+		
+		const time_passed=~~((Date.now()-this.timer_start_time)*0.001);
+		const time_left=this.time_for_move-time_passed;
+
+		if (time_left >= 0) {
+			time_left>9
+				? objects.timer.text = '0:'+time_left
+				: objects.timer.text = '0:0'+time_left
+		}
 		
 		//подсвечиваем красным если осталость мало времени
-		if (this.move_time_left === 10) {
+		if (time_left === 10) {
 			objects.timer.tint=0xff0000;
 			sound.play('clock');
 		}
 		
-		//обновляем на табло
-		if (this.move_time_left >= 0) {
-			if ( this.move_time_left >9 )
-				objects.timer.text = '0:'+this.move_time_left;
-			else
-				objects.timer.text = '0:0'+this.move_time_left;
+		//если время закончилось
+		if(time_left<=-5){			
+			this.conf_play_flag
+				? this.move_resolver('op_timeout')
+				: this.move_resolver('op_no_sync');
 		}
 		
-		//вызываем через секунду
-		this.timer_id = setTimeout(function(){online_player.second_tick()}, 1000);		
 	},
-	
-	receive_move:async function(move_data){
 		
-		this.op_conf_play=true;
-		this.reset_timer(true);
-		const final_state=await game.receive_move(move_data);
-		
-		if (['checkmate_to_player','stalemate_to_player','draw_50'].includes(final_state))
-			this.stop(final_state);
-		
-	},
-	
 	stop : async function(final_state) {					
 		
 		//отключаем взаимодейтсвие с доской
@@ -1079,11 +1165,12 @@ online_player={
 			'draw' 					: [['Игра закончилась ничьей.','The game ended in a draw'], DRAW],
 			'checkmate_to_opponent' : [['Победа!\nВы поставили мат!','Victory!\nYou checkmated'], WIN],
 			'checkmate_to_player' 	: [['Поражение!\nВам поставили мат!','Defeat!\nYou have been checkmated'], LOSE],
-			'opponent_gave_up' 		: [['Победа!\nСоперник сдался.','Victory!\nThe opponent gave up'], WIN],
+			'op_gave_up' 			: [['Победа!\nСоперник сдался.','Victory!\nThe opponent gave up'], WIN],
 			'player_gave_up' 		: [['Поражение!\nВы сдались.','Defeat!\nyou gave up'], LOSE],
-			'opp_timeout' 			: [['Победа!\nСоперник не сделал ход.','Victory!\nthe opponent did not make a move'], WIN],
+			'timer_error' 			: [['Поражение!\nОшибка таймера.','Defeat!\nTimer error'], LOSE],
+			'op_timeout' 			: [['Победа!\nСоперник не сделал ход.','Victory!\nthe opponent did not make a move'], WIN],
 			'my_timeout' 			: [['Поражение!\nУ вас закончилось время.','Defeat!\nyou have run out of time'], LOSE],
-			'opp_no_sync' 			: [['Похоже соперник не смог начать игру','It looks like the opponent could not start the game'], NOSYNC],
+			'op_no_sync' 			: [['Похоже соперник не смог начать игру','It looks like the opponent could not start the game'], NOSYNC],
 			'my_no_sync' 			: [['Похоже Вы не смогли начать игру','It looks like you could not start the game'], NOSYNC],
 			'draw_50' 				: [['Ничья!\nЗа последние 50 ходов не было взятий фигур и продвижения пешек','A draw!\nfor the last 50 moves there have been no taking of pieces and pawn promotion'], NOSYNC]	
 		}
@@ -1166,6 +1253,175 @@ online_player={
 
 };
 
+quiz={
+	
+	on:false,
+	moves_to_mate:2,
+	
+	quiz_data:[
+	['8/6k1/8/6N1/5K2/7Q/8/8','Bajtay, Jozsef\nL_Italia Scacchistica\nSep 1971',2],
+	['8/8/k7/5R2/4K3/3R4/8/8','Burbach, Johannes Jacob\nDeutsche Schachzeitung\nApr 1983',2],
+	['6R1/7k/5K2/8/6N1/8/8/8','Cabrera, Darwin\nChess, 18\nDec 1964',2],	
+	['8/8/8/8/4R3/6k1/8/4K2R','Candy, W. E.\nUnknown\n1911',2],	
+	['8/8/3K4/8/3k4/5Q2/2R5/8','Carpenter, George Edward\nDubuque Chess Journal\nOct 1873 (724)',2],	
+	['7K/3Q4/8/6k1/8/6N1/8/8','Chiasson, Joseph Emile\nEchec+\n1992',2],		
+	['8/4K3/8/5k2/8/4B3/4Q3/8','Conroy, J. A.\nHome Circle\n1850',2],	
+	['8/Q7/8/8/8/6N1/4K2k/8','Gruber, Hans\nSachsische Zeitung\n5 Jun 1981 (1087)',2],	
+	['8/8/5Q2/3k4/8/1K6/2R5/8','Holladay, Edgar Dinwiddie\nThe Problemist\nJul 1990 (7904)',2],	
+	['8/6P1/P7/8/8/8/8/k1K5','Speckmann, Werner\nEurope Echecs\n1965 (494)',3],
+	['k5N1/8/8/8/8/5K2/8/1Q6','Libis, Zdenek\nSachove umeni\nFeb 1971 (2655)',3],
+	['8/8/8/8/k7/7R/1K6/5B2','Klager, K. M.\nWormser Zeitung\n1964 (527)',3],
+	['8/8/8/8/8/R3K3/8/2B1k3','Mabmann, Wilhelm Karl Heinrich\nBasler Nachrichten\n10 Jul 1954 (4326)',3],
+	['5b1k/3P4/5K2/8/8/8/8/8','Olausson, Michel\nTroll, 1991',3],
+	['2k5/5R2/8/2K5/8/8/8/2B5','Kakabadze, Ferad\nTroll\n29 Aug 2001 (551)',3],
+	['8/8/8/8/6K1/8/5P1Q/5k2','Erdenbrecher, Hans Michael\nDie Schwalbe\nFeb 1971 (321)',3],
+	['1K6/4kP2/2Q5/8/8/8/8/8','Демидюк, Степан Иосифович\nTT Apprenti Sorcier\n1993',3],
+	['k1n5/2QK4/8/8/8/8/8/8','Богданов, Євгений Михайлович\nMat-64Comm.Mat-64\n2000 (81)',3],
+	['8/1Q6/2p5/4K3/8/k7/8/8','Havel, Miroslav\nSachove umeni\n20 Sep 1951',3],
+	['8/8/8/8/p7/3N4/2K5/k7','Kollarik, Gorazd\nHlas Iudu\n13 Mar 1975 (459)',3],
+	['5B1k/8/6K1/8/8/7N/8/8','Majoros, Bela\nSakkelet\n1994 (5-6/5971)',3],
+	['7k/8/6Qn/6K1/8/8/8/8','Румянцев, Сергей Юрьевич\nЮный ленинец (Кишинев)\n1974',3],
+	['3r4/3kPK2/2R5/8/8/8/8/8','Teixeira, Nelson\nO Globo\n1982',3],
+	['8/3p1N2/K7/2k5/4Q3/8/8/8','Makaronez, Leonid\nL_Italia Scacchistica\nMar 1998 (8256)',3],
+	['1k6/1P3QK1/8/8/8/8/P7/8','Максимовских, Александр Петрович\nШахматы в СССР\nFeb 1966 (12)',3],
+	['8/K2p4/2k5/6Q1/8/1B6/8/8','Кожакин, Владимир Владимирович\nL_Italia Scacchistica\nDec 1998 (8609)',3],
+	['8/5k2/8/4Q3/3P4/8/8/2B4K','Кулигин, Микола Володимирович\nКудесник, 1993',3],
+	['3k4/3N4/3K4/8/8/3N4/8/3B4','Fargette, Bruno\nThemes-64\nJul 1966 (1478)',4],
+	['7k/7B/7K/8/8/8/8/R6b','Meynsbrughen, Michel\nperso.infonie.fr/clafouti\n1999',4],
+	['8/8/7K/B4Q2/3k4/8/4P3/8','Havel, Miroslav\nParallele 50\n22 Nov 1951',4],
+	['8/7R/8/8/8/8/5K1p/3b3k','Mlynka, Karol\nSmer\n1968',4],
+	['8/8/8/8/8/7p/7R/1kNK4','Zucker, Manfred\nMagyar Sakkelet\n1984 (1/4752)',4],
+	['Q7/1B6/1k6/3K4/8/8/1p6/8','Пипа, Володимир Иосифович\nШах-ВВ (Боровичи)\n1991',4],
+	['8/8/8/8/8/3p2K1/3N4/4N2k','Brieger, Robert Sinclair\nThe Joy of Mate\n1985 (33)',4],
+	['k1K5/4R3/4P3/P7/8/8/8/8','Speckmann, Werner\nstella polaris\nMar 1966 (123)',4],
+	['8/B7/8/3K1k2/8/5NR1/8/8','Makaronez, Leonid\nThe Problemist Supplement\nJul 2006 (83/1817)',4]
+	
+	],
+		
+	async activate(){				
+				
+		//устанавливаем статус в базе данных а если мы не видны то установливаем только скрытое состояние
+		set_state({state : 'b'});
+		
+		this.on=true;
+		
+		//смотрим сколько людей решили
+		let pc=await firebase.database().ref("quizes/"+my_data.quiz_level ).once('value'); 
+		pc=pc.val()||0;
+						
+		//новая игра стокфиша
+		sf.new_game(10,7);	
+		
+		//воспользуемся кнопкой из бота чтобы выйти
+		objects.sb_bcg.pointerdown=this.exit_down.bind(quiz);
+		anim2.add(objects.stop_bot_button,{x:[800,objects.stop_bot_button.sx]},true,0.5,'linear');
+		
+		const q=this.quiz_data[my_data.quiz_level];
+		g_board = board_func.fen_to_board(q[0]);
+		
+		this.moves_to_mate=q[2];
+		objects.quiz_title0.text=['Задача №','Problem №'][LANG]+(my_data.quiz_level+1);
+		objects.quiz_title1.text=`**Мат за ${q[2]} хода**`;
+		objects.quiz_title2.text=q[1];
+		objects.quiz_title3.text=['Количество игроков решивших данную проблему:\n','The number of players who solved this problem:\n'][LANG]+pc;
+		anim2.add(objects.quiz_title_cont,{alpha:[0,1]},true,2,'linear');
+		
+		game.activate('master',quiz)
+		
+	},
+	
+	exit_down(){
+		
+		if (anim2.any_on()){
+			sound.play('locked');
+			return;
+			
+		}
+		sound.play('click');
+		this.close();
+		main_menu.activate();
+		
+	},
+	
+	async wait_move() {
+			
+		const move_data=await sf.wait_move();		
+		if (move_data==='stop') return 'stop';
+		
+		return await board.process_op_move(move_data);
+		
+	},
+	
+	close(){
+		
+		objects.mk_exit_button.visible=false;
+		sf.stop();
+		if(objects.quiz_title_cont.visible)
+			anim2.add(objects.quiz_title_cont,{alpha:[1,0]},false,0.5,'linear');
+		
+		//убираем кнопку выхода
+		anim2.add(objects.stop_bot_button,{x:[objects.stop_bot_button.x,800]},false,0.5,'linear');
+		
+		this.on=false;
+		game.clear_elements();
+		
+	},
+	
+	stop : async function(final_state) {
+		
+		//отключаем стокфиш
+		sf.stop();
+		
+		//отключаем цикл игры
+		my_player.move_resolver(['stop']);
+						
+		//отключаем взаимодейтсвие с доской
+		objects.board.interactive=false;
+		
+		//убираем кнопку выхода
+		anim2.add(objects.stop_bot_button,{x:[objects.stop_bot_button.x,800]},false,0.5,'linear');
+						
+		//элементы только для данного оппонента
+		objects.step_back_button.visible = false;
+		let t=''
+		
+		
+		if (final_state === 'checkmate_to_opponent'){
+			
+			sound.play('win');
+			t = [['Задача решена!','The problem is solved'],999]		
+			my_data.quiz_level++;
+			
+			//проверяем последнюю проблему
+			if(my_data.quiz_level===this.quiz_data.length) {
+				my_data.quiz_level=this.quiz_data.length-1;
+				message.add(['Это последняя задача, но скоро будут новые...','This is the last task, but there will be new ones soon...'][LANG])		
+			}
+			firebase.database().ref("players/"+my_data.uid+"/quiz_level").set(my_data.quiz_level);
+			
+						
+		} else {
+			
+			sound.play('lose');
+			t = [['Вы не решили задачу!','The problem is not solved'],999]		
+		}		
+		
+		await big_message.show(t[0][LANG],'---)))---', false);
+				
+		game.clear_elements();
+		
+		ad.show();
+
+		//снова активируем
+		this.activate();		
+	},
+	
+	send_move(){
+		
+		
+	},
+}
+
 mk={	
 	res:null,
 	cur_mk_level:0,
@@ -1233,7 +1489,7 @@ mk={
 		sound.play('hit');
 		objects.vs_icon.visible=true;
 		objects.vs_icon.y=objects.vs_icon.sy;
-				
+						
 		anim2.add(objects.mk_start_button,{x:[800, objects.mk_start_button.sx]},true,0.4,'linear');
 		anim2.add(objects.mk_up_button,{x:[800, objects.mk_up_button.sx]},true,0.4,'linear');
 		anim2.add(objects.mk_down_button,{x:[800, objects.mk_down_button.sx]},true,0.4,'linear');
@@ -1256,24 +1512,23 @@ mk={
 		
 	},
 	
-	send_move : function  () {
-				
-		//указываем есть ли возможность рокировки
-		let castling=' ';
-		if (game.op_moved_flag[1]===0 && game.op_moved_flag[7]===0)
-			castling+='k';
-		if (game.op_moved_flag[0]===0 && game.op_moved_flag[1]===0)
-			castling+='q';		
+	async wait_move() {
+			
+		const move_data=await sf.wait_move();		
+		if (move_data==='stop') return 'stop';
 		
-		//формируем фен строку и запускаем поиск решения				
-		const fen = board_func.get_fen(g_board) + ' b' + castling;	
-				
 		
-		objects.timer.x = 575;
+		//воспроизводим звук
+		if (Math.random()>0.9){
+			sound.play(mk.cur_enemy.name+mk.voices_order[mk.voice_ind],mk.res.resources);		
+			mk.voice_ind++;
+			mk.voice_ind=mk.voice_ind%mk.cur_enemy.sounds;
+			
+		}
 		
-		stockfish.postMessage('position fen ' + fen);		
-		stockfish.postMessage("go depth "+this.cur_enemy.depth);
-		//stockfish.postMessage("go movetime 10000");
+		
+		return await board.process_op_move(move_data);
+		
 	},
 	
 	close_ladder:async function(){
@@ -1305,19 +1560,24 @@ mk={
 
 	stop : async function(final_state) {
 		
-		//отключаем комманды
-		stockfish.removeEventListener('message', mk.stockfish_response);
+		//отключаем стокфиш
+		sf.stop();
+		
+		//отключаем цикл игры
+		my_player.move_resolver(['stop']);
 						
 		//отключаем взаимодейтсвие с доской
-		objects.board.pointerdown=null;
+		objects.board.interactive=false;
 		
 		objects.timer.visible=false;
 						
 		//элементы только для данного оппонента
 		objects.stop_bot_button.visible = false;
 		objects.step_back_button.visible = false;
-
-		let t = [['Вы отменили смертельную битву','You canceled mortal kombat'],999]		
+		let t=''
+		
+		if ( final_state === 'stop')
+			t = [['Вы отменили смертельную битву','You canceled mortal kombat'],999]		
 		
 		if ( final_state === 'stalemate_to_opponent' || final_state === 'stalemate_to_player')
 			t = [['Пат!\nИгра закончилась ничьей.','Stalemate!\nthe game ended in a draw'],DRAW]		
@@ -1358,11 +1618,10 @@ mk={
 				firebase.database().ref("players/"+my_data.uid+"/mk_sback_num").set(my_data.mk_sback_num);
 			} 			
 		}
-
 		
 		game.clear_elements();
 		
-		show_ad();
+		ad.show();
 
 		//снова активируем лестницу
 		this.activate();		
@@ -1377,12 +1636,17 @@ mk={
 		
 		sound.play('click');
 		
-		this.stop();		
+		this.stop('stop');		
+	},
+		
+	send_move(){
+		
+		
 	},
 		
 	step_back:function(){
 				
-		if(!my_turn || anim2.any_on() || game.prv_state.board===undefined){
+		if(!my_turn || anim2.any_on() || board.prv_state.board===undefined){
 			sound.play('locked')
 			return;			
 		}
@@ -1399,11 +1663,10 @@ mk={
 		
 		objects.selected_frame.visible=false;
 		this.selected_piece=0;
-		g_board=JSON.parse(JSON.stringify(game.prv_state.board));
-		game.my_moved_flag=game.prv_state.my_moved_flag.slice();
-		game.op_moved_flag=game.prv_state.op_moved_flag.slice();		
-		for (let [key, spr] of Object.entries(game.eaten_labels))
-			spr.text=spr.val=game.prv_state.eaten_labels[key];
+		g_board=JSON.parse(JSON.stringify(board.prv_state.board));
+		board.move_flags=JSON.parse(JSON.stringify(board.prv_state.move_flags));
+		for (let [key, spr] of Object.entries(board.eaten_labels))
+			spr.text=spr.val=board.prv_state.eaten_labels[key];
 		board_func.update_board();
 		
 	},
@@ -1412,6 +1675,9 @@ mk={
   		
 		if (objects.mk_fighters_cards_cont.visible)
 			this.close_ladder();
+		
+		//отключаем стокфиш
+		sf.stop();
 		
 		//отключаем комманды
 		stockfish.removeEventListener('message', mk.stockfish_response);
@@ -1423,6 +1689,7 @@ mk={
 						
 		//элементы только для данного оппонента
 		objects.stop_bot_button.visible = false;
+		objects.step_back_button.visible = false;
 		
 		game.clear_elements();
 		
@@ -1447,17 +1714,8 @@ mk={
 				this.res.add(sres_name,git_src+'sounds/'+this.cur_enemy.name+'/'+i+'.mp3');
 		}
 			
-
 		await new Promise((resolve, reject)=> this.res.load(resolve))
 		
-		/*if(this.res.resources.bcg===undefined) this.res.add('bcg',git_src+'mk/bcg.png');
-		await new Promise((resolve, reject)=> this.res.load(resolve))
-		
-		if(this.res.resources.board===undefined) this.res.add('board',git_src+'mk/board.png');
-		await new Promise((resolve, reject)=> this.res.load(resolve))
-	
-		objects.board.texture=this.res.resources.board.texture;
-		objects.desktop.texture=this.res.resources.bcg.texture;*/
 		
 		this.voice_ind=0;
 		this.voices_order=Array.from(Array(this.cur_enemy.sounds).keys())
@@ -1465,26 +1723,11 @@ mk={
 		
 		anim2.add(objects.desktop,{alpha:[0,1]}, true, 0.5,'linear');	
 		//objects.board.alpha=0.85;
-		
-		//фиксируем врему начала игры
-		this.start_time = Date.now();
-		
-		this.move_made = [0,0,0,0,0,0,0,0];
-		
+				
 		sound.play('mk_ring');
 		
-		//сообщения от стокфиша
-		stockfish.addEventListener('message', mk.stockfish_response);
-	
-		stockfish.postMessage("ucinewgame");	
-				
-		stockfish.postMessage("setoption name Skill Level value "+this.cur_enemy.skill_level);
-		
-		stockfish.postMessage("setoption name Skill Level Maximum Error value 5000");
-		
-
-
 		anim2.add(objects.stop_bot_button,{x:[900, objects.stop_bot_button.sx]},true,0.5,'linear');
+		objects.sb_bcg.pointerdown=mk.stop_down.bind(mk);
 		
 		//возможность вернуть доску на шаг назад
 		if(my_data.mk_sback_num>0){
@@ -1505,10 +1748,13 @@ mk={
 		set_state({state : 'b'});
 		
 		//доска для смертельной битвы
-		//g_board = [['x','x','x','x','k','x','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
-		g_board = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
+		g_board = [['x','x','x','x','k','x','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
+		//g_board = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
 
 		//инициируем общие ресурсы игры
+				
+		
+		sf.new_game(this.cur_enemy.skill_level,this.depth);
 		game.activate('master',mk);
 		
 	},
@@ -1525,7 +1771,6 @@ mk={
 		await this.close_ladder();
 		
 		main_menu.activate();
-		
 		
 	},
 	
@@ -1567,15 +1812,70 @@ mk={
 		this.shift_ladder(this.cur_mk_level,0.5,0);
 	},
 		
-	stockfish_response : async function (e) {
+	reset_timer_when_move : function() {
 		
-		console.log(e.data);		
+	}
+		
+}
+
+sf={
+	
+	move_resolver:0,
+	skill_level:0,
+	depth:0,
+	
+	response(e){
 		
 		if (e.data.substring(0, 8) !== 'bestmove')
-			return
+			return;
+		this.move_resolver(e);
+		
+	},
+	
+	new_game(skill_level,depth){
+		
+		this.skill_level=skill_level;
+		this.depth=depth;
+		
+		stockfish.postMessage('ucinewgame');
+		stockfish.addEventListener('message', this.response.bind(this));
+		stockfish.postMessage('setoption name Skill Level value '+skill_level);		
+		stockfish.postMessage('setoption name Skill Level Maximum Error value 5000');
+	},	
+	
+	stop(){
+		
+		stockfish.postMessage('stop');
+		stockfish.removeEventListener('message', this.response.bind(this));
+		if(this.move_resolver!==0)
+			this.move_resolver('stop');		
+		
+	},
+		
+	async wait_move(){
+									
 
-		const move_str = e.data.substring(9, 13);
-		const pawn_replace = e.data.substring(13,14);
+		
+		//указываем есть ли возможность рокировки у бота
+		let castling=' ';
+		if (board.move_flags[0][4]===0 && board.move_flags[0][7]===0)
+			castling+='k';
+		if (board.move_flags[0][4]===0 && board.move_flags[0][0]===0)
+			castling+='q';		
+		
+		//формируем фен строку и запускаем поиск решения				
+		const fen = board_func.get_fen(g_board) + ' b' + castling;	
+		
+		stockfish.postMessage('position fen ' + fen);		
+		stockfish.postMessage('go depth '+this.depth);
+		
+		const sf_data=await new Promise(resolver=>{
+			this.move_resolver=resolver;
+		})					
+		if(sf_data==='stop') return 'stop';
+						
+		const move_str = sf_data.data.substring(9, 13);
+		const pawn_replace = sf_data.data.substring(13,14);
 
 		const x1s=move_str[0];
 		const y1s=move_str[1];
@@ -1593,126 +1893,198 @@ mk={
 			if(x2===6) x2=7
 			if(x2===2) x2=0			
 		}
-				
-		const move_data={x1,y1,x2,y2};
 		
-		objects.timer.x = 225;
+		const move_data={x1,y1,x2,y2};		
 		
 		//проверяем замену пешки на новую фигуру
 		if (op_pieces.includes(pawn_replace) === true)
-			move_data.pawn_replace = pawn_replace;			
+			move_data.pawn_replace = pawn_replace;		
 				
-		//воспроизводим звук
-		if (Math.random()>0.9){
-			sound.play(mk.cur_enemy.name+mk.voices_order[mk.voice_ind],mk.res.resources);		
-			mk.voice_ind++;
-			mk.voice_ind=mk.voice_ind%mk.cur_enemy.sounds;
-			
-		}
-
-		
-		const final_state=await game.receive_move(move_data);
-		
-		if (['checkmate_to_player','stalemate_to_player','draw_50'].includes(final_state))
-			mk.stop(final_state);
-		
-	},
+		return move_data;
+	}	
 	
-	reset_timer_when_move : function() {
-		
-	}
-		
 }
 
-game={
-
+board={
+	
+	prv_state:0,	
 	valid_moves : 0,
-	player_under_check : 0,
-	opponent : {},
-	checker_is_moving : 0,
-	draw_50: 0,
-	state : 0,
-	selected_piece:0,
+	selected_piece:0,	
+	move_flags:[],
+	eaten_labels:0,
+	prv_state:null,
 	my_color:'w',
 	op_color:'b',
-	prv_state:0,	
-	eaten_labels:0,
-	my_moved_flag:[],
-	op_moved_flag:[],
+	draw_50:0,
+	pass_take_flag:0,
+	player_under_check:false,
 	is_my_first_move:false,
-
-	activate: function(role, opponent) {
+	
+	init(role){
 		
-		this.state = 'on';
-		my_role=role;
-		this.opponent = opponent;
+		this.move_flags=[[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]];
 		
 		my_turn=this.is_my_first_move=role==='master';
+		
+		//предыдущее состояние доски
+		this.prv_state={};
 		
 		//определяем цвет фигур
 		this.my_color=['b','w'][+this.is_my_first_move];
 		this.op_color=['w','b'][+this.is_my_first_move];
 		
-		//если открыт лидерборд то закрываем его
-		if (objects.lb_1_cont.visible===true) lb.close();		
-		
-		this.op_moved_flag = [0,0,0,0,0,0,0,0];
-		this.my_moved_flag = [0,0,0,0,0,0,0,0];
-		this.player_under_check = 0;
-		
-		//предыдущее состояние доски
-		this.prv_state={};
-						
-		//обновляем время без взятий и движения пешки
-		this.draw_50 = 0;			
-		
-		//инициируем все что связано с оппонентом
-		//this.opponent.init(my_role,is_my_first_move);
-				
-		//общие элементы для игры		
-		objects.selected_frame.visible=false;
-		objects.board.visible=true;
-		anim2.add(objects.my_card_cont,{x:[-100, objects.my_card_cont.sx]},true,0.4,'linear');
-		anim2.add(objects.opp_card_cont,{x:[900, objects.opp_card_cont.sx]},true,0.4,'linear');
-		anim2.add(objects.my_eaten_cont,{alpha:[0, 1]},true,0.4,'linear');
-		anim2.add(objects.opp_eaten_cont,{alpha:[0, 1]},true,0.4,'linear');
-	
-		//никакая фигура не быбрана
-		this.selected_piece=0;		
-
-		//обозначаем какой сейчас ход
-		move=0;
-		objects.cur_move_text.visible=true;
-		objects.cur_move_text.text=['Ход: ','Move: '][LANG]+move;
-		
-		//включаем взаимодейтсвие с доской
-		objects.board.pointerdown=game.mouse_down_on_board.bind(game);
-
-		//счетчик времени
-		objects.timer.visible=true;
+		//пока никто не подтвердил игру
+		this.me_conf_play=false;
+		this.op_conf_play=false;
 		
 		//надписи съеденых фигур
 		this.eaten_labels={p:objects.my_pn,r:objects.my_rn,n:objects.my_nn,b:objects.my_bn,q:objects.my_qn,P:objects.opp_pn,R:objects.opp_rn,N:objects.opp_nn,B:objects.opp_bn,Q:objects.opp_qn};
 		for (let [x, t] of Object.entries(this.eaten_labels)) {
 			t.val=t.text=0;
 		}
+		
+		//никакая фигура не быбрана
+		this.selected_piece=0;		
+		
+		//предыдущее состояние доски
+		this.prv_state={};
+		
+		//общие элементы для игры		
+		objects.selected_frame.visible=false;
+		objects.cur_move_text.visible=true;
+
+		anim2.add(objects.board,{alpha:[0, 1]},true,0.4,'linear');
+		anim2.add(objects.my_card_cont,{x:[-100, objects.my_card_cont.sx]},true,0.4,'linear');
+		anim2.add(objects.opp_card_cont,{x:[900, objects.opp_card_cont.sx]},true,0.4,'linear');
+		anim2.add(objects.my_eaten_cont,{alpha:[0, 1]},true,0.4,'linear');
+		anim2.add(objects.opp_eaten_cont,{alpha:[0, 1]},true,0.4,'linear');
+		
+		//включаем взаимодейтсвие с доской
+		objects.board.pointerdown=board.mouse_down.bind(board);
+		
+		if (role === 'master')
+			g_board = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
+		else
+			g_board = [['r','n','b','k','q','b','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','K','Q','B','N','R']];
 
 		board_func.update_board();
+		
+	},
+	
+	init_quiz(){
+		
+		my_turn=this.is_my_first_move=true;
+		
+		this.move_flags=[[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]];
 
+		//определяем цвет фигур
+		this.my_color='w';
+		this.op_color='b';
+				
+		//никакая фигура не быбрана
+		this.selected_piece=0;		
+		
+		//предыдущее состояние доски
+		this.prv_state={};
+		
+		//общие элементы для игры		
+		objects.selected_frame.visible=false;
+		objects.cur_move_text.visible=true;
+		anim2.add(objects.board,{alpha:[0, 1]},true,0.4,'linear');
+		anim2.add(objects.my_card_cont,{x:[-100, objects.my_card_cont.sx]},true,0.4,'linear');
+		//anim2.add(objects.opp_card_cont,{x:[900, objects.opp_card_cont.sx]},true,0.4,'linear');
+		
+		//включаем взаимодейтсвие с доской
+		objects.board.pointerdown=board.mouse_down.bind(board);
+		
+		board_func.update_board();
+		
 	},
 		
-	mouse_down_on_board : function(e) {
+	is_castling(selected_piece, new_x, new_y){
+		
+		//где должен изначально стоять король
+		const king_orig_x = [3,4][+this.is_my_first_move]		
+		
+		const castling_dir = Math.sign(new_x - selected_piece.ix);
+				
+		//выбрана первая линия
+		const c0 = this.selected_piece.iy === 7 && new_y === 7;
+		
+		//если выбрал короля
+		const c1 = selected_piece.piece === 'K';
+		
+		//если выбрал ячейку где должен сначала стоять король и он там стоит
+		const c2 = selected_piece.ix === king_orig_x;
+		
+		//уведомление как правильно делать рокировку
+		if (c0&&c1&&c2){
+			if(new_x===king_orig_x-2 || new_x===king_orig_x+2){
+				message.add(['Для рокировки нажмите на короля, затем на ладью','For castling, click on the king, then on the rook'][LANG]);
+				return 'incorrect_castling';					
+			}				
+		} else {			
+			return 'no_castling';	
+		}
+			
+		//если сделал ход на 0 или 7 и там ладья
+		const c3 = (g_board[new_y][new_x] === 'R') && (new_x === 0 || new_x === 7)			
+		if (c3===false)
+			return 'no_castling';	
+			
+		//если король не делал ход
+		const c4 = this.move_flags[7][king_orig_x] === 0;				
+		if (c4 === false) {
+			message.add(['Рокировка невозможна. Король уже сделал ход.','Castling is impossible. The King has already made a move.'][LANG]);				
+			return 'king_moved';
+		}					
+	
+		//если ладья не делала ход
+		const c5 = this.move_flags[7][new_x] === 0;
+		if (c5 === false) {
+			message.add(['Рокировка невозможна. Ладья уже сделала ход.','Castling is impossible. The rook has already made a move.'][LANG]);
+			return 'rook_moved';
+		}				
+		
+		//если нет шаха
+		const c6 = this.player_under_check === 0;		
+		if (c6 === false) {
+			message.add(['Рокировка невозможна. Вам Шах.','Castling is impossible. Check!'][LANG]);	
+			return 'player_under_check';
+		}
+		
+		//проверяем наличие свободного поля между ладьей и королем
+		for (let px=king_orig_x+castling_dir;px<7 && px>0;px+=castling_dir){
+			if (g_board[7][px] !== 'x') {
+				message.add(['Рокировка невозможна. Поле не свободно.','Castling is impossible. The field is not free.'][LANG]);	
+				return 'field_not_free';
+			}	
+		}		
+			
+		//проверяем битое поле на пути короля
+		const _new_x = selected_piece.ix + castling_dir;
+		const _m_data={x1:selected_piece.ix,y1:selected_piece.iy,x2:_new_x, y2:new_y};	
+		const {x1,y1,x2,y2}=_m_data;
+		const _new_board = JSON.parse(JSON.stringify(g_board));			
+		_new_board[y2][x2] = _new_board[y1][x1];
+		_new_board[y1][x1] = 'x';
+		
+		const _is_check = board_func.is_check(_new_board, 'K');
+		if (_is_check === true) {
+			message.add(['Рокировка невозможна. Битое поле на пути короля.','Castling is impossible. The field is under attack.'][LANG]);
+			return 'beaten_field';
+		}			
+
+		return 'ok_castling';
+	},
+		
+	async mouse_down(e) {
 
 		if (objects.big_message_cont.visible === true || objects.pawn_replace_dialog.visible === true || objects.req_cont.visible === true || this.checker_is_moving === 1)	{
 			sound.play('locked');
 			return
 		}
 
-		//проверяем что моя очередь
-		if (!my_turn) {
-			add_message(["Не твоя очередь",'Not your turn'][LANG]);
-			return;
-		}
 		
 		//координаты указателя
 		const mx = e.data.global.x/app.stage.scale.x;
@@ -1724,7 +2096,7 @@ game={
 
 		//если фигура еще не выбрана
 		if (this.selected_piece===0){
-			game.valid_moves = [];
+			this.valid_moves = [];
 			
 			//проверяем что выбрана моя фигура а не оппонента или пустая клетка
 			let piece = g_board[new_y][new_x];
@@ -1742,8 +2114,7 @@ game={
 			//воспроизводим соответствующий звук
 			sound.play('move');
 						
-			game.valid_moves = board_func.get_valid_moves(g_board, this.selected_piece, op_pieces);
-						
+			this.valid_moves = board_func.get_valid_moves(g_board, this.selected_piece, op_pieces);
 
 			return;
 		}
@@ -1757,126 +2128,26 @@ game={
 				this.selected_piece=0;
 				objects.selected_frame.visible=false;
 				return;
-			}				
+			}						
 			
 			//если игрок хочет рокировку, проверяем....			
-			let castling = 0;
-			const castling_dir = Math.sign(new_x - this.selected_piece.ix);
-			
-			//где должен изначально стоять король
-			const king_orig_x = [3,4][+this.is_my_first_move]
-			
-			//выбрана первая линия
-			const c0 = this.selected_piece.iy === 7 && new_y === 7;
-			
-			//если выбрал короля
-			const c1 = this.selected_piece.piece === 'K';
-			
-			//если выбрал ячейку где должен сначала стоять король и он там стоит
-			const c2 = this.selected_piece.ix === king_orig_x;
-			
-			//уведомление как правильно делать рокировку
-			if (c0&&c1&&c2){
-				if(new_x===king_orig_x-2 || new_x===king_orig_x+2){
-					add_message(['Для рокировки нажмите на короля, затем на ладью','For castling, click on the king, then on the rook'][LANG]);
-					return;					
-				}				
-			}
-		
-			
-			//если сделал ход на 0 или 7 и там ладья
-			const c3 = (g_board[new_y][new_x] === 'R') && (new_x === 0 || new_x === 7)			
-			if (c0 && c1 && c2 && c3) {
-								
-				
-				//если король не делал ход
-				const c4 = this.my_moved_flag[1] === 0;				
-				if (c4 === false) {
-					add_message(['Рокировка невозможна. Король уже сделал ход.','Castling is impossible. The King has already made a move.'][LANG]);				
-					return;
-				}					
-			
-				//если ладья не делала ход
-				const c5 = this.my_moved_flag[new_x] === 0;	
-				if (c5 === false) {
-					add_message(['Рокировка невозможна. Ладья уже сделала ход.','Castling is impossible. The rook has already made a move.'][LANG]);
-		
-					return;
-				}				
-				
-				//если нет шаха
-				const c6 = game.player_under_check === 0;		
-				if (c6 === false) {
-					add_message(['Рокировка невозможна. Вам Шах.','Castling is impossible. Check!'][LANG]);	
-					return;
-				}
-				
-				//проверяем наличие свободного поля между ладьей и королем
-				if (king_orig_x === 4) {
-					
-					//проверяем длинную рокировку
-					if (new_x === 0) {
-						if (!(g_board[7][1] === 'x' && g_board[7][2] === 'x' && g_board[7][3] === 'x')) {
-							add_message(['Рокировка невозможна. Поле не свободно.','Castling is impossible. The field is not free.'][LANG]);	
-							return;
-						}							
-					}			
-					
-					//проверяем короткую рокировку
-					if (new_x === 7) {
-						if (!(g_board[7][5] === 'x' && g_board[7][6] === 'x')) {
-							add_message(['Рокировка невозможна. Поле не свободно.','Castling is impossible. The field is not free.'][LANG]);			
-							return;
-						}								
-					}			
-					
-				} else {
-					
-					//проверяем длинную рокировку
-					if (new_x === 7) {
-						if (!(g_board[7][4] === 'x' && g_board[7][5] === 'x' && g_board[7][6] === 'x')){
-							add_message(['Рокировка невозможна. Поле не свободно.','Castling is impossible. The field is not free.'][LANG]);			
-							return;
-						}										
-					}			
-
-					//проверяем короткую рокировку
-					if (new_x === 0) {
-						if (!(g_board[7][1] === 'x' && g_board[7][2] === 'x')){
-							add_message(['Рокировка невозможна. Поле не свободно.','Castling is impossible. The field is not free.'][LANG]);			
-							return;
-						}								
-					}				
-				}	
-				
-				//проверяем битое поле на пути короля
-				const _new_x = this.selected_piece.ix + castling_dir;
-				const _m_data={x1:this.selected_piece.ix,y1:this.selected_piece.iy,x2:_new_x, y2:new_y};	
-				const {x1,y1,x2,y2}=_m_data;
-				const _new_board = JSON.parse(JSON.stringify(g_board));			
-				_new_board[y2][x2] = _new_board[y1][x1];
-				_new_board[y1][x1] = 'x';
-				
-				const _is_check = board_func.is_check(_new_board, 'K');
-				if (_is_check === true) {
-					add_message(['Рокировка невозможна. Битое поле на пути короля.','Castling is impossible. The field is under attack.'][LANG]);
-					return;
-				}			
-				
-
-				castling = 1;
-			}
-			
-			if (game.valid_moves.includes(new_x+'_'+new_y) === false && castling === 0) {	
-				add_message(['Так ходить нельзя','Invalid move'][LANG]);	
+			let castling = this.is_castling(this.selected_piece,new_x,new_y);
+			if (['incorrect_castling','rook_moved','king_moved','player_under_check','field_not_free','beaten_field'].includes(castling))
 				return;
-			}	
 			
+			//проверяем если это валидный ход и это не рокировка
+			if (this.valid_moves.includes(new_x+'_'+new_y) === false && castling === 'no_castling') {	
+				message.add(['Так ходить нельзя','Invalid move'][LANG]);	
+				return;
+			}				
 			
 			//для проверки рокировки на шах указываем конечное назначение короля
 			let new_x_castled = new_x;
-			if (castling === 1)
-				new_x_castled = this.selected_piece.ix + castling_dir * 2;				
+			if (castling === 'ok_castling'){
+				const castling_dir = Math.sign(new_x - this.selected_piece.ix);
+				new_x_castled = this.selected_piece.ix + castling_dir * 2;						
+			}
+		
 		
 			//проверяем следующее состояние доски
 			const {x1,y1,x2,y2}={x1:this.selected_piece.ix,y1:this.selected_piece.iy,x2:new_x_castled, y2:new_y};	
@@ -1888,13 +2159,15 @@ game={
 			if (new_board[y1][x1]==='P' && new_board[y2][x2]==='x' && x1!==x2)
 				new_board[y1][x2] = 'x';
 			
-			//производим сам ход
+			//производим сам ход на предварительной доске
 			new_board[y2][x2] = new_board[y1][x1];
 			new_board[y1][x1] = 'x';						
 			
 			let is_check = board_func.is_check(new_board, 'K');
 			if (is_check === true) {
-				castling === 1 ? add_message(['Рокировка невозможна.Так вам шах','Castling is impossible. Check!'][LANG]) : add_message(['Так вам шах','There will be a check'][LANG]);				
+				castling==='ok_castling'
+					? message.add(['Рокировка невозможна.Так вам шах','Castling is impossible. Check!'][LANG])
+					: message.add(['Так вам шах','There will be a check'][LANG]);				
 				return;
 			}		
 			
@@ -1909,107 +2182,109 @@ game={
 			//отменяем выделение
 			this.selected_piece=0;				
 			
-			game.process_my_move(m_data, castling);
+			this.process_my_move(m_data, castling==='ok_castling');
 		}
-
 	},
+	
+	get_eaten_piece(pass_taken_pawn_pos_y,x2,y2){		
+		const y2_pawned=pass_taken_pawn_pos_y||y2;
+		if (g_board[y2_pawned][x2]!=='x')
+			return board_func.get_checker_by_pos(x2,y2_pawned);
+		return null;		
+	},
+	
+	get_pass_eaten_pawn_y(move_data){		
+		const {x1,y1,x2,y2}=move_data;		
+		if (g_board[y1][x1] === 'P'&&x1 !== x2 && g_board[y2][x2] === 'x')
+			return 3;		
+		if (g_board[y1][x1] === 'p'&&x1 !== x2 && g_board[y2][x2] === 'x')
+			return 4;
+		return null;		
+	},
+		
+	async process_my_move(move_data, castling){
 
-	process_my_move : async function (move_data, castling) {
-
-		//обновляем счетчик хода
-		move++;
-		objects.cur_move_text.text=['Ход: ','Move: '][LANG]+move;
 		const {x1,y1,x2,y2}=move_data;
-					
 		
 		//запоминаем состояние доски до хода чтобы вернуть если надо
 		this.prv_state.board=JSON.parse(JSON.stringify(g_board));		
-		this.prv_state.my_moved_flag=this.my_moved_flag.slice();
-		this.prv_state.op_moved_flag=this.op_moved_flag.slice();
+		this.prv_state.move_flags=JSON.parse(JSON.stringify(this.move_flags));
 		this.prv_state.eaten_labels={};
-		for(const key in this.eaten_labels)
-			this.prv_state.eaten_labels[key]=this.eaten_labels[key].val;
+		for(const key in this.eaten_labels) this.prv_state.eaten_labels[key]=this.eaten_labels[key].val;
 		
-		
-		//указываем если король или ладья сделали движение и рокировка больше невозможна
-		if(x1===0 && y1===7) this.my_moved_flag[0]=1;
-		if(x1===7 && y1===7) this.my_moved_flag[7]=1;
-		if(g_board[y1][x1]==='K' && y1===7) this.my_moved_flag[1]=1;		
+		//заносим информацию о сделаных ходах (для расчета рокировки)
+		this.move_flags[y1][x1]=1;
 		
 		//звук перемещения
-		sound.play('move');			
+		sound.play('move');		
 		
+		this.me_conf_play=true;
 		
-		//перемещаем мою фигуру и обновляем доску	
-		this.checker_is_moving = 1;		
-		if (castling === 1)
-			await this.make_castling_on_board(move_data);
-		else
-			await this.make_move_on_board(move_data);
-		this.checker_is_moving = 0;		
-		
-		//диалог выбора фигуры
-		if (g_board[y2][x2] === 'P' && y2 === 0) {
-			g_board[y2][x2] = await pawn_replace_dialog.show();		
-			move_data.pawn_replace = g_board[y2][x2].toLowerCase();	
-			board_func.update_board();			
-		}	
-		
-		//перезапускаем таймер хода и кто ходит			
-		my_turn = false;			
-		
-		//отпрравляем ход оппоненту
-		this.opponent.send_move(move_data);		
-				
-		//проверяем звершение игры
-		let final_state = board_func.check_fin(g_board,'b');		
-					
-		if (final_state === 'check')
-			add_message(['Вы объявили шах!','You have declared a check!'][LANG]);	
-		
-		if (final_state === 'checkmate' || final_state === 'stalemate' )
-			this.opponent.stop(final_state + '_to_opponent');		
-		
-		//проверяем 50 ходов для ничьи		
-		if (my_role === 'slave') {
+		//запоминаем какая фигура пошла
+		const figure_to_move=g_board[y1][x1];
+								
+		//анимационное перемещение
+		if(castling){
 			
-			let moves_notaken_nopawnmove = Math.floor(this.draw_50/2);			
-			console.log(moves_notaken_nopawnmove);
-			if (moves_notaken_nopawnmove >= 50) {
-				this.opponent.stop('draw_50');
-				return;				
-			}		
-
-			if (moves_notaken_nopawnmove === 30 || moves_notaken_nopawnmove === 35 || moves_notaken_nopawnmove === 40 || moves_notaken_nopawnmove >= 45)
-				add_message([`Ходов до ничьи: ${50-moves_notaken_nopawnmove}. Если не будет взятий или движения пешек.`,`Moves to a draw: ${50-moves_notaken_nopawnmove}. If there are no takeaways or pawn movements.`][LANG])
+			//анимационное перемещение
+			await this.make_castling_on_board(move_data)
+			
+		}else{			
+			
+			//определяем пешку на проходе
+			const pass_taken_pawn_pos_y = this.get_pass_eaten_pawn_y(move_data);
+				
+			//определяем съеденую фигуру
+			const eaten_figure=this.get_eaten_piece(pass_taken_pawn_pos_y,x2,y2);
+			var eaten_figure_s=eaten_figure?.piece;
+			
+			//анимационное перемещение
+			await this.make_move_on_board(move_data,eaten_figure)
+			
+			//перенос фигуры в массиве
+			g_board[y2][x2] = g_board[y1][x1];
+			g_board[y1][x1] = 'x'	
+			
+			//удаления взятой на проходе пешки в массиве
+			if (pass_taken_pawn_pos_y) g_board[pass_taken_pawn_pos_y][x2] = 'x';
+			
+			//диалог выбора фигуры и замена пешки
+			if (g_board[y2][x2] === 'P' && y2 === 0) {
+				g_board[y2][x2] = await pawn_replace_dialog.show();		
+				move_data.pawn_replace = g_board[y2][x2].toLowerCase();	
+			}				
 		}
 		
+		//обновляем доску
+		board_func.update_board();
+		
+		//отпрравляем ход оппоненту
+		opponent.send_move(move_data);	
+				
+		//проверяем звершение игры
+		const final_state = board_func.check_fin(g_board,'b');		
+					
+		if (final_state === 'check')
+			message.add(['Вы объявили шах!','You have declared a check!'][LANG]);	
+		
+		//сообщаем в цикл что ход завершен
+		my_player.move_resolver([final_state+ '_to_opponent',figure_to_move,eaten_figure_s]);
 
 	},
-	
-	make_move_on_board : async function ( move_data ) {
+		
+	async make_move_on_board (move_data,eaten_figure) {
 				
 		if (state === 'o')
 			return;
 			
 		let {x1,y1,x2,y2} = move_data;
 				
-		//определяем есть ли взятие на проходе
-		let pass_taken_pawn_pos_y = null;
-		if (g_board[y1][x1] === 'P' && x1 !== x2 && g_board[y2][x2] === 'x')
-			pass_taken_pawn_pos_y = 3;		
-		if (g_board[y1][x1] === 'p' && x1 !== x2 && g_board[y2][x2] === 'x')
-			pass_taken_pawn_pos_y = 4;
-			
-		//определяем фигуру которую съели если она есть
-		let eaten_figure=0;
-		y2_pawned=pass_taken_pawn_pos_y||y2;
-		if (g_board[y2_pawned][x2] !=='x')
-			eaten_figure=board_func.get_checker_by_pos(x2,y2_pawned);
-				
 		//медленно убираем съеденную фигуру если она имеется		
-		if (eaten_figure!==0)
-			anim2.add(eaten_figure,{alpha:[1,0]}, false, 0.06,'linear');
+		if (eaten_figure){
+			sound.play('eaten');
+			anim2.add(eaten_figure,{alpha:[1,0]}, false, 0.06,'linear');			
+		}
+
 						
 		//подготавливаем данные для перестановки
 		let piece=board_func.get_checker_by_pos(move_data.x1,move_data.y1);
@@ -2020,40 +2295,9 @@ game={
 		let y2p=move_data.y2*50+objects.board.y+10;
 		
 		await anim2.add(piece,{x:[x1p,x2p],y:[y1p,y2p]}, true, 0.25,'easeInOutCubic');
-				
-		
-		//увеличиваем количество ходов без взятия и движения пешек
-		this.draw_50++;
-		
-		//обновляем инфу о съеденых фигурах
-		if (eaten_figure!==0) {			
-			this.draw_50 = 0;
-			sound.play('eaten');			
-			const e=this.eaten_labels[eaten_figure.piece];
-			e.text=++e.val;		
-		}
-		
-		//проверяем что это движение пешки
-		if (g_board[y1][x1] === 'p' || g_board[y1][x1] === 'P')
-			this.draw_50 = 0;
-		
-		//обновляем доску
-		g_board[y2][x2] = g_board[y1][x1];
-		g_board[y1][x1] = 'x'	
-		
-		if (pass_taken_pawn_pos_y !== null)
-			g_board[pass_taken_pawn_pos_y][x2] = 'x';
-		
-		//если производится замена пешки
-		if (move_data.pawn_replace !== undefined) 
-			g_board[y2][x2] = move_data.pawn_replace;	
-			
-			
-		
-		board_func.update_board();
 	},
 	
-	make_castling_on_board : async function ( move_data ) {
+	async make_castling_on_board ( move_data ) {
 		
 		if (state === 'o')
 			return;
@@ -2121,20 +2365,15 @@ game={
 		
 		await Promise.all([anim2.add(king_fig,{x:[king_x1p,king_x2p]}, true, 0.3,'easeInOutCubic'), anim2.add(rook_fig,{x:[rook_x1p,rook_x2p]}, true, 0.3,'easeInOutCubic')]);
 		
-		
-		//обновляем доску
+		//обновляем массив
 		g_board[y][rook_x2] = g_board[y][rook_x1] ;
 		g_board[y][king_x2] = g_board[y][king_x1] ;
-		
-		//убираем старые
 		g_board[y][rook_x1] = 'x';		
 		g_board[y][king_x1] = 'x';	
-		
-					
-		board_func.update_board();
+
 	},
 	
-	receive_move : async function (move_data) {
+	async process_op_move (move_data) {
 		
 		const {x1,y1,x2,y2} = move_data;		
 		
@@ -2145,60 +2384,301 @@ game={
 			}			
 		} catch (e) {}
 		
-		//защита от двойных ходов
-		if (my_turn === true) return
+		//заносим информацию о сделаных ходах (для расчета рокировки)
+		this.move_flags[y1][x1]=1;
 		
 		//воспроизводим уведомление о том что соперник произвел ход
 		sound.play('receive_move');
-
-		//указываем если ладьи или король сделали ход
-		if(x1===0 && y1===0) this.op_moved_flag[0]=1;
-		if(x1===7 && y1===0) this.op_moved_flag[7]=1;
-		if(g_board[y1][x1]==='K' && y1===0) this.op_moved_flag[1]=1;	
-
-		//если это движение пешки через клетку, то фиксируем это, чтобы взять потом на проходе
-		if (g_board[y1][x1] === 'p' && y1 === 1 && y2 === 3)
-			pass_take = x2;
-		else
-			pass_take = -1;
 		
-		//перемещаем мою фигуру и обновляем доску
-		this.checker_is_moving = 1;	
+		this.op_conf_play=true;
+		
+		//запоминаем какая фигура пошла
+		const figure_to_move=g_board[y1][x1];
+		
+		//если это движение пешки через клетку, запоминаем это, чтобы взять потом на проходе если что
+		this.pass_take_flag = -1;
+		if (g_board[y1][x1] === 'p' && y1 === 1 && y2 === 3)
+			this.pass_take_flag = x2;
+		
+		//определяем рокировка ли это
+		const castling=g_board[y1][x1] === 'k' && g_board[y2][x2] === 'r'
 		
 		//если рокировка то рокируем
-		if (g_board[y1][x1] === 'k' && g_board[y2][x2] === 'r')
+		if (castling){
+			
+			//анимационное перемещение
 			await this.make_castling_on_board(move_data);
-		else
-			await this.make_move_on_board(move_data);
-		this.checker_is_moving = 0;
+			
+		} else {
+			
+			//определяем пешку на проходе
+			const pass_taken_pawn_pos_y = this.get_pass_eaten_pawn_y(move_data);
+			
+			//определяем съеденую фигуру
+			const eaten_figure=this.get_eaten_piece(pass_taken_pawn_pos_y,x2,y2);
+			var eaten_figure_s=eaten_figure?.piece;
+			
+			//анимационное перемещение
+			await this.make_move_on_board(move_data,eaten_figure);
+			
+			//перенос фигуры в массиве
+			g_board[y2][x2] = g_board[y1][x1];
+			g_board[y1][x1] = 'x'	
+			
+			//удаления взятой на проходе пешки в массиве
+			if (pass_taken_pawn_pos_y) g_board[pass_taken_pawn_pos_y][x2] = 'x';
+			
+			//если производится бонусная замена пешки в массиве
+			if (move_data.pawn_replace) g_board[y2][x2] = move_data.pawn_replace;	
+									
+		}
+		
+		//обновляем доску
+		board_func.update_board();
 		
 		//проверяем завершение игры
 		const final_state = board_func.check_fin(g_board,'w');	
-		if (final_state === 'checkmate' || final_state === 'stalemate' )
-			return final_state+'_to_player';
 		
-		//проверяем 50 ходов для ничьи		
-		if (my_role === 'master') {
-			
-			const moves_notaken_nopawnmove = Math.floor(this.draw_50/2);			
-			if (moves_notaken_nopawnmove >= 50)
-				return 'draw_50';				
-
-			if (moves_notaken_nopawnmove === 30 || moves_notaken_nopawnmove === 35 || moves_notaken_nopawnmove === 40 || moves_notaken_nopawnmove >= 45)
-				add_message([`Ходов до ничьи: ${50-moves_notaken_nopawnmove}. Если не будет взятий или движения пешек.`,`Moves to a draw: ${50-moves_notaken_nopawnmove}. If there are no takeaways or pawn movements.`][LANG])
-		}
-		
-		//поверяем шах
+		//поверяем если мне объявлен шах
+		this.player_under_check = 0
 		if (final_state === 'check') {
-			add_message(['Шах!','Check!'][LANG]);			
+			message.add(['Шах!','Check!'][LANG]);			
 			this.player_under_check = 1;			
-		} else {
-			this.player_under_check = 0;
 		}
 		
-		my_turn=true;
+		return [final_state+'_to_player',figure_to_move,eaten_figure_s];
+	},
+	
+}
+
+my_player={
+	
+	move_resolver:0,
+	timer:0,
+	prv_time:null,
+	time_for_move:0,
+	conf_play_flag:false,
+	
+	activate_timer(){
+			
+		if(objects.timer.visible===false || opponent!==online_player) return;
+		
+		this.timer_start_time=Date.now();
+		
+		this.timer=setInterval(my_player.time_tick.bind(my_player),1000);	
+		
+		this.conf_play_flag
+			? this.time_for_move=35
+			: this.time_for_move=15
+			
+		objects.timer.text = '0:'+this.time_for_move;
+		objects.timer.x=225;
+		objects.timer.tint=0xffffff;	
+		
+		//это для проврки таймера
+		this.prv_time=null;
+		
 	},
 		
+	async wait_move(){
+				
+		my_turn=true;
+		objects.board.interactive=true;
+
+		this.activate_timer();
+				
+		const response=await new Promise(resolver=>{			
+			this.move_resolver=resolver;			
+		})	
+		
+		objects.board.interactive=false;
+		this.conf_play_flag=true;
+		my_turn=false;
+		clearTimeout(this.timer);	
+		
+		return response;
+	},
+	
+	time_tick(){
+		
+		const cur_time=Date.now();
+		const time_passed=~~((cur_time-this.timer_start_time)*0.001);
+		const time_left=this.time_for_move-time_passed;
+		
+		
+		if(this.prv_time){			
+			const tick_time=cur_time-this.prv_time;
+			console.log('tick_time',tick_time)		
+			if(tick_time>5000){
+				this.move_resolver(['timer_error']);
+				return;
+			}
+		}
+		this.prv_time=cur_time;	
+			
+		
+		
+		if (time_left >= 0) {
+			time_left>9
+				? objects.timer.text = '0:'+time_left
+				: objects.timer.text = '0:0'+time_left
+		}
+		
+		//подсвечиваем красным если осталость мало времени
+		if (time_left === 10) {
+			objects.timer.tint=0xff0000;
+			sound.play('clock');
+		}
+		
+		//если время закончилось
+		if(time_left<=-5){			
+			this.conf_play_flag
+				? this.move_resolver(['my_timeout'])
+				: this.move_resolver(['my_no_sync']);
+		}
+		
+	}
+	
+}
+
+game={
+
+	activate: function(role, op) {
+		
+		my_role=role;
+		opponent = op;
+					
+		//если открыт лидерборд то закрываем его
+		if (objects.lb_1_cont.visible===true) lb.close();		
+		
+		if(op===quiz)
+			this.run_quiz();
+		else
+			this.run_game();
+
+	},
+				
+	async run_game(){
+		
+		let move=0;
+		let players;
+		
+		//выбираем порядок ходов
+		my_role==='master'
+		? players=[my_player,opponent]
+		: players=[opponent,my_player];
+
+		//инициируем доску
+		board.init(my_role);
+
+		let response=''
+		let draw_50=0;
+		
+		//главный цикл игры
+		game_loop:while(true){
+			
+			//считаем ходы без взятия и движения пешек
+			draw_50++;			
+			objects.cur_move_text.text=['Ход: ','Move: '][LANG]+move;
+			//2 хода
+			for (let i=0;i<2;i++){
+				
+				response=await players[i].wait_move();
+				//console.log(response)
+				if(['checkmate_to_player',
+					'checkmate_to_opponent',
+					'stalemate_to_player',
+					'draw',
+					'op_timeout',
+					'op_no_sync',
+					'my_timeout',
+					'timer_error',
+					'my_no_sync',
+					'op_gave_up',
+					'player_gave_up',
+					'stalemate_to_opponent',
+					'stop'].includes(response[0])) break game_loop;	
+
+				//сбрасываем счетчик
+				if(response[1]==='P'||response[1]==='p'||response[2]) draw_50=0;
+					
+				//если кого-то съели то обновляем данную информацию
+				if(response[2]) {				
+					const e=board.eaten_labels[response[2]];
+					e.text=++e.val;				
+				}
+					
+			}			
+			
+			if(draw_50===50){
+				response[0]='draw_50';
+				break game_loop;				
+			}		
+			
+			if([30,35,40,45,46,47,48,49].includes(draw_50))
+				message.add([`Ходов до ничьи: ${50-draw_50}. Если не будет взятий или движения пешек.`,`Moves to a draw: ${50-draw_50}. If there are no takeaways or pawn movements.`][LANG])
+					
+			
+			move++;			
+		}
+		
+		
+		console.log('Вышли из цикла с результатом: ',response)
+		
+		opponent.stop(response[0]);
+		
+	},
+			
+	async run_quiz(){
+
+		let move=0;
+		
+		players=[my_player,opponent];
+		
+		//инициируем доску
+		board.init_quiz();
+		
+		//главный цикл игры
+		game_loop:while(true){
+						
+			//2 хода
+			objects.cur_move_text.text=['Ход: ','Move: '][LANG]+move;
+			
+			for (let i=0;i<2;i++){
+				
+				response=await players[i].wait_move();
+				//console.log(response)
+				if(['checkmate_to_player',
+					'checkmate_to_opponent',
+					'stalemate_to_player',
+					'draw',
+					'op_timeout',
+					'op_no_sync',
+					'my_timeout',
+					'timer_error',
+					'my_no_sync',
+					'op_gave_up',
+					'player_gave_up',
+					'stalemate_to_opponent',
+					'stop'].includes(response[0])) break game_loop;	
+
+			}
+			
+			
+			move++;	
+
+			if(move===quiz.moves_to_mate){
+				response[0]='draw_50';
+				break game_loop;				
+			}	
+			
+		}
+		
+		console.log('Вышли из цикла с результатом: ',response)
+		
+		opponent.stop(response[0]);
+	},		
+			
 	play_finish_sound : function(result) {
 		
 		if (result === LOSE )
@@ -2224,7 +2704,8 @@ game={
 		objects.selected_frame.visible=false;		
 		objects.pawn_replace_dialog.visible=false;		
 		objects.mini_dialog.visible=false;	
-		objects.figures.forEach((c)=>{	c.visible = false});		
+		objects.figures.forEach((c)=>{	c.visible = false});	
+		message.close();
 		
 	},
 		
@@ -2233,10 +2714,8 @@ game={
 		this.clear_elements();
 				
 		opp_data.uid = '';
-		
-		move=0;			
-		
-		show_ad();
+				
+		ad.show();
 		
 		main_menu.activate();
 		
@@ -2455,7 +2934,7 @@ process_new_message=function(msg) {
 	}
 
 	//принимаем также отрицательный ответ от соответствующего соперника
-	if ( pending_player===msg.sender) {
+	if (pending_player===msg.sender) {
 		
 		if (msg.message==="REJECT")
 			cards_menu.rejected_invite('Соперник отказался от игры!');
@@ -2485,28 +2964,27 @@ process_new_message=function(msg) {
 
 			//получение сообщение с сдаче
 			if (msg.message==="GIVEUP" )
-				online_player.stop('opponent_gave_up');
+				online_player.opp_giveup();
 				
 			//запрос на ничью
 			if (msg.message==="DRAWREQ" )
 				mini_dialog.show('draw_request');
 				
-			//согласие на ничью
+			//соперник согласился на ничью
 			if (msg.message==="DRAWOK" )
-				online_player.stop('draw');
-			
-			
-			//согласие на ничью
+				online_player.draw();
+						
+			//у соперника нет времения
 			if (msg.message==="TIME" )
-				online_player.stop('opp_timeout');
+				online_player.resolver(['op_timeout']);
 				
 			//отказ от ничьи
 			if (msg.message==="DRAWNO" )
-				add_message(['Соперник отказался от ничьи','The opponent refused to draw'][LANG]);
+				message.add(['Соперник отказался от ничьи','The opponent refused to draw'][LANG]);
 				
 			//получение сообщение с ходом игорка
 			if (msg.message==="MOVE")
-				online_player.receive_move(msg.data);
+				online_player.move_resolver(msg.data);
 		}
 	}
 
@@ -2613,7 +3091,7 @@ req_dialog = {
 			return;				
 		}
 	
-		add_message(['Приглашения отключены','Invitations are disabled'][LANG]);
+		message.add(['Приглашения отключены','Invitations are disabled'][LANG]);
 		no_invite = true;
 		
 		sound.play('click');
@@ -2667,31 +3145,83 @@ req_dialog = {
 
 }
 
-show_ad=function(){
+ad = {
+	
+	prv_show : -9999,
+	
+	show : function() {
 		
-	if (game_platform==="YANDEX") {			
-		//показываем рекламу
-		window.ysdk.adv.showFullscreenAdv({
-		  callbacks: {
-			onClose: function() {}, 
-			onError: function() {}
-					}
-		})
-	}
-	
-	if (game_platform==="VK") {
-				 
-		vkBridge.send("VKWebAppShowNativeAds", {ad_format:"interstitial"})
-		.then(data => console.log(data.result))
-		.catch(error => console.log(error));	
-	}	
-	
-	if (game_platform==='GOOGLE_PLAY') {
-		if (typeof Android !== 'undefined') {
-			Android.showAdFromJs();
+		if ((Date.now() - this.prv_show) < 90000 )
+			return false;
+		this.prv_show = Date.now();		
+		
+		if (game_platform==="YANDEX") {			
+			//показываем рекламу
+			window.ysdk.adv.showFullscreenAdv({
+			  callbacks: {
+				onClose: function() {}, 
+				onError: function() {}
+						}
+			})
+		}
+		
+		if (game_platform==="VK") {
+					 
+			vkBridge.send("VKWebAppShowNativeAds", {ad_format:"interstitial"})
+			.then(data => console.log(data.result))
+			.catch(error => console.log(error));	
+		}		
+
+		if (game_platform==="MY_GAMES") {
+					 
+			my_games_api.showAds({interstitial:true});
 		}			
-	}
+		
+		if (game_platform==='GOOGLE_PLAY') {
+			if (typeof Android !== 'undefined') {
+				Android.showAdFromJs();
+			}			
+		}
+		
+		
+	},
 	
+	show2 : async function() {
+		
+		
+		if (game_platform ==="YANDEX") {
+			
+			let res = await new Promise(function(resolve, reject){				
+				window.ysdk.adv.showRewardedVideo({
+						callbacks: {
+						  onOpen: () => {},
+						  onRewarded: () => {resolve('ok')},
+						  onClose: () => {resolve('err')}, 
+						  onError: (e) => {resolve('err')}
+					}
+				})
+			
+			})
+			return res;
+		}
+		
+		if (game_platform === "VK") {	
+
+			let res = '';
+			try {
+				res = await vkBridge.send("VKWebAppShowNativeAds", { ad_format: "reward" })
+			}
+			catch(error) {
+				res ='err';
+			}
+			
+			return res;				
+			
+		}	
+		
+		return 'err';
+		
+	}
 }
 
 social_dialog = {
@@ -2813,7 +3343,21 @@ main_menu= {
 		anim2.add(objects.rules_cont,{y:[objects.rules_cont.y, -450]},false,0.4,'easeInBack');
 	},		
 
+	quiz_button_down(){
+		
+		if(anim2.any_on()===true){
+			sound.play('locked');
+			return;
+		}
+		
+		sound.play('click2');
+		this.close();
+		quiz.activate();
+		
+	},
+
 	mk_button_down: async function(){
+		
 		if(anim2.any_on()===true){
 			sound.play('locked');
 			return;
@@ -3792,7 +4336,7 @@ stickers={
 		this.hide_panel();
 
 		firebase.database().ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"MSG",tm:Date.now(),data:id});
-		add_message(['Стикер отправлен сопернику','The sticker was sent to the opponent'][LANG]);
+		message.add(['Стикер отправлен сопернику','The sticker was sent to the opponent'][LANG]);
 		
 
 		//показываем какой стикер мы отправили
@@ -4153,6 +4697,7 @@ async function load_resources() {
 	game_res.add('eaten',git_src+'sounds/eaten.mp3');
 	game_res.add('win',git_src+'sounds/win.mp3');
 	game_res.add('click',git_src+'sounds/click.mp3');
+	game_res.add('click2',git_src+'sounds/click2.mp3');
 	game_res.add('mini_dialog',git_src+'sounds/mini_dialog.mp3');
 	game_res.add('pawn_replace_dialog',git_src+'sounds/pawn_replace_dialog.mp3');
 	game_res.add('pawn_replace',git_src+'sounds/pawn_replace.mp3');
@@ -4393,6 +4938,7 @@ async function init_game_env(lang) {
 	my_data.games = (other_data && other_data.games) || 0;
 	my_data.mk_level=(other_data && other_data.mk_level) || 14;
 	my_data.mk_sback_num=(other_data && other_data.mk_sback_num) || 0;
+	my_data.quiz_level=(other_data && other_data.quiz_level) || 0;
 
 	//номер комнаты
 	if (my_data.rating > 0 && my_data.rating < 1400)
@@ -4404,7 +4950,7 @@ async function init_game_env(lang) {
 	if (my_data.rating >= 1595)
 		room_name= 'states4';			
 
-	//room_name= 'states4';	
+	//room_name= 'states5';	
 	//устанавливаем рейтинг в попап
 	objects.id_rating.text=objects.my_card_rating.text=my_data.rating;
 

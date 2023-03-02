@@ -1323,7 +1323,7 @@ quiz={
 		objects.quiz_title0.text=['Задача №','Problem №'][LANG]+(my_data.quiz_level+1);
 		objects.quiz_title1.text=`**Мат за ${q[2]} хода**`;
 		objects.quiz_title2.text=q[1];
-		objects.quiz_title3.text=['Количество игроков решивших данную проблему:\n','The number of players who solved this problem:\n'][LANG]+(pc||0);
+		objects.quiz_title3.text=['Количество игроков решивших данную задачу:\n','The number of players who solved this problem:\n'][LANG]+(pc||0);
 		anim2.add(objects.quiz_title_cont,{alpha:[0,1]},true,2,'linear');
 		
 		game.activate('master',quiz)

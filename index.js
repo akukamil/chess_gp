@@ -1330,7 +1330,7 @@ quiz={
 		
 	},
 	
-	update_quiz_stat(quiz_id){
+	async update_quiz_stat(quiz_id){
 		
 		//смотрим сколько людей решили
 		let pc=await firebase.database().ref("quizes/"+quiz_id ).once('value'); 

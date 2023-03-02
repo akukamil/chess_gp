@@ -1307,7 +1307,7 @@ quiz={
 		
 		//смотрим сколько людей решили
 		let pc=await firebase.database().ref("quizes/"+my_data.quiz_level ).once('value'); 
-		pc=pc.val()||0;
+		pc=pc.val();
 						
 		//новая игра стокфиша
 		sf.new_game(10,7);	
@@ -1323,11 +1323,21 @@ quiz={
 		objects.quiz_title0.text=['Задача №','Problem №'][LANG]+(my_data.quiz_level+1);
 		objects.quiz_title1.text=`**Мат за ${q[2]} хода**`;
 		objects.quiz_title2.text=q[1];
-		objects.quiz_title3.text=['Количество игроков решивших данную проблему:\n','The number of players who solved this problem:\n'][LANG]+pc;
+		objects.quiz_title3.text=['Количество игроков решивших данную проблему:\n','The number of players who solved this problem:\n'][LANG]+(pc||0);
 		anim2.add(objects.quiz_title_cont,{alpha:[0,1]},true,2,'linear');
 		
 		game.activate('master',quiz)
 		
+	},
+	
+	update_quiz_stat(quiz_id){
+		
+		//смотрим сколько людей решили
+		let pc=await firebase.database().ref("quizes/"+quiz_id ).once('value'); 
+		pc=pc.val();
+		
+		if (pc!==null && pc!==undefined)
+			firebase.database().ref("quizes/"+quiz_id ).set(pc+1); 
 	},
 	
 	exit_down(){
@@ -1387,6 +1397,10 @@ quiz={
 		
 		
 		if (final_state === 'checkmate_to_opponent'){
+			
+			
+			//обновляем количество выигравших игроков
+			this.update_quiz_stat(my_data.quiz_level);
 			
 			sound.play('win');
 			t = [['Задача решена!','The problem is solved'],999]		
@@ -3344,6 +3358,7 @@ main_menu= {
 	},		
 
 	quiz_button_down(){
+		
 		
 		if(anim2.any_on()===true){
 			sound.play('locked');

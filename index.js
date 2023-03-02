@@ -2522,7 +2522,6 @@ my_player={
 		
 		if(this.prv_time){			
 			const tick_time=cur_time-this.prv_time;
-			console.log('tick_time',tick_time)		
 			if(tick_time>5000){
 				this.move_resolver(['timer_error']);
 				return;
@@ -4979,7 +4978,7 @@ async function init_game_env(lang) {
 	firebase.database().ref("inbox/"+my_data.uid).on('value', (snapshot) => { process_new_message(snapshot.val());});
 
 	//обновляем данные в файербейс так как могли поменяться имя или фото
-	firebase.database().ref("players/"+my_data.uid).set({name:my_data.name, pic_url: my_data.pic_url, rating : my_data.rating,quiz_level : my_data.quiz_level, games : my_data.games, games : my_data.games, mk_level : my_data.mk_level,mk_sback_num:my_data.mk_sback_num, tm:firebase.database.ServerValue.TIMESTAMP});
+	firebase.database().ref("players/"+my_data.uid).set({name:my_data.name, pic_url: my_data.pic_url, rating : my_data.rating, quiz_level : my_data.quiz_level, games : my_data.games, games : my_data.games, mk_level : my_data.mk_level,mk_sback_num:my_data.mk_sback_num, tm:firebase.database.ServerValue.TIMESTAMP});
 
 	//устанавливаем мой статус в онлайн
 	set_state({state : 'o'});

@@ -2061,7 +2061,7 @@ board={
 		}				
 		
 		//если нет шаха
-		const c6 = this.player_under_check === 0;		
+		const c6 = this.player_under_check === false;		
 		if (c6 === false) {
 			message.add(['Рокировка невозможна. Вам Шах.','Castling is impossible. Check!'][LANG]);	
 			return 'player_under_check';
@@ -2454,10 +2454,10 @@ board={
 		const final_state = board_func.check_fin(g_board,'w');	
 		
 		//поверяем если мне объявлен шах
-		this.player_under_check = 0
+		this.player_under_check = false
 		if (final_state === 'check') {
 			message.add(['Шах!','Check!'][LANG]);			
-			this.player_under_check = 1;			
+			this.player_under_check = true;			
 		}
 		
 		return [final_state+'_to_player',figure_to_move,eaten_figure_s];

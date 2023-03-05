@@ -1399,8 +1399,7 @@ quiz={
 		if (final_state === 'checkmate_to_opponent'){
 			
 			
-			//обновляем количество выигравших игроков
-			this.update_quiz_stat(my_data.quiz_level);
+
 			
 			sound.play('win');
 			t = [['Задача решена!','The problem is solved'],999]		
@@ -1410,6 +1409,11 @@ quiz={
 			if(my_data.quiz_level===this.quiz_data.length) {
 				my_data.quiz_level=this.quiz_data.length-1;
 				message.add(['Это последняя задача, но скоро будут новые...','This is the last task, but there will be new ones soon...'][LANG])		
+			}else{
+				
+				//обновляем количество выигравших игроков
+				this.update_quiz_stat(my_data.quiz_level);				
+				
 			}
 			firebase.database().ref("players/"+my_data.uid+"/quiz_level").set(my_data.quiz_level);
 			

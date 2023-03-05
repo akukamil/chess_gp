@@ -1321,7 +1321,7 @@ quiz={
 		
 		this.moves_to_mate=q[2];
 		objects.quiz_title0.text=['Задача №','Problem №'][LANG]+(my_data.quiz_level+1);
-		objects.quiz_title1.text=`**Мат за ${q[2]} хода**`;
+		objects.quiz_title1.text=[`**Мат за ${q[2]} хода**`,`**Mate in ${q[2]} moves**`][LANG];
 		objects.quiz_title2.text=q[1];
 		objects.quiz_title3.text=['Количество игроков решивших данную задачу:\n','The number of players who solved this problem:\n'][LANG]+(pc||0);
 		anim2.add(objects.quiz_title_cont,{alpha:[0,1]},true,2,'linear');
@@ -4821,7 +4821,7 @@ async function define_platform_and_language() {
 	if (s.includes('192.168')) {
 			
 		game_platform = 'DEBUG';	
-		LANG = 0;
+		LANG = 1;
 		return;	
 	}	
 	

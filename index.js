@@ -1397,12 +1397,11 @@ quiz={
 		
 		
 		if (final_state === 'checkmate_to_opponent'){
-			
-			
+						
 			//омечаем что эта задача решена
 			if(my_data.quiz_level>=this.quiz_data.length-1){
 				
-				message.add(['Это последняя задача, но скоро будут новые...','This is the last task, but there will be new ones soon...'][LANG])		
+				message.add(['Это последняя задача, но скоро будут новые...','This is the last problem, but there will be new ones soon...'][LANG])		
 				
 			}else{
 				

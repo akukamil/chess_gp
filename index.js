@@ -4954,13 +4954,13 @@ async function init_game_env(lang) {
 	my_data.quiz_level=(other_data && other_data.quiz_level) || 0;
 
 	//номер комнаты
-	if (my_data.rating > 0 && my_data.rating < 1400)
+	if (my_data.rating > 0 && my_data.rating < 1410)
 		room_name = 'states'		
-	if (my_data.rating >= 1400 && my_data.rating < 1463)
+	if (my_data.rating >= 1410 && my_data.rating < 1473)
 		room_name = 'states2'		
-	if (my_data.rating >= 1463 && my_data.rating < 1595)
+	if (my_data.rating >= 1473 && my_data.rating < 1605)
 		room_name = 'states3'		
-	if (my_data.rating >= 1595)
+	if (my_data.rating >= 1605)
 		room_name= 'states4';			
 
 	//room_name= 'states5';	

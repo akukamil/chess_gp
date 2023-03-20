@@ -1276,7 +1276,7 @@ quiz={
 	['2k5/5R2/8/2K5/8/8/8/2B5','Kakabadze, Ferad\nTroll\n29 Aug 2001 (551)',3],
 	['8/8/8/8/6K1/8/5P1Q/5k2','Erdenbrecher, Hans Michael\nDie Schwalbe\nFeb 1971 (321)',3],
 	['1K6/4kP2/2Q5/8/8/8/8/8','Демидюк, Степан Иосифович\nTT Apprenti Sorcier\n1993',3],
-	['k1n5/2QK4/8/8/8/8/8/8','Богданов, Євгений Михайлович\nMat-64Comm.Mat-64\n2000 (81)',3],
+	['k1n5/2QK4/8/8/8/8/8/8','Богданов, Евгений Михайлович\nMat-64Comm.Mat-64\n2000 (81)',3],
 	['8/1Q6/2p5/4K3/8/k7/8/8','Havel, Miroslav\nSachove umeni\n20 Sep 1951',3],
 	['8/8/8/8/p7/3N4/2K5/k7','Kollarik, Gorazd\nHlas Iudu\n13 Mar 1975 (459)',3],
 	['5B1k/8/6K1/8/8/7N/8/8','Majoros, Bela\nSakkelet\n1994 (5-6/5971)',3],
@@ -1294,7 +1294,24 @@ quiz={
 	['Q7/1B6/1k6/3K4/8/8/1p6/8','Пипа, Володимир Иосифович\nШах-ВВ (Боровичи)\n1991',4],
 	['8/8/8/8/8/3p2K1/3N4/4N2k','Brieger, Robert Sinclair\nThe Joy of Mate\n1985 (33)',4],
 	['k1K5/4R3/4P3/P7/8/8/8/8','Speckmann, Werner\nstella polaris\nMar 1966 (123)',4],
-	['8/B7/8/3K1k2/8/5NR1/8/8','Makaronez, Leonid\nThe Problemist Supplement\nJul 2006 (83/1817)',4]
+	['8/B7/8/3K1k2/8/5NR1/8/8','Makaronez, Leonid\nThe Problemist Supplement\nJul 2006 (83/1817)',4],  //5 фигур	
+	['N7/5k2/N6Q/6p1/8/6K1/8/8','Havel, Miroslav\nParallele 50, 3 Jul 1952',4],//6фигур
+	['3Q4/8/8/2p5/2p5/3B1K2/3k4/8','Carpenter, George Edward\nSchachminiaturen, 1902',4],
+	['r3k3/5R1K/8/8/1n6/8/8/6R1','Poisson, Olivier\ndiagrammes, Sep 1981 (53/1169)',4],
+	['6K1/7P/7P/1R6/8/8/kP6/8','Makaronez, Leonid\nProblemas, Jul 1994 (7/1112)',4],
+	['8/8/8/8/7R/1P1kp3/7R/1K6','Богданов, Е.М.\nMat-64, Mar 2000 (45)',4],
+	['4Q3/8/8/3k4/3p4/3P4/3B4/K7','Кожакин, Владимир Владимирович\nMat-64, 2001 (259)',4],
+	['8/8/8/8/3NK3/4N3/8/2B1k2B','Clavero, P.\nEurope Echecs, Apr 1990 (376/10)',4],
+	['7k/5p2/8/5BR1/5K2/6B1/8/8','Кардымон, Геннадий П.\nКудесник, 1992',4],
+	['8/3k4/1BN2PB1/1K6/8/8/8/8','Pajor, Andras\nMagyar Sakkelet, 1989 (3/5347)',4],
+	['2B5/8/1B1k1N2/8/3NK3/8/8/8','Majoros, Bela\nSakkelet, 1995 (4/6075)',4],
+	['8/8/6B1/6B1/6kp/7N/6K1/8','Barna, Laszlo\nSakkelet, 1997 (9-10/6358)',4],
+	['7K/3B4/8/8/1Bk5/4R3/2N5/8','Кожакин, Владимир Владимирович\nSakkelet, 1999 (1-2/6517)',4],
+	['8/1K6/8/B1k2N2/2B5/4N3/8/8','Shahaf, Noam\nProblemas, Mar 2000 (27/1615)',4],
+	['7R/8/3K4/8/3k4/3P3p/1R6/8','Богданов, Евгений Михайлович\nTroll, 2000',4],
+	['1R6/3N4/2N1k3/8/4K3/8/8/B7','Иванов, Валерий Алексеевич\nЗадачи и этюды, Apr 2006 (38/2478)',4],
+	['8/3N4/K7/8/4k1N1/b1Q5/8/8','Навроцкий, Игорь\nШаховий Леополіс, 2006 (7)',4]
+	
 	
 	],
 		

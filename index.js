@@ -3565,6 +3565,7 @@ cards_menu={
 
 	_opp_data : {},
 	uid_pic_url_cache : {},
+	room_name_num:'',
 	
 	cards_pos: [
 				[0,0],[0,90],[0,180],[0,270],
@@ -3601,6 +3602,9 @@ cards_menu={
 		//теперь уже можно приглашать
 		no_invite=false;
 		set_state({state : 'o'});
+		
+		//нормальное название комнаты
+		this.room_name_num={'states':1,'states2':2,'states3':3,'states4':4,'states4':5}[room_name];
 		
 		//подписываемся на изменения состояний пользователей
 		firebase.database().ref(room_name).on('value', (snapshot) => {cards_menu.players_list_updated(snapshot.val());});
@@ -3683,7 +3687,8 @@ cards_menu={
 		for (let uid in players)
 			if (players[uid].hidden===0)
 				num++
-		objects.players_online.text=['Игроков онлайн: ','Players online: '][LANG] + num + ['   ( комната: ','   ( room: '][LANG] +room_name +' )';
+
+		objects.players_online.text=['Игроков онлайн: ','Players online: '][LANG] + num + ['     ( комната #','     ( room #'][LANG] + this.room_name_num +' )';
 		
 		
 		//считаем сколько одиночных игроков и сколько столов

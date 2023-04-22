@@ -1091,7 +1091,7 @@ online_player={
 		this.timer=setInterval(online_player.time_tick.bind(online_player),1000);
 		
 		this.conf_play_flag
-			? this.time_for_move=35
+			? this.time_for_move=45
 			: this.time_for_move=15
 			
 		objects.timer.text = '0:'+this.time_for_move;
@@ -2497,7 +2497,7 @@ my_player={
 		this.timer=setInterval(my_player.time_tick.bind(my_player),1000);	
 		
 		this.conf_play_flag
-			? this.time_for_move=35
+			? this.time_for_move=45
 			: this.time_for_move=15
 			
 		objects.timer.text = '0:'+this.time_for_move;

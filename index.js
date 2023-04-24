@@ -3604,7 +3604,7 @@ cards_menu={
 		set_state({state : 'o'});
 		
 		//нормальное название комнаты
-		this.room_name_num={'states':1,'states2':2,'states3':3,'states4':4,'states4':5}[room_name];
+		this.room_name_num={'states':1,'states2':2,'states3':3,'states4':4,'states5':5}[room_name];
 		
 		//подписываемся на изменения состояний пользователей
 		firebase.database().ref(room_name).on('value', (snapshot) => {cards_menu.players_list_updated(snapshot.val());});

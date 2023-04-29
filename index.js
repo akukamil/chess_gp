@@ -4979,9 +4979,9 @@ async function init_game_env(lang) {
 		room_name = 'states'		
 	if (my_data.rating >= 1410 && my_data.rating < 1473)
 		room_name = 'states2'		
-	if (my_data.rating >= 1473 && my_data.rating < 1605)
+	if (my_data.rating >= 1473 && my_data.rating < 1700)
 		room_name = 'states3'		
-	if (my_data.rating >= 1605)
+	if (my_data.rating >= 1700)
 		room_name= 'states4';			
 
 	//room_name= 'states5';	

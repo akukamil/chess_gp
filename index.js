@@ -576,6 +576,14 @@ board_func={
 		
 	},
 
+	get_str(brd){		
+		let str = "";
+		for (var y = 0; y < 8; y++)	
+			for (var x = 0; x < 8; x++)
+				str+=brd[y][x];
+		return str;
+	},
+
 	fen_to_board(fen){
 		
 		const rows = fen.split(' ')[0].split('/');
@@ -992,6 +1000,10 @@ online_player={
 
 		//отправляем ход сопернику
 		firebase.database().ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"MOVE",tm:Date.now(),data:move_data});
+		
+		//также фиксируем данные стола
+		firebase.database().ref('tables/'+game_id+'/board').set({uid:my_data.uid,f_str:board_func.get_str(g_board),tm:firebase.database.ServerValue.TIMESTAMP});
+		
 	},
 	
 	calc_new_rating : function (old_rating, game_result) {
@@ -2754,6 +2766,55 @@ game={
 
 }
 
+var game_watching={
+	
+	game_id:0,
+	field:{},
+	on:false,
+	anchor_uid:'',
+	
+	activate(card_data){
+		
+		this.on=true;
+		
+		this.game_id=card_data.game_id;
+		
+
+		
+		firebase.database().ref("tables/"+this.game_id).on('value',(snapshot) => {
+			game_watching.new_move(snapshot.val());
+		})
+		
+	},
+
+	get_inverted_board(board){
+		
+		
+	},
+	
+	stop_and_return(){
+		this.close();
+		cards_menu.activate();		
+	},
+	
+	async new_move(data){
+		
+		if(data===null || data===undefined)
+			return;
+		
+		//обновляем доску
+		console.log(data);
+		
+	},
+	
+	close(){
+		
+		this.on=false;
+
+	}
+	
+}
+
 feedback = {
 		
 	rus_keys : [[50,176,80,215.07,'1'],[90,176,120,215.07,'2'],[130,176,160,215.07,'3'],[170,176,200,215.07,'4'],[210,176,240,215.07,'5'],[250,176,280,215.07,'6'],[290,176,320,215.07,'7'],[330,176,360,215.07,'8'],[370,176,400,215.07,'9'],[410,176,440,215.07,'0'],[491,176,541,215.07,'<'],[70,224.9,100,263.97,'Й'],[110,224.9,140,263.97,'Ц'],[150,224.9,180,263.97,'У'],[190,224.9,220,263.97,'К'],[230,224.9,260,263.97,'Е'],[270,224.9,300,263.97,'Н'],[310,224.9,340,263.97,'Г'],[350,224.9,380,263.97,'Ш'],[390,224.9,420,263.97,'Щ'],[430,224.9,460,263.97,'З'],[470,224.9,500,263.97,'Х'],[510,224.9,540,263.97,'Ъ'],[90,273.7,120,312.77,'Ф'],[130,273.7,160,312.77,'Ы'],[170,273.7,200,312.77,'В'],[210,273.7,240,312.77,'А'],[250,273.7,280,312.77,'П'],[290,273.7,320,312.77,'Р'],[330,273.7,360,312.77,'О'],[370,273.7,400,312.77,'Л'],[410,273.7,440,312.77,'Д'],[450,273.7,480,312.77,'Ж'],[490,273.7,520,312.77,'Э'],[70,322.6,100,361.67,'!'],[110,322.6,140,361.67,'Я'],[150,322.6,180,361.67,'Ч'],[190,322.6,220,361.67,'С'],[230,322.6,260,361.67,'М'],[270,322.6,300,361.67,'И'],[310,322.6,340,361.67,'Т'],[350,322.6,380,361.67,'Ь'],[390,322.6,420,361.67,'Б'],[430,322.6,460,361.67,'Ю'],[511,322.6,541,361.67,')'],[451,176,481,215.07,'?'],[30,371.4,180,410.47,'ЗАКРЫТЬ'],[190,371.4,420,410.47,'_'],[430,371.4,570,410.47,'ОТПРАВИТЬ'],[531,273.7,561,312.77,','],[471,322.6,501,361.67,'('],[30,273.7,80,312.77,'EN']],	
@@ -3148,7 +3209,7 @@ req_dialog = {
 		anim2.add(objects.req_cont,{y:[objects.req_cont.y, -260]},false,0.4,'easeInBack');
 
 		//отправляем информацию о согласии играть с идентификатором игры
-		game_id=~~(Math.random()*599);
+		game_id=~~(Math.random()*99999);
 		firebase.database().ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"ACCEPT",tm:Date.now(),game_id:game_id});
 
 		//заполняем карточку оппонента
@@ -3780,7 +3841,9 @@ cards_menu={
 			
 			let r1= players[uid].rating
 			let r2= players[tables[uid]].rating
-			this.place_table({uid1:uid,uid2:tables[uid],name1: n1, name2: n2, rating1: r1, rating2: r2});
+			
+			const game_id=players[uid].game_id;
+			this.place_table({uid1:uid,uid2:tables[uid],name1: n1, name2: n2, rating1: r1, rating2: r2, game_id:game_id});
 		}
 		
 	},
@@ -3807,9 +3870,9 @@ cards_menu={
 		}
 	},
 
-	place_table : function (params={uid1:0,uid2:0,name1: "XXX",name2: "XXX", rating1: 1400, rating2: 1400}) {
+	place_table : function (params={uid1:0,uid2:0,name1: "XXX",name2: "XXX", rating1: 1400, rating2: 1400, game_id: 0}) {
 				
-		for(let i=1;i<15;i++) {
+		for(let i=0;i<15;i++) {
 
 			//это если есть вакантная карточка
 			if (objects.mini_cards[i].visible===false) {
@@ -3855,6 +3918,7 @@ cards_menu={
 
 
 				objects.mini_cards[i].visible=true;
+				objects.mini_cards[i].game_id=params.game_id;
 
 
 				break;
@@ -4017,6 +4081,7 @@ cards_menu={
 		
 		anim2.add(objects.td_cont,{y:[-150,objects.td_cont.sy]},true,0.4,'easeOutBack');
 
+		objects.td_cont.card=objects.mini_cards[card_id];
 		
 		objects.td_avatar1.texture = objects.mini_cards[card_id].avatar1.texture;
 		objects.td_avatar2.texture = objects.mini_cards[card_id].avatar2.texture;
@@ -4113,6 +4178,15 @@ cards_menu={
 		make_text(objects.invite_name,cards_menu._opp_data.name,230);
 		objects.invite_rating.text=objects.mini_cards[cart_id].rating_text.text;
 
+	},
+
+	peek_down(){
+		
+		//активируем просмотр игры
+		game_watching.activate(objects.td_cont.card);
+		
+		this.close();
+		
 	},
 
 	show_feedbacks: async function(uid) {
@@ -4304,6 +4378,10 @@ cards_menu={
 
 		cards_menu.close();
 		online_player.activate("master");
+		
+		//обновляем стол
+		firebase.database().ref('tables/'+game_id+'/master').set(my_data.uid);
+		firebase.database().ref('tables/'+game_id+'/slave').set(opp_data.uid);
 	},
 
 	back_button_down: function() {
@@ -4696,7 +4774,7 @@ set_state=function(params) {
 		small_opp_id=opp_data.uid.substring(0,10);
 
 	if(no_invite===false || state==='p')
-		firebase.database().ref(room_name + "/" + my_data.uid).set({state:state, name:my_data.name, rating : my_data.rating, hidden:h_state, opp_id : small_opp_id});
+		firebase.database().ref(room_name + "/" + my_data.uid).set({state:state, name:my_data.name, rating : my_data.rating, hidden:h_state, opp_id : small_opp_id, game_id:game_id});
 
 }
 

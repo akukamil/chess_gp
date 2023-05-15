@@ -1,6 +1,6 @@
 var M_WIDTH=800, M_HEIGHT=450;
 var app, game_res, game, objects={}, state="",my_role="", game_tick=0, my_turn=false, room_name = '', move=0, game_id=0, connected = 1, LANG = 0,git_src;
-var any_dialog_active=0, some_process = {}, h_state=0, game_platform="", hidden_state_start = 0;
+var some_process = {}, h_state=0, game_platform="", hidden_state_start = 0;
 var WIN = 1, DRAW = 0, LOSE = -1, NOSYNC = 2,no_invite=false;
 g_board=[];
 var pending_player="", opponent=null;
@@ -1001,7 +1001,6 @@ mini_dialog={
 	close : function() {
 		
 		anim2.add(objects.mini_dialog,{y:[objects.mini_dialog.y,450]}, false, 0.3,'linear');
-		//any_dialog_active--;
 		
 	}
 	
@@ -2931,6 +2930,7 @@ game_watching={
 	
 	back_button_down(){
 		
+		sound.play('click');
 		this.close();
 		main_menu.activate();
 		
@@ -3334,8 +3334,6 @@ req_dialog = {
 			return;			
 		}
 
-
-		any_dialog_active=0;
 		
 		//устанавливаем окончательные данные оппонента
 		opp_data=req_dialog._opp_data;
@@ -3639,7 +3637,7 @@ lb={
 
 	back_button_down: function() {
 
-		if (any_dialog_active===1 || objects.lb_1_cont.ready===false) {
+		if (anim2.any_on()) {
 			sound.play('locked');
 			return
 		};
@@ -3739,7 +3737,7 @@ pawn_replace_dialog = {
 		
 		let s = objects.pawn_replace_dialog;
 		await anim2.add(s,{y:[s.y,-300]}, false, 0.25,'easeInBack');
-		any_dialog_active = 0;			
+	
 	}, 
 	
 	down : function (figure) {
@@ -4234,8 +4232,6 @@ cards_menu={
 		if (objects.td_cont.ready === false)
 			return;
 		
-		any_dialog_active--;	
-		
 		sound.play('close');
 		
 		anim2.add(objects.td_cont,{y:[objects.td_cont.y,400]},false,0.4,'easeInBack');
@@ -4544,11 +4540,10 @@ stickers={
 	show_panel: function() {
 
 
-		if (any_dialog_active===1) {
+		if (anim2.any_on()) {
 			sound.play('locked');
 			return
 		};
-		any_dialog_active=1;
 
 		if (objects.stickers_cont.ready===false)
 			return;
@@ -4569,8 +4564,6 @@ stickers={
 
 		if (objects.stickers_cont.ready===false)
 			return;
-
-		any_dialog_active=0;
 
 		//убираем панель стикеров
 		anim2.add(objects.stickers_cont,{y:[objects.stickers_cont.y,450]},false,0.4,'easeOutBack');

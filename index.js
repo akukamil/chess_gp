@@ -2938,6 +2938,10 @@ game_watching={
 	
 	close(){
 		
+		//восстанавливаем мое имя так как оно могло меняться
+		make_text(objects.my_card_name,my_data.name,150);
+		objects.my_card_rating.text = my_data.rating;
+				
 		objects.gw_back_button.visible=false;
 		objects.board.visible=false;
 		objects.my_card_cont.visible = false;	

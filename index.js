@@ -2815,6 +2815,11 @@ game_watching={
 		
 		this.game_id=card_data.game_id;
 		
+		//определяем цвет фигур
+		board.my_color='w';
+		board.op_color='b';
+		
+		
 		objects.gw_back_button.visible=true;
 		objects.my_card_cont.visible = true;	
 		objects.opp_card_cont.visible = true;	

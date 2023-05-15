@@ -508,7 +508,7 @@ board_func={
 	moves: [],
 	move_end_callback: function(){},
 
-	update_board: function() {
+	update_board(){
 
 		//сначала скрываем все шашки
 		objects.figures.forEach((c)=>{	c.visible=false});
@@ -540,7 +540,27 @@ board_func={
 
 	},
 	
-	get_fen : function(brd) {
+	rotate_board(brd){		
+	
+		const new_board=JSON.parse(JSON.stringify(brd));
+		for (x=0;x<8;x++){
+			for(y=0;y<8;y++){				
+				let figure=new_board[7-y][7-x];
+				if(figure!=='x'){
+					
+					if (figure===figure.toUpperCase())
+						figure=figure.toLowerCase();
+					else
+						figure=figure.toUpperCase();
+				}				
+				brd[y][x]=figure;						
+			}
+		}
+
+		
+	},
+	
+	get_fen(brd) {
 		
 		let fen = "";
 		
@@ -576,14 +596,25 @@ board_func={
 		
 	},
 
-	get_str(brd){		
+	brd_to_str(brd){		
 		let str = "";
 		for (var y = 0; y < 8; y++)	
 			for (var x = 0; x < 8; x++)
 				str+=brd[y][x];
 		return str;
 	},
-
+	
+	str_to_brd(str){	
+	
+		let brd = [['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','','']];
+		
+		let i=0;
+		for (var y = 0; y < 8; y++)	
+			for (var x = 0; x < 8; x++)
+				brd[y][x]=str[i++];
+		return brd;
+	},
+	
 	fen_to_board(fen){
 		
 		const rows = fen.split(' ')[0].split('/');
@@ -872,6 +903,7 @@ board_func={
 			return 'check';
 		return '';
 	}
+
 }
 
 make_text = function (obj, text, max_width) {
@@ -1002,7 +1034,7 @@ online_player={
 		firebase.database().ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"MOVE",tm:Date.now(),data:move_data});
 		
 		//также фиксируем данные стола
-		firebase.database().ref('tables/'+game_id+'/board').set({uid:my_data.uid,f_str:board_func.get_str(g_board),tm:firebase.database.ServerValue.TIMESTAMP});
+		firebase.database().ref('tables/'+game_id+'/board').set({uid:my_data.uid,f_str:board_func.brd_to_str(g_board),tm:firebase.database.ServerValue.TIMESTAMP});
 		
 	},
 	
@@ -1193,6 +1225,9 @@ online_player={
 		let old_rating = my_data.rating;
 		my_data.rating = this.calc_new_rating (my_data.rating, res_info[1]);
 		firebase.database().ref("players/"+my_data.uid+"/rating").set(my_data.rating);
+
+		//также фиксируем данные стола
+		firebase.database().ref("tables/"+game_id+'/board').set('fin');
 
 		//обновляем даные на карточке
 		objects.my_card_rating.text=my_data.rating;
@@ -2591,6 +2626,9 @@ game={
 		//если открыт лидерборд то закрываем его
 		if (objects.lb_1_cont.visible===true) lb.close();		
 		
+		//закрываем просмотр игры если он открыт
+		if (game_watching.on) game_watching.close();	
+		
 		if(op===quiz)
 			this.run_quiz();
 		else
@@ -2766,29 +2804,63 @@ game={
 
 }
 
-var game_watching={
+game_watching={
 	
 	game_id:0,
-	field:{},
 	on:false,
-	anchor_uid:'',
-	
-	activate(card_data){
+	master_uid:'',
+	slave_uid:'',
+	async activate(card_data){
 		
 		this.on=true;
 		
 		this.game_id=card_data.game_id;
 		
-
+		objects.gw_back_button.visible=true;
+		objects.my_card_cont.visible = true;	
+		objects.opp_card_cont.visible = true;	
+		objects.board.visible=true;
+		objects.board.interactive=false;
 		
-		firebase.database().ref("tables/"+this.game_id).on('value',(snapshot) => {
+		//аватарки		
+		objects.my_avatar.texture=card_data.avatar2.texture;
+		objects.opp_avatar.texture=card_data.avatar1.texture;
+		
+		//имена
+		make_text(objects.my_card_name,card_data.name2,150);
+		make_text(objects.opp_card_name,card_data.name1,150);
+		
+		//рейтинги
+		objects.my_card_rating.text=card_data.rating_text2.text;
+		objects.opp_card_rating.text=card_data.rating_text1.text;
+		
+		let main_data=await firebase.database().ref("tables/"+this.game_id).once('value');
+		main_data=main_data.val();
+		
+		this.master_uid=main_data.master;
+		this.slave_uid=main_data.slave;
+		
+		if (main_data.board){
+			
+			//проверяем если это законченая игра
+			if(main_data.board==='fin'){			
+				this.new_move('fin');
+				return;
+			} 
+			
+			g_board = board_func.str_to_brd(main_data.board.f_str);
+			if (this.master_uid!==main_data.board.uid)
+				board_func.rotate_board(g_board);
+		}
+		else
+			g_board = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
+		
+		//обновляем доску
+		board_func.update_board();
+		
+		firebase.database().ref('tables/'+this.game_id+'/board').on('value',(snapshot) => {
 			game_watching.new_move(snapshot.val());
 		})
-		
-	},
-
-	get_inverted_board(board){
-		
 		
 	},
 	
@@ -2797,18 +2869,81 @@ var game_watching={
 		cards_menu.activate();		
 	},
 	
-	async new_move(data){
+	async new_move(board_data){
 		
-		if(data===null || data===undefined)
+		if(!board_data) return;
+		
+		if(board_data==='fin'){			
+			await big_message.show(['Эта игра завершена','This game is over'][LANG],')))');
+			this.close();
+			main_menu.activate();
 			return;
+		} 
 		
+		
+
+
+		const old_board=JSON.parse(JSON.stringify(g_board));		
+		
+		g_board = board_func.str_to_brd(board_data.f_str);
+		if (this.master_uid!==board_data.uid){
+			board_func.rotate_board(g_board);	
+		}
+		
+		
+
+		//опредеяем кто ушел	
+		let fig_to_move,tx,ty;
+		for (var x = 0; x < 8; x++) {
+			for (var y = 0; y < 8; y++) {				
+				const fig0 = old_board[y][x];
+				const fig1 = g_board[y][x];
+				
+				if (fig0!=='x' && fig1==='x')
+					fig_to_move=board_func.get_checker_by_pos(x,y);
+	
+				if ((fig1!=='x' && fig0==='x') || (fig0!==fig1 && fig1!=='x')){
+					tx=x;
+					ty=y;
+				}
+			}
+		}
+		
+		if (fig_to_move && document.hidden === false){
+			
+			//звук перемещения
+			sound.play('receive_move');	
+		
+			let x1p=fig_to_move.ix*50+objects.board.x+20;
+			let y1p=fig_to_move.iy*50+objects.board.y+10;
+			let x2p=tx*50+objects.board.x+20;
+			let y2p=ty*50+objects.board.y+10;			
+			await anim2.add(fig_to_move,{x:[x1p,x2p],y:[y1p,y2p]}, true, 0.25,'easeInOutCubic');		
+			
+		}
+
+	
+			
 		//обновляем доску
-		console.log(data);
+		board_func.update_board();
+		
+	},
+	
+	back_button_down(){
+		
+		this.close();
+		main_menu.activate();
 		
 	},
 	
 	close(){
 		
+		objects.gw_back_button.visible=false;
+		objects.board.visible=false;
+		objects.my_card_cont.visible = false;	
+		objects.opp_card_cont.visible = false;	
+		objects.figures.forEach((c)=>{c.visible = false});	
+		firebase.database().ref('tables/'+this.game_id+'/board').off();
 		this.on=false;
 
 	}
@@ -4182,10 +4317,12 @@ cards_menu={
 
 	peek_down(){
 		
+		this.close();	
+		
 		//активируем просмотр игры
 		game_watching.activate(objects.td_cont.card);
 		
-		this.close();
+
 		
 	},
 

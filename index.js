@@ -2884,9 +2884,6 @@ game_watching={
 			return;
 		} 
 		
-		
-
-
 		const old_board=JSON.parse(JSON.stringify(g_board));		
 		
 		g_board = board_func.str_to_brd(board_data.f_str);
@@ -2894,8 +2891,6 @@ game_watching={
 			board_func.rotate_board(g_board);	
 		}
 		
-		
-
 		//опредеяем кто ушел	
 		let fig_to_move,tx,ty;
 		for (var x = 0; x < 8; x++) {
@@ -2926,14 +2921,17 @@ game_watching={
 			
 		}
 
-	
-			
 		//обновляем доску
 		board_func.update_board();
 		
 	},
 	
 	back_button_down(){
+		
+		if (anim2.any_on()) {
+			sound.play('locked');
+			return
+		};
 		
 		sound.play('click');
 		this.close();
@@ -4322,6 +4320,11 @@ cards_menu={
 	},
 
 	peek_down(){
+		
+		if (anim2.any_on()) {
+			sound.play('locked');
+			return
+		};
 		
 		this.close();	
 		

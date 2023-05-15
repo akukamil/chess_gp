@@ -2947,6 +2947,7 @@ game_watching={
 		make_text(objects.my_card_name,my_data.name,150);
 		objects.my_card_rating.text = my_data.rating;
 				
+		objects.my_avatar.texture=objects.id_avatar.texture;
 		objects.gw_back_button.visible=false;
 		objects.board.visible=false;
 		objects.my_card_cont.visible = false;	

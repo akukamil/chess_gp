@@ -2019,6 +2019,7 @@ board={
 		}
 		
 		//никакая фигура не быбрана
+		objects.move_hl[0].visible=objects.move_hl[1].visible=false;
 		this.selected_piece=0;		
 		
 		//предыдущее состояние доски
@@ -2028,7 +2029,7 @@ board={
 		objects.selected_frame.visible=false;
 		objects.cur_move_text.visible=true;
 
-		anim2.add(objects.board,{alpha:[0, 1]},true,0.4,'linear');
+		anim2.add(objects.board_cont,{alpha:[0, 1]},true,0.4,'linear');
 		anim2.add(objects.my_card_cont,{x:[-100, objects.my_card_cont.sx]},true,0.4,'linear');
 		anim2.add(objects.opp_card_cont,{x:[900, objects.opp_card_cont.sx]},true,0.4,'linear');
 		anim2.add(objects.my_eaten_cont,{alpha:[0, 1]},true,0.4,'linear');
@@ -2057,6 +2058,7 @@ board={
 		this.op_color='b';
 				
 		//никакая фигура не быбрана
+		objects.move_hl[0].visible=objects.move_hl[1].visible=false;
 		this.selected_piece=0;		
 		
 		//предыдущее состояние доски
@@ -2065,7 +2067,7 @@ board={
 		//общие элементы для игры		
 		objects.selected_frame.visible=false;
 		objects.cur_move_text.visible=true;
-		anim2.add(objects.board,{alpha:[0, 1]},true,0.4,'linear');
+		anim2.add(objects.board_cont,{alpha:[0, 1]},true,0.4,'linear');
 		anim2.add(objects.my_card_cont,{x:[-100, objects.my_card_cont.sx]},true,0.4,'linear');
 		//anim2.add(objects.opp_card_cont,{x:[900, objects.opp_card_cont.sx]},true,0.4,'linear');
 		
@@ -2168,6 +2170,9 @@ board={
 		//координаты указателя на игровой доске
 		let new_x=Math.floor(8*(mx-objects.board.x-20)/400);
 		let new_y=Math.floor(8*(my-objects.board.y-10)/400);
+		
+		//убираем хайлайты
+		objects.move_hl[0].visible=objects.move_hl[1].visible=false;
 
 		//если фигура еще не выбрана
 		if (this.selected_piece===0){
@@ -2508,6 +2513,15 @@ board={
 									
 		}
 		
+		//подсвечиваем ход
+		objects.move_hl[0].visible=true;
+		objects.move_hl[1].visible=true;
+		objects.move_hl[0].x = x1 * 50 + objects.board.x + 20;
+		objects.move_hl[0].y = y1 * 50 + objects.board.y + 10;
+		objects.move_hl[1].x = x2 * 50 + objects.board.x + 20;
+		objects.move_hl[1].y = y2 * 50 + objects.board.y + 10;
+		
+		
 		//обновляем доску
 		board_func.update_board();
 		
@@ -2771,7 +2785,7 @@ game={
 		
 		//общие элементы для игры
 		objects.timer.visible=false;
-		objects.board.visible=false;
+		objects.board_cont.visible=false;
 		objects.stickers_cont.visible=false;
 		objects.cur_move_text.visible=false;
 		objects.opp_card_cont.visible=false;
@@ -2781,7 +2795,6 @@ game={
 		objects.selected_frame.visible=false;		
 		objects.pawn_replace_dialog.visible=false;		
 		objects.mini_dialog.visible=false;	
-		objects.figures.forEach((c)=>{	c.visible = false});	
 		message.close();
 		
 	},
@@ -2823,7 +2836,7 @@ game_watching={
 		objects.gw_back_button.visible=true;
 		objects.my_card_cont.visible = true;	
 		objects.opp_card_cont.visible = true;	
-		objects.board.visible=true;
+		objects.board_cont.visible=true;
 		objects.board.interactive=false;
 		
 		//аватарки		
@@ -2916,7 +2929,12 @@ game_watching={
 			let x1p=fig_to_move.ix*50+objects.board.x+20;
 			let y1p=fig_to_move.iy*50+objects.board.y+10;
 			let x2p=tx*50+objects.board.x+20;
-			let y2p=ty*50+objects.board.y+10;			
+			let y2p=ty*50+objects.board.y+10;	
+			objects.move_hl[0].x=x1p;
+			objects.move_hl[0].y=y1p;
+			objects.move_hl[1].x=x2p;
+			objects.move_hl[1].y=y2p;	
+			objects.move_hl[0].visible=objects.move_hl[1].visible=true;
 			await anim2.add(fig_to_move,{x:[x1p,x2p],y:[y1p,y2p]}, true, 0.25,'easeInOutCubic');		
 			
 		}
@@ -2947,10 +2965,9 @@ game_watching={
 				
 		objects.my_avatar.texture=objects.id_avatar.texture;
 		objects.gw_back_button.visible=false;
-		objects.board.visible=false;
+		objects.board_cont.visible=false;
 		objects.my_card_cont.visible = false;	
 		objects.opp_card_cont.visible = false;	
-		objects.figures.forEach((c)=>{c.visible = false});	
 		firebase.database().ref('tables/'+this.game_id+'/board').off();
 		this.on=false;
 
@@ -5058,7 +5075,7 @@ async function define_platform_and_language() {
 	if (s.includes('192.168')) {
 			
 		game_platform = 'DEBUG';	
-		LANG = 1;
+		LANG = 0;
 		return;	
 	}	
 	

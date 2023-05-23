@@ -2036,6 +2036,7 @@ board={
 		anim2.add(objects.opp_eaten_cont,{alpha:[0, 1]},true,0.4,'linear');
 		
 		//включаем взаимодейтсвие с доской
+		objects.board.interactive=false;
 		objects.board.pointerdown=board.mouse_down.bind(board);
 		
 		if (role === 'master')

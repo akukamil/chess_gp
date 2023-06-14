@@ -172,7 +172,7 @@ class mk_character_card_class extends PIXI.Container{
 	
 }
 
-anim2 = {
+anim2={
 		
 	c1: 1.70158,
 	c2: 1.70158 * 1.525,
@@ -367,7 +367,7 @@ anim2 = {
 	
 }
 
-sound = {
+sound={
 	
 	on : 1,
 	
@@ -390,7 +390,7 @@ sound = {
 	
 }
 
-message =  {
+message={
 	
 	promise_resolve :0,
 	
@@ -441,7 +441,7 @@ message =  {
 
 }
 
-big_message = {
+big_message={
 	
 	p_resolve : 0,
 		
@@ -1215,6 +1215,7 @@ online_player={
 			'my_timeout' 			: [['Поражение!\nУ вас закончилось время.','Defeat!\nyou have run out of time'], LOSE],
 			'op_no_sync' 			: [['Похоже соперник не смог начать игру','It looks like the opponent could not start the game'], NOSYNC],
 			'my_no_sync' 			: [['Похоже Вы не смогли начать игру','It looks like you could not start the game'], NOSYNC],
+			'move_error' 			: [['Какая-то ошибка. Уже работаем над ее устранением.','Unknown error...'], NOSYNC],
 			'draw_50' 				: [['Ничья!\nЗа последние 50 ходов не было взятий фигур и продвижения пешек','A draw!\nfor the last 50 moves there have been no taking of pieces and pawn promotion'], NOSYNC]	
 		}
 		
@@ -1244,34 +1245,7 @@ online_player={
 			//увеличиваем количество игр
 			my_data.games++;
 			firebase.database().ref("players/"+[my_data.uid]+"/games").set(my_data.games);	
-
-			let check_players =[
-				'ls3844970',
-				'meZ2SiSr91BSgxoD763cGrZZww5sWo98rvrr9tARYj0=',
-				'ls1807543',
-				'ls3996035',
-				'RPYlNOh4Dpv5g2IiZc+Sc6en0gy0InfpdsZwPHJzlbE=',
-				'vk157725076',
-				'4MqwsTmjkY9YTwsZP+VlTiS7Zi6+XwOERw8Bj+yfzmY=',
-				'0bKUa5fOJS6hNU53qzI459VAbM7VCNluAMEXPcmFo6Q=',
-				'JERga13Sq681XyhSDd6tns8piJi57EtPCsuXZ9jFOkg=',
-				'ls9359789',
-				'pqLNTN3nGPlhgHHzDZj9Oe+M6c1bqSZAHaNCfGWCZ4g=',
-				'AWgYaqbra7yaWLwSKm27DiwZxgc4M1LIn+z7AxVT8us=',
-				'NizqlONZS6sQge1lJTi9ytVjhJ4jqUWJmZZmnjqVghQ=',
-				'QdHMDnRWAhSDuDV2yDm6f5jXUItmr0USiomyU4ga874=',
-				'2ghP9ja8vONuZep9zxQj6IXUY7uFdp5ZAhjZ64Z8+bc=',
-				'ls934420',
-				'ls9152430',
-				'jRD+TXmyb3wsZV8+34Z7ovZqQndV2SImUSy88rlVhZo=',
-				'JzJ06g2JqepeWjD7U6vOBXaUFVSRGlhgA8ZF6uLlRjU=',
-				'ls9894724'
-			]
-			
-			if (check_players.includes(my_data.uid) || check_players.includes(opp_data.uid)) {
-				firebase.database().ref("finishes2").push({'player1':objects.my_card_name.text,'player2':objects.opp_card_name.text, 'res':res_info[1], 'fin_type':final_state,'duration':duration, 'ts':firebase.database.ServerValue.TIMESTAMP});
-			}			
-		
+	
 		}
 		
 		await big_message.show(res_info[0][LANG], `${['Рейтинг:','Rating:'][LANG]} ${old_rating} > ${my_data.rating}`, true);
@@ -1752,11 +1726,8 @@ mk={
 			this.close_ladder();
 		
 		//отключаем стокфиш
-		sf.stop();
-		
-		//отключаем комманды
-		stockfish.removeEventListener('message', mk.stockfish_response);
-						
+		sf.stop();		
+					
 		//отключаем взаимодейтсвие с доской
 		objects.board.pointerdown=null;
 		
@@ -2460,8 +2431,9 @@ board={
 		
 		//проверка ошибок
 		try {
-			if (my_pieces.includes(g_board[y1][x1]) === true) {			
-				firebase.database().ref("errors").push([my_data.name, opp_data.name, g_board, move_data, move]);
+			if (opponent===online_player&&(my_pieces.includes(g_board[y1][x1])||g_board[y1][x1]==='x')) {			
+				firebase.database().ref("errors").push([my_data.name, opp_data.name, g_board, move_data]);
+				return ['move_error'];
 			}			
 		} catch (e) {}
 		
@@ -2689,7 +2661,8 @@ game={
 					'op_gave_up',
 					'player_gave_up',
 					'stalemate_to_opponent',
-					'stop'].includes(response[0])) break game_loop;	
+					'stop',
+					'move_error'].includes(response[0])) break game_loop;	
 
 				//сбрасываем счетчик
 				if(response[1]==='P'||response[1]==='p'||response[2]) draw_50=0;

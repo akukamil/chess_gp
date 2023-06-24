@@ -5686,7 +5686,7 @@ async function init_game_env(lang) {
 	if (my_data.rating >= 1760)
 		room_name= 'states4';			
 
-	room_name= 'states2';	
+	//room_name= 'states2';	
 	//это путь к чату
 	chat_path='chat';
 	

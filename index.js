@@ -5450,6 +5450,7 @@ async function load_resources() {
 	game_res.add('mk_excelent',git_src+'sounds/mk_excelent.mp3');
 	game_res.add('hit',git_src+'sounds/hit.mp3');
 	game_res.add('mk_haha2',git_src+'sounds/mk_haha2.mp3');
+	game_res.add('inst_msg',git_src+'sounds/inst_msg.mp3');
 	
 	//добавляем фигуры отдельно
 	['p','r','n','b','k','q'].forEach(n => {		

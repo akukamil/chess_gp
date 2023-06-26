@@ -3301,7 +3301,7 @@ game_watching={
 		if(board_data==='fin'){			
 			await big_message.show(['Эта игра завершена','This game is over'][LANG],')))');
 			this.close();
-			main_menu.activate();
+			lobby.activate();
 			return;
 		} 
 		

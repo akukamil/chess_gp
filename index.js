@@ -3046,6 +3046,10 @@ game={
 		//если открыт лидерборд то закрываем его
 		if (objects.lb_1_cont.visible===true) lb.close();		
 		
+		//если открыт чат то закрываем его
+		if (objects.chat_cont.visible)
+			chat.close();
+		
 		//закрываем просмотр игры если он открыт
 		if (game_watching.on) game_watching.close();	
 		

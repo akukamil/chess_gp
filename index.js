@@ -5190,8 +5190,14 @@ auth1={
 			
 			my_data.name 	= _player.getName();
 			my_data.uid 	= _player.getUniqueID().replace(/\//g, "Z");
-			my_data.pic_url = _player.getPhoto('medium');						
+			my_data.pic_url = _player.getPhoto('medium');
+
+			if (my_data.pic_url === 'https://games-sdk.yandex.ru/games/api/sdk/v1/player/avatar/0/islands-retina-medium')
+				my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;	
+			
 			my_data.name = my_data.name || this.get_random_name(my_data.uid);
+			
+			
 			
 			return;
 		}

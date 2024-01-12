@@ -1624,7 +1624,7 @@ online_player={
 		let res_info = res_db[final_state];
 		
 		//обновляем рейтинг
-		let old_rating = my_data.rating;
+		const old_rating = my_data.rating;
 		my_data.rating = this.calc_new_rating (my_data.rating, res_info[1]);
 		firebase.database().ref("players/"+my_data.uid+"/rating").set(my_data.rating);
 
@@ -1642,11 +1642,17 @@ online_player={
 			
 			//записываем результат в базу данных
 			const duration = ~~((Date.now() - this.start_time)*0.001);
-			firebase.database().ref("finishes/" + game_id + my_role).set({'player1':objects.my_card_name.text,'player2':objects.opp_card_name.text, 'res':res_info[1], 'fin_type':final_state,'duration':duration, 'ts':firebase.database.ServerValue.TIMESTAMP});
+			firebase.database().ref("finishes/" + game_id + my_role).set({'player1':objects.my_card_name.text,'player2':objects.opp_card_name.text, 'res':res_info[1], 'fin_type':final_state,duration, 'ts':firebase.database.ServerValue.TIMESTAMP});
 		
 			//увеличиваем количество игр
 			my_data.games++;
 			firebase.database().ref("players/"+[my_data.uid]+"/games").set(my_data.games);	
+	
+			//контрольные концовки
+			if (my_data.rating>2130 || opp_data.rating>2130) {
+				fbs.ref('finishes2').push({uid:my_data.uid,player1:objects.my_card_name.text,player2:objects.opp_card_name.text, res:res_info[1],fin_type:final_state,duration, rating: [old_rating,my_data.rating],ts:firebase.database.ServerValue.TIMESTAMP});	
+			}
+	
 	
 		}
 		

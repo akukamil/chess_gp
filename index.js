@@ -263,9 +263,7 @@ class chat_record_class extends PIXI.Container {
 		this.uid=msg_data.uid;
 		this.tm = msg_data.tm;			
 		this.hash = msg_data.hash;
-		this.index = msg_data.index;	
-		
-
+		this.index = msg_data.index;
 		
 		
 		this.name.set2(msg_data.name,110)
@@ -764,7 +762,9 @@ chat={
 		}
 		
 		if (objects.chat_keyboard_cont.visible)		
-			keyboard.response_message(player_data.uid,player_data.name.text);			
+			keyboard.response_message(player_data.uid,player_data.name.text);
+		else
+			lobby.show_invite_dialog_from_chat(player_data.uid,player_data.name.text);
 		
 		
 	},
@@ -4789,24 +4789,18 @@ lobby={
 		anim2.add(objects.invite_cont,{x:[800, objects.invite_cont.sx]}, true, 0.15,'linear');
 		
 		let player_data={uid};
-		await this.update_players_cache_data(uid);
-			
-		player_data.name=this.players_cache[uid].name;
-		player_data.rating=this.players_cache[uid].rating;
-		player_data.pic_url=this.players_cache[uid].pic_url;
-		
+		//await this.update_players_cache_data(uid);
+					
 		//копируем предварительные данные
-		lobby._opp_data = {uid:player_data.uid,name:player_data.name,rating:player_data.rating};
+		lobby._opp_data = {uid,name:players_cache.players[uid].name,rating:players_cache.players[uid].rating};
 											
-		this.show_feedbacks(lobby._opp_data.uid);
+											
+		//фидбэки												
+		this.show_feedbacks(lobby._opp_data.uid);	
 		
 		objects.invite_button_title.text=['ПРИГЛАСИТЬ','SEND INVITE'][LANG];
 
 		let invite_available = 	lobby._opp_data.uid !== my_data.uid;
-		invite_available=invite_available && lobby._opp_data.rating >= 50 && my_data.rating >= 50;
-		
-		//кнопка удаления комментариев
-		objects.fb_delete_button.visible=false;
 		
 		//если мы в списке игроков которые нас недавно отврегли
 		if (this.rejected_invites[lobby._opp_data.uid] && Date.now()-this.rejected_invites[lobby._opp_data.uid]<60000) invite_available=false;
@@ -4815,9 +4809,9 @@ lobby={
 		objects.invite_button.visible=objects.invite_button_title.visible=invite_available;
 
 		//заполняем карточу приглашения данными
-		objects.invite_avatar.texture=PIXI.utils.TextureCache[player_data.pic_url];
-		objects.invite_name.set2(lobby._opp_data.name,230);
-		objects.invite_rating.text=player_data.rating;
+		objects.invite_avatar.texture=players_cache.players[uid].texture;
+		objects.invite_name.set2(players_cache.players[uid].name,230);
+		objects.invite_rating.text=players_cache.players[uid].rating;
 	},
 
 	async show_feedbacks(uid) {	
@@ -5454,7 +5448,6 @@ var kill_game = function() {
 	firebase.app().delete();
 	document.body.innerHTML = 'CLIENT TURN OFF';
 }
-
 
 resize=function(){
     const vpw = window.innerWidth;  // Width of the viewport

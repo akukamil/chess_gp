@@ -5451,7 +5451,7 @@ auth1={
 			
 			my_data.name 	= _player.first_name + ' ' + _player.last_name;
 			my_data.uid 	= "vk"+_player.id;
-			my_data.pic_url = _player.photo_100;
+			my_data.orig_pic_url = _player.photo_100;
 			
 			return;
 			

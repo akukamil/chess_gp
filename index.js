@@ -4116,7 +4116,6 @@ pref={
 		
 		if (this.avatar_changed){
 			
-			my_data.cust_pic_url=this.cur_pic_url;
 			players_cache.players[my_data.uid].texture=0;
 			players_cache.players[my_data.uid].pic_url=this.cur_pic_url;
 			
@@ -5943,7 +5942,6 @@ async function init_game_env(lang) {
 	my_data.mk_level=other_data?.mk_level || 14;
 	my_data.mk_sback_num=other_data?.mk_sback_num || 0;
 	my_data.quiz_level=other_data?.quiz_level || 0;
-	my_data.cust_pic_url=other_data?.cust_pic_url||0;
 	my_data.nick_tm = other_data?.nick_tm || 0;
 	my_data.avatar_tm = other_data?.avatar_tm || 0;
 	my_data.pic_url=other_data?.pic_url || my_data.orig_pic_url;

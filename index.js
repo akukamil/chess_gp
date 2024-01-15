@@ -4025,7 +4025,8 @@ pref={
 	},
 	
 	check_time(last_time){
-		return 1;
+
+
 		//провряем можно ли менять
 		const tm=Date.now();
 		const days_since_nick_change=~~((tm-last_time)/86400000);

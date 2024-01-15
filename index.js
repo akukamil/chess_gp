@@ -1,5 +1,5 @@
 var M_WIDTH=800, M_HEIGHT=450;
-var app, game_res, game,gdata={},  objects={}, state="",my_role="",client_id, game_tick=0, my_turn=false, room_name = '',chat_path, move=0, game_id=0, connected = 1, LANG = 0,git_src;
+var app, game_res, game,gdata={},  objects={}, state="",my_role="",client_id, game_tick=0, my_turn=false, room_name = '',chat_path='chat', move=0, game_id=0, connected = 1, LANG = 0,git_src;
 var some_process = {}, h_state=0, game_platform="", hidden_state_start = 0;
 var WIN = 1, DRAW = 0, LOSE = -1, NOSYNC = 2,no_invite=false;
 g_board=[];
@@ -321,11 +321,10 @@ anim2 = {
 	c5: (2 * Math.PI) / 4.5,
 	empty_spr : {x:0, visible:false, ready:true, alpha:0},
 		
-	slot: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+	slot: Array(30).fill(null),
+		
 	
-	
-	
-	any_on () {		
+	any_on() {		
 		for (let s of this.slot)
 			if (s !== null&&s.block)
 				return true
@@ -340,12 +339,52 @@ anim2 = {
 		
 		for (var i=0;i<this.slot.length;i++)
 			if (this.slot[i]!==null)
-				if (this.slot[i].obj===obj)
-					this.slot[i]=null;		
+				if (this.slot[i].obj===obj){
+					this.slot[i].p_resolve('finished');		
+					this.slot[i].obj.ready=true;					
+					this.slot[i]=null;	
+				}
+	
+	},
+	
+	flick(x){
+		
+		return Math.abs(Math.sin(x*6.5*3.141593));
+		
+	},
+	
+	easeBridge(x){
+		
+		if(x<0.1)
+			return x*10;
+		if(x>0.9)
+			return (1-x)*10;
+		return 1		
+	},
+	
+	ease3peaks(x){
+
+		if (x < 0.16666) {
+			return x / 0.16666;
+		} else if (x < 0.33326) {
+			return 1-(x - 0.16666) / 0.16666;
+		} else if (x < 0.49986) {
+			return (x - 0.3326) / 0.16666;
+		} else if (x < 0.66646) {
+			return 1-(x - 0.49986) / 0.16666;
+		} else if (x < 0.83306) {
+			return (x - 0.6649) / 0.16666;
+		} else if (x >= 0.83306) {
+			return 1-(x - 0.83306) / 0.16666;
+		}		
 	},
 	
 	easeOutBack(x) {
 		return 1 + this.c3 * Math.pow(x - 1, 3) + this.c1 * Math.pow(x - 1, 2);
+	},
+	
+	easeOutBack2(x) {
+		return -5.875*Math.pow(x, 2)+6.875*x;
 	},
 	
 	easeOutElastic(x) {
@@ -392,7 +431,7 @@ anim2 = {
 	},
 	
 	ease2back(x) {
-		return Math.sin(x*Math.PI*2);
+		return Math.sin(x*Math.PI);
 	},
 	
 	easeInOutCubic(x) {
@@ -402,8 +441,7 @@ anim2 = {
 	
 	shake(x) {
 		
-		return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-		
+		return Math.sin(x*2 * Math.PI);	
 		
 	},	
 	
@@ -428,9 +466,9 @@ anim2 = {
 				}
 				
 				//для возвратных функцие конечное значение равно начальному
-				if (func === 'ease2back')
+				if (func === 'ease2back' || func === 'shake' || func === 'ease3peaks')
 					for (let key in params)
-						params[key][1]=params[key][0];					
+						params[key][1]=params[key][0];				
 					
 				this.slot[i] = {
 					obj,
@@ -473,11 +511,8 @@ anim2 = {
 		
 
 	},	
-	
-	
-	
-	
-	process () {
+		
+	process() {
 		
 		for (var i = 0; i < this.slot.length; i++)
 		{
@@ -515,11 +550,11 @@ anim2 = {
 	}
 }
 
-sound={
+sound={	
 	
 	on : 1,
 	
-	play(snd_res) {
+	play(snd_res,is_loop) {
 		
 		if (!this.on||document.hidden)
 			return;
@@ -527,10 +562,23 @@ sound={
 		if (!gres[snd_res]?.data)
 			return;
 		
-		gres[snd_res].sound.play();	
+		gres[snd_res].sound.play({loop:is_loop||false});	
+		
+	},
+	
+	switch(){
+		
+		if (this.on){
+			this.on=0;
+			objects.pref_info.text=['Звуки отключены','Sounds is off'][LANG];
+			
+		} else{
+			this.on=1;
+			objects.pref_info.text=['Звуки включены','Sounds is on'][LANG];
+		}
+		anim2.add(objects.pref_info,{alpha:[0,1]}, false, 3,'easeBridge',false);		
 		
 	}
-	
 	
 }
 
@@ -3636,9 +3684,9 @@ keep_alive=function(){
 	}
 
 
-	firebase.database().ref("players/"+my_data.uid+"/tm").set(firebase.database.ServerValue.TIMESTAMP);
-	firebase.database().ref("inbox/"+my_data.uid).onDisconnect().remove();
-	firebase.database().ref(room_name+"/"+my_data.uid).onDisconnect().remove();
+	firebase.database().ref('players/'+my_data.uid+'/tm').set(firebase.database.ServerValue.TIMESTAMP);
+	firebase.database().ref('inbox/'+my_data.uid).onDisconnect().remove();
+	firebase.database().ref(room_name+'/'+my_data.uid).onDisconnect().remove();
 	set_state({});
 }
 
@@ -3952,6 +4000,142 @@ social_dialog={
 	
 }
 
+pref={
+	
+	cur_pic_url:'',
+	avatar_changed:0,
+	
+	activate(){
+		
+		if(anim2.any_on()||objects.pref_cont.visible){
+			sound.play('locked');
+			return;			
+		}
+		
+		anim2.add(objects.pref_info,{alpha:[0,1]}, false, 3,'easeBridge',false);	
+		objects.pref_info.text=['Менять аватар и имя можно 1 раз в 30 дней!','You can change name and avatar once per month'][LANG];
+		
+		sound.play('click');
+		anim2.add(objects.pref_cont,{scale_x:[0,1]}, true, 0.2,'linear');
+		
+		this.avatar_changed=0;
+		objects.pref_cont.visible=true;
+		objects.pref_avatar.texture=players_cache.players[my_data.uid].texture;
+		
+	},
+	
+	check_time(last_time){
+		return 1;
+		//провряем можно ли менять
+		const tm=Date.now();
+		const days_since_nick_change=~~((tm-last_time)/86400000);
+		const days_befor_change=30-days_since_nick_change;
+		const ln=days_befor_change%10;
+		const opt=[0,5,6,7,8,9].includes(ln)*0+[2,3,4].includes(ln)*1+(ln===1)*2;
+		const day_str=['дней','дня','день'][opt];
+		
+		if (days_befor_change>0){
+			objects.pref_info.text=[`Поменять можно через ${days_befor_change} ${day_str}`,`Wait ${days_befor_change} days`][LANG];
+			anim2.add(objects.pref_info,{alpha:[0,1]}, false, 3,'easeBridge',false);	
+			sound.play('locked');
+			return 0;
+		}
+		
+		return 1;
+	},
+	
+	async change_name(){
+		
+		//провряем можно ли менять ник
+		if(!this.check_time(my_data.nick_tm)) return;
+				
+					
+		const name=await keyboard.read();
+		if (name.length>1){
+			my_data.name=name;
+			fbs.ref('players/'+my_data.uid+'/name').set(my_data.name);
+			objects.my_card_name.set2(my_data.name,110);
+			set_state({});
+			
+			objects.pref_info.text=['Имя изменено','Name has been changed'][LANG];
+			anim2.add(objects.pref_info,{alpha:[0,1]}, false, 3,'easeBridge',false);		
+			my_data.nick_tm=Date.now();			
+			fbs.ref('players/'+my_data.uid+'/nick_tm').set(my_data.nick_tm);
+
+		}else{
+			
+			objects.pref_info.text=['Какая-то ошибка','Unknown error'][LANG];
+			anim2.add(objects.pref_info,{alpha:[0,1]}, false, 3,'easeBridge',false);
+			
+		}
+		
+	},
+	
+	async reset_avatar(){
+		
+		if(!this.check_time(my_data.avatar_tm)) return;
+		
+		this.avatar_changed=1;
+		this.cur_pic_url=my_data.orig_pic_url;
+		objects.pref_avatar.texture=await players_cache.load_pic(my_data.uid,my_data.orig_pic_url);
+		
+	},
+	
+	change_avatar(){
+		
+		if(!this.check_time(my_data.avatar_tm)) return;
+		this.avatar_changed=1;
+		this.cur_pic_url='mavatar'+irnd(10,999999);
+		objects.pref_avatar.texture=PIXI.Texture.from(multiavatar(this.cur_pic_url));
+		
+	},
+	
+	sound_switch(){
+		
+		if(anim2.any_on()){
+			sound.play('locked');
+			return;			
+		}
+		sound.switch();
+		sound.play('click');
+		const tar_x=sound.on?333:295;
+		anim2.add(objects.pref_sound_slider,{x:[objects.pref_sound_slider.x,tar_x]}, true, 0.1,'linear');	
+		
+	},
+	
+	ok_button_down(){
+		
+		if(anim2.any_on()){
+			sound.play('locked');
+			return;			
+		}
+		
+		anim2.add(objects.pref_cont,{scale_x:[1,0]}, false, 0.2,'linear');	
+		
+		if (this.avatar_changed){
+			
+			my_data.cust_pic_url=this.cur_pic_url;
+			players_cache.players[my_data.uid].texture=0;
+			players_cache.players[my_data.uid].pic_url=this.cur_pic_url;
+			
+			
+			fbs.ref(`players/${my_data.uid}/pic_url`).set(this.cur_pic_url);
+			
+			my_data.avatar_tm=Date.now();
+			fbs.ref(`players/${my_data.uid}/avatar_tm`).set(my_data.avatar_tm);
+
+						
+			players_cache.update_avatar(my_data.uid).then(()=>{
+				const my_card=objects.mini_cards.find(card=>card.uid===my_data.uid);
+				my_card.avatar.texture=players_cache.players[my_data.uid].texture;				
+			})	
+			
+		}		
+		
+	}
+	
+}
+
 main_menu={
 
 	async activate() {
@@ -4206,6 +4390,18 @@ players_cache={
 	
 	players:{},
 	
+	async load_pic(uid,pic_url){
+		
+		//если это мультиаватар
+		if(pic_url.includes('mavatar'))
+			return PIXI.Texture.from(multiavatar(pic_url));
+		
+		const loader=new PIXI.Loader;
+		loader.add(uid, pic_url,{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 5000});	
+		await new Promise(resolve=> loader.load(resolve))		
+		return loader.resources[uid].texture;
+	},
+	
 	async update(uid,params={}){
 				
 		//если игрока нет в кэше то создаем его
@@ -4234,9 +4430,9 @@ players_cache={
 		
 		if(player.pic_url==='https://vk.com/images/camera_100.png')
 			player.pic_url='https://akukamil.github.io/domino/vk_icon.png';
-		
+				
 		//загружаем и записываем текстуру
-		if (player.pic_url) player.texture=PIXI.Texture.from(player.pic_url);	
+		if (player.pic_url) player.texture=await this.load_pic(uid, player.pic_url);	
 		
 	}	
 }
@@ -4297,8 +4493,6 @@ lobby={
 
 		//добавляем карточку ии
 		//this.add_card_ai();
-
-
 		
 		//подписываемся на изменения состояний пользователей
 		fbs.ref(room_name) .on('value', (snapshot) => {lobby.players_list_updated(snapshot.val());});
@@ -4401,7 +4595,6 @@ lobby={
 				delete tables[t_keys[i]];
 			}
 		}
-
 		
 		//убираем карточки пропавших игроков и обновляем карточки оставшихся
 		for(let i=0;i<objects.mini_cards.length;i++) {			
@@ -4503,7 +4696,7 @@ lobby={
 		}
 	},
 	
-	place_table(params={uid1:0,uid2:0,name1: "XXX",name2: "XXX", rating1: 1400, rating2: 1400,game_id:0}) {
+	place_table(params={uid1:0,uid2:0,name1: 'X',name2:'X', rating1: 1400, rating2: 1400,game_id:0}) {
 				
 		for(let i=0;i<objects.mini_cards.length;i++) {
 
@@ -4573,7 +4766,7 @@ lobby={
 		card.visible=true;
 	},
 
-	place_new_card(params={uid:0, state: "o", name: "XXX", rating: rating}) {
+	place_new_card(params={uid:0, state: 'o', name:'X ', rating: rating}) {
 
 		for(let i=0;i<objects.mini_cards.length;i++) {
 
@@ -4981,12 +5174,9 @@ lobby={
 
 	close_invite_dialog() {
 
-		sound.play('close_it');
+		sound.play('click');	
 
-		if (objects.invite_cont.visible===false)
-			return;
-		
-		
+		if (!objects.invite_cont.visible) return;		
 
 		//отправляем сообщение что мы уже не заинтересованы в игре
 		if (pending_player!=='') {
@@ -5234,14 +5424,12 @@ auth1={
 			
 			my_data.name 	= _player.getName();
 			my_data.uid 	= _player.getUniqueID().replace(/\//g, "Z");
-			my_data.pic_url = _player.getPhoto('medium');
+			my_data.orig_pic_url = _player.getPhoto('medium');
 
-			if (my_data.pic_url === 'https://games-sdk.yandex.ru/games/api/sdk/v1/player/avatar/0/islands-retina-medium')
-				my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;	
+			if (my_data.orig_pic_url === 'https://games-sdk.yandex.ru/games/api/sdk/v1/player/avatar/0/islands-retina-medium')
+				my_data.orig_pic_url = multiavatar(my_data.uid);	
 			
-			my_data.name = my_data.name || this.get_random_name(my_data.uid);
-			
-			
+			my_data.name = my_data.name || this.get_random_name(my_data.uid);			
 			
 			return;
 		}
@@ -5372,10 +5560,10 @@ auth2={
 			
 			my_data.uid = _player.getUniqueID().replace(/[\/+=]/g, '');
 			my_data.name = _player.getName();
-			my_data.pic_url = _player.getPhoto('medium');
+			my_data.orig_pic_url = _player.getPhoto('medium');
 			
-			if (my_data.pic_url === 'https://games-sdk.yandex.ru/games/api/sdk/v1/player/avatar/0/islands-retina-medium')
-				my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;	
+			if (my_data.orig_pic_url === 'https://games-sdk.yandex.ru/games/api/sdk/v1/player/avatar/0/islands-retina-medium')
+				my_data.orig_pic_url = 'mavatar'+my_data.uid;	
 			
 			if (my_data.name === '')
 				my_data.name = this.get_random_name(my_data.uid);
@@ -5383,7 +5571,6 @@ auth2={
 			//если английский яндекс до добавляем к имени страну
 			let country_code = await this.get_country_code();
 			my_data.name = my_data.name + ' (' + country_code + ')';			
-
 
 			
 			return;
@@ -5403,7 +5590,7 @@ auth2={
 			
 			my_data.name 	= _player.first_name + ' ' + _player.last_name;
 			my_data.uid 	= "vk"+_player.id;
-			my_data.pic_url = _player.photo_100;
+			my_data.orig_pic_url = _player.photo_100;
 			
 			return;
 			
@@ -5414,28 +5601,16 @@ auth2={
 			let country_code = await this.get_country_code();
 			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('GP_');
 			my_data.name = this.get_random_name(my_data.uid) + ' (' + country_code + ')';
-			my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;		
+			my_data.orig_pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;		
 			return;
 		}
 		
 		if (game_platform === 'DEBUG') {		
 
 			my_data.name = my_data.uid = 'debug' + prompt('Отладка. Введите ID', 100);
-			my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;			
+			my_data.orig_pic_url = 'mavatar'+my_data.uid;		
 			return;
-		}
-		
-		if (game_platform === 'CRAZYGAMES') {
-			
-			let country_code = await this.get_country_code();
-			try {await this.load_script('https://sdk.crazygames.com/crazygames-sdk-v1.js')} catch (e) {alert(e)};			
-			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('CG_');
-			my_data.name = this.get_random_name(my_data.uid) + ' (' + country_code + ')';
-			my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;		
-			let crazysdk = window.CrazyGames.CrazySDK.getInstance();
-			crazysdk.init();			
-			return;
-		}
+		}	
 		
 		if (game_platform === 'UNKNOWN') {
 			
@@ -5443,7 +5618,7 @@ auth2={
 			alert('Неизвестная платформа. Кто Вы?')
 			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('LS_');
 			my_data.name = this.get_random_name(my_data.uid);
-			my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;		
+			my_data.orig_pic_url = 'mavatar'+my_data.uid;		
 		}
 	}
 	
@@ -5480,12 +5655,12 @@ set_state=function(params){
 	if (params.hidden!==undefined)
 		h_state=+params.hidden;
 
-	let small_opp_id="";
+	let small_opp_id='';
 	if (opp_data.uid!==undefined)
 		small_opp_id=opp_data.uid.substring(0,10);
 
-	if(no_invite===false || state==='p')
-		firebase.database().ref(room_name + "/" + my_data.uid).set({state:state, name:my_data.name, rating : my_data.rating, hidden:h_state, opp_id : small_opp_id, game_id:game_id});
+	if(!no_invite || state==='p')
+		firebase.database().ref(room_name + '/' + my_data.uid).set({state, name:my_data.name, rating : my_data.rating, hidden:h_state, opp_id:small_opp_id, game_id});
 
 }
 
@@ -5653,8 +5828,6 @@ async function init_game_env(lang) {
 	else
 		await auth2.init();
 	
-
-
 	//инициируем файербейс
 	if (firebase.apps.length===0) {
 		firebase.initializeApp({
@@ -5672,9 +5845,12 @@ async function init_game_env(lang) {
 	//коротко файрбейс
 	fbs=firebase.database();
 	
+	//подгружаем библиотеку аватаров
+	await auth2.load_script('multiavatar.min.js');
+	
 	app = new PIXI.Application({width:M_WIDTH, height:M_HEIGHT,antialias:false,backgroundColor : 0x404040});
 	const c=document.body.appendChild(app.view);
-	c.style["boxShadow"] = "0 0 15px #000000";
+	c.style['boxShadow'] = '0 0 15px #000000';
 
 	//доп функция для текста битмап
 	PIXI.BitmapText.prototype.set2=function(text,w){		
@@ -5685,9 +5861,8 @@ async function init_game_env(lang) {
 		}	
 	}
 
-
 	resize();
-	window.addEventListener("resize", resize);
+	window.addEventListener('resize', resize);
 
     //создаем спрайты и массивы спрайтов и запускаем первую часть кода
     for (var i = 0; i < load_list.length; i++) {
@@ -5756,25 +5931,29 @@ async function init_game_env(lang) {
 	}
 	
 	
+	//получаем остальные данные об игроке
+	const _other_data = await firebase.database().ref('players/'+my_data.uid).once('value');
+	const other_data = _other_data.val();
+	
+	//делаем защиту от неопределенности
+	my_data.rating = other_data?.rating || 1400;
+	my_data.games = other_data?.games || 0;
+	my_data.mk_level=other_data?.mk_level || 14;
+	my_data.mk_sback_num=other_data?.mk_sback_num || 0;
+	my_data.quiz_level=other_data?.quiz_level || 0;
+	my_data.cust_pic_url=other_data?.cust_pic_url||0;
+	my_data.nick_tm = other_data?.nick_tm || 0;
+	my_data.avatar_tm = other_data?.avatar_tm || 0;
+	my_data.pic_url=other_data?.pic_url || my_data.orig_pic_url;
+	
 	//загружаем мои данные в кэш
-	await players_cache.update(my_data.uid);
-	await players_cache.update_avatar(my_data.uid)
+	await players_cache.update(my_data.uid,{pic_url:my_data.pic_url});
+	await players_cache.update_avatar(my_data.uid);
 	
 	//устанавливаем фотки в попап
 	objects.id_avatar.texture=players_cache.players[my_data.uid].texture;
 	objects.id_name.set2(my_data.name,150);
 	
-	//получаем остальные данные об игроке
-	const _other_data = await firebase.database().ref("players/"+my_data.uid).once('value');
-	const other_data = _other_data.val();
-	
-	//делаем защиту от неопределенности
-	my_data.rating = (other_data && other_data.rating) || 1400;
-	my_data.games = (other_data && other_data.games) || 0;
-	my_data.mk_level=(other_data && other_data.mk_level) || 14;
-	my_data.mk_sback_num=(other_data && other_data.mk_sback_num) || 0;
-	my_data.quiz_level=(other_data && other_data.quiz_level) || 0;
-
 	//номер комнаты
 	if (my_data.rating > 0 && my_data.rating < 1410)
 		room_name = 'states'		
@@ -5786,8 +5965,6 @@ async function init_game_env(lang) {
 		room_name= 'states4';			
 
 	//room_name= 'states5';	
-	//это путь к чату
-	chat_path='chat';
 	
 	//устанавливаем рейтинг в попап
 	objects.id_rating.text=objects.my_card_rating.text=my_data.rating;
@@ -5802,7 +5979,7 @@ async function init_game_env(lang) {
 	firebase.database().ref("inbox/"+my_data.uid).on('value', (snapshot) => { process_new_message(snapshot.val());});
 
 	//обновляем данные в файербейс так как могли поменяться имя или фото
-	firebase.database().ref("players/"+my_data.uid).set({name:my_data.name, pic_url: my_data.pic_url, rating : my_data.rating, quiz_level : my_data.quiz_level, games : my_data.games, games : my_data.games, mk_level : my_data.mk_level,mk_sback_num:my_data.mk_sback_num, tm:firebase.database.ServerValue.TIMESTAMP});
+	firebase.database().ref('players/'+my_data.uid).set({name:my_data.name, pic_url: my_data.pic_url, rating : my_data.rating, quiz_level : my_data.quiz_level, games : my_data.games, games : my_data.games, mk_level : my_data.mk_level,mk_sback_num:my_data.mk_sback_num,avatar_tm:my_data.avatar_tm,nick_tm:my_data.nick_tm, tm:firebase.database.ServerValue.TIMESTAMP});
 
 	//устанавливаем мой статус в онлайн
 	set_state({state : 'o'});

@@ -4111,6 +4111,7 @@ pref={
 			return;			
 		}
 		
+		sound.play('click');
 		anim2.add(objects.pref_cont,{scale_x:[1,0]}, false, 0.2,'linear');	
 		
 		if (this.avatar_changed){

@@ -4062,6 +4062,7 @@ pref={
 			anim2.add(objects.pref_info,{alpha:[0,1]}, false, 3,'easeBridge',false);		
 			my_data.nick_tm=Date.now();			
 			fbs.ref('players/'+my_data.uid+'/nick_tm').set(my_data.nick_tm);
+			fbs.ref(`players/${my_data.uid}/name`).set(my_data.name);
 
 		}else{
 			

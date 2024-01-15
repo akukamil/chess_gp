@@ -4048,20 +4048,19 @@ pref={
 	async change_name(){
 		
 		//провряем можно ли менять ник
-		if(!this.check_time(my_data.nick_tm)) return;
+		//if(!this.check_time(my_data.nick_tm)) return;
 				
 					
 		const name=await keyboard.read(15);
 		if (name.length>1){
 			my_data.name=name;
-			fbs.ref('players/'+my_data.uid+'/name').set(my_data.name);
+
 			objects.my_card_name.set2(my_data.name,110);
-			set_state({});
-			
+			set_state({});			
 			objects.pref_info.text=['Имя изменено','Name has been changed'][LANG];
 			anim2.add(objects.pref_info,{alpha:[0,1]}, false, 3,'easeBridge',false);		
 			my_data.nick_tm=Date.now();			
-			fbs.ref('players/'+my_data.uid+'/nick_tm').set(my_data.nick_tm);
+			fbs.ref(`players/${my_data.uid}/nick_tm`).set(my_data.nick_tm);
 			fbs.ref(`players/${my_data.uid}/name`).set(my_data.name);
 
 		}else{
@@ -5948,6 +5947,7 @@ async function init_game_env(lang) {
 	my_data.nick_tm = other_data?.nick_tm || 0;
 	my_data.avatar_tm = other_data?.avatar_tm || 0;
 	my_data.pic_url=other_data?.pic_url || my_data.orig_pic_url;
+	my_data.name=other_data?.name || my_data.name;
 	
 	//загружаем мои данные в кэш
 	await players_cache.update(my_data.uid,{pic_url:my_data.pic_url});

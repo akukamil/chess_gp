@@ -5428,7 +5428,7 @@ auth1={
 			my_data.orig_pic_url = _player.getPhoto('medium');
 
 			if (my_data.orig_pic_url === 'https://games-sdk.yandex.ru/games/api/sdk/v1/player/avatar/0/islands-retina-medium')
-				my_data.orig_pic_url = multiavatar(my_data.uid);	
+				my_data.orig_pic_url = 'mavatar'+my_data.uid;	
 			
 			my_data.name = my_data.name || this.get_random_name(my_data.uid);			
 			
@@ -5602,7 +5602,7 @@ auth2={
 			let country_code = await this.get_country_code();
 			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('GP_');
 			my_data.name = this.get_random_name(my_data.uid) + ' (' + country_code + ')';
-			my_data.orig_pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;		
+			my_data.orig_pic_url = 'mavatar'+my_data.uid;		
 			return;
 		}
 		

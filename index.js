@@ -5821,7 +5821,10 @@ async function init_game_env(lang) {
 						
 	//отображаем шкалу загрузки
 	document.body.innerHTML='<style>html,body {margin: 0;padding: 0;height: 100%;	}body {display: flex;align-items: center;justify-content: center;background-color: rgba(41,41,41,1);flex-direction: column	}#m_progress {	  background: #1a1a1a;	  justify-content: flex-start;	  border-radius: 5px;	  align-items: center;	  position: relative;	  padding: 0 5px;	  display: none;	  height: 50px;	  width: 70%;	}	#m_bar {	  box-shadow: 0 1px 0 rgba(255, 255, 255, .5) inset;	  border-radius: 5px;	  background: rgb(119, 119, 119);	  height: 70%;	  width: 0%;	}	</style></div><div id="m_progress">  <div id="m_bar"></div></div>';
-			
+		
+	//подгружаем библиотеку аватаров
+	await auth2.load_script('multiavatar.min.js');
+		
 	await load_resources();
 	
 	if ((game_platform === 'YANDEX' || game_platform === 'VK') && LANG === 0)
@@ -5846,8 +5849,7 @@ async function init_game_env(lang) {
 	//коротко файрбейс
 	fbs=firebase.database();
 	
-	//подгружаем библиотеку аватаров
-	await auth2.load_script('multiavatar.min.js');
+
 	
 	app = new PIXI.Application({width:M_WIDTH, height:M_HEIGHT,antialias:false,backgroundColor : 0x404040});
 	const c=document.body.appendChild(app.view);

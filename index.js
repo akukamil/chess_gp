@@ -1965,7 +1965,7 @@ quiz={
 	},
 }
 
-mk={	
+mk={
 	res:null,
 	cur_mk_level:0,
 	start_time:0,
@@ -4889,7 +4889,7 @@ lobby={
 	},
 	
 	close_table_dialog() {
-		sound.play('close_it');
+		sound.play('click');
 		anim2.add(objects.td_cont,{x:[objects.td_cont.x, 800]}, false, 0.1,'linear');
 	},
 

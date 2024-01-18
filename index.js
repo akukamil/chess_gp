@@ -672,8 +672,7 @@ big_message={
 			const fb_id = irnd(0,50);			
 			await firebase.database().ref('fb/'+opp_data.uid+'/'+fb_id).set([fb, firebase.database.ServerValue.TIMESTAMP, my_data.name]);
 		
-		}
-		
+		}		
 		this.p_resolve('close');
 				
 	},
@@ -702,6 +701,7 @@ chat={
 	drag_sy:-999,	
 	recent_msg:[],
 	moderation_mode:0,
+	block_next_click:0,
 	
 	activate() {	
 
@@ -806,6 +806,17 @@ chat={
 		
 		if (this.moderation_mode){
 			console.log(player_data.index,player_data.uid,player_data.name.text,player_data.msg.text);
+			
+			fbs_once('players/'+player_data.uid+'/games').then((data)=>{
+				console.log('сыграно игр: ',data)
+			})
+			if (this.block_next_click){
+				fbs.ref('blocked/'+player_data.uid).set(Date.now())
+				fbs.ref('inbox/'+player_data.uid).set({message:'CLIEND_ID',tm:Date.now(),client_id:999999});
+				console.log('Игрок заблокирован и убит: ',player_data.uid);
+				this.block_next_click=0;
+			}			
+		
 			return
 		}
 		
@@ -4048,7 +4059,7 @@ pref={
 	async change_name(){
 		
 		//провряем можно ли менять ник
-		//if(!this.check_time(my_data.nick_tm)) return;
+		if(!this.check_time(my_data.nick_tm)) return;
 				
 					
 		const name=await keyboard.read(15);

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<body>
+
 
 
 
@@ -63,27 +63,25 @@
 	
 </style>
 
+
   		<div class="two_buttons_area">
 
 			<div class="button_with_text">
-				<button class="button" id ="but_ref1" onclick="states_room('states')">Комната №1</button>
+				<button class="button"  id ="but_ref1"  onclick="states_room('states')">Комната №1</button>
 			</div>
 
 			<div class="button_with_text">
-				<button class="button" id ="but_ref2"  onclick="states_room('states2')">Комната №2</button>
+				<button class="button"  id ="but_ref2"  onclick="states_room('states2')">Комната №2</button>
 			</div>
-			
+
 			<div class="button_with_text">
 				<button class="button" id ="but_ref3"  onclick="states_room('states3')">Комната №3</button>
 			</div>
-			
-			<div class="button_with_text">
-				<button class="button" id ="but_ref4"  onclick="states_room('states4')">Комната №3</button>
-			</div>
-			
+
 		</div>
-  		
-		<div class="two_buttons_area">
+		
+
+  		<div class="two_buttons_area">
 
 			<div class="button_with_text">
 				<button class="button" onclick="show_leaders()">Таблица лидеров</button>
@@ -134,7 +132,15 @@
 			</div>
 
 		</div>
-    
+  
+  
+  
+<body onload="update_room_quick_stat()">
+
+</body>
+</html>
+
+
 <script>
 
 
@@ -154,6 +160,7 @@ firebase.initializeApp({
 async function update_room_quick_stat() {
 
 	
+	
 	//считываем текущее время
 	console.time();
 	await firebase.database().ref("server_time").set(firebase.database.ServerValue.TIMESTAMP);
@@ -172,12 +179,8 @@ async function update_room_quick_stat() {
 	firebase.database().ref('states3').once('value').then((snapshot) => {
 		document.getElementById("but_ref3").textContent = Object.keys(snapshot.val()).length;
 	})
-	
-	firebase.database().ref('states4').once('value').then((snapshot) => {
-		document.getElementById("but_ref4").textContent = Object.keys(snapshot.val()).length;
-	})
-
 }
+
 
 //ВСЕ ИГРОКИ С ОПРЕДЕЛЕННОГО ВРЕМЕНИ
 function all_players() {
@@ -195,12 +198,12 @@ function all_players() {
 		let _data = [];
 		for (let i = 0 ; i < uids.length ; i++) {
 					
-			_data.push([uids[i].substring(0, 8), data[uids[i]].name, data[uids[i]].rating, data[uids[i]].games, data[uids[i]].mk_level, data[uids[i]].mk_sback_num, data[uids[i]].tm])		
+			_data.push([uids[i], data[uids[i]].name, data[uids[i]].rating, data[uids[i]].games, data[uids[i]].tm])		
 			
 		}	
 		
 		//это заголовки
-		let header = ['uid','name','rating','games','mk_level','mk_sback_num','last_seen'];
+		let header = ['uid','name','rating','games','last_seen'];
 
 		my_table.create(_data, header, 'none', 'list');	
 	})
@@ -213,7 +216,7 @@ async function player_info() {
 	document.body.innerHTML = "";
 	let snapshot = await firebase.database().ref("players").orderByChild("name").startAt(player_name).limitToFirst(5).once("value");
 	var data = snapshot.val();
-	console.log(data);
+
 	//меняем дату на нормальный вид
 	Object.keys(data).forEach(k=>{data[k].tm = new Date(data[k].tm).toLocaleString();delete data[k].pic_url});
 
@@ -225,7 +228,7 @@ async function player_info() {
 		
 		
 	//это заголовки
-	let header = ['uid','name','rating','games','last_seen'];
+	let header = ['uid2','name','rating','games','last_seen'];
 
 	my_table.create(_data, header, 'none', 'list');	
 }
@@ -248,7 +251,8 @@ async function delete_old_players() {
 	data = Object.keys(data).map((key) => [key, data[key].rating, data[key].tm]);
 	
 	data.forEach(p=>{
-		
+	
+	
 		//проверяем на валидность рейтинга
 		if (p[1] === undefined) {
 			firebase.database().ref("players/"+p[0]).remove();
@@ -265,6 +269,7 @@ async function delete_old_players() {
 		
 	})
 	alert("Удалено игроков: "+total_removed);
+
 
 }
 
@@ -296,12 +301,12 @@ async function get_games(ref) {
 	let _data = [];
 	for (let i = 0 ; i < uids.length ; i++) {
 				
-		_data.push([data[uids[i]].player1, data[uids[i]].player2, data[uids[i]].fin_type,data[uids[i]].res, data[uids[i]].duration,data[uids[i]].ts ])		
+		_data.push([data[uids[i]].uid,data[uids[i]].player1, data[uids[i]].player2, data[uids[i]].fin_type,data[uids[i]].res, data[uids[i]].duration,data[uids[i]].client_id, data[uids[i]].rating, data[uids[i]].ts ])		
 		
 	}	
 	
 	//это заголовки
-	let header = ['player1','player2','fin_type','res','duration','ts'];
+	let header = ['uid','player1','player2','fin_type','res','duration','client_id','rating','ts'];
 	
 	my_table.create(_data, header, 'none', 'list');	
 		
@@ -319,9 +324,11 @@ function show_leaders() {
 		//создаем массив для последующей работы
 		let uids = Object.keys(data);
 		let _data = [];
-		for (let i = 0 ; i < uids.length ; i++)
+		for (let i = 0 ; i < uids.length ; i++) {
+					
 			_data.push([uids[i], data[uids[i]].name, data[uids[i]].rating, data[uids[i]].games, data[uids[i]].tm])		
-
+			
+		}	
 		
 		//это заголовки
 		let header = ['uid','name','rating','games','last_seen'];
@@ -372,6 +379,9 @@ async function states_room(room) {
 	my_table.create(_data, header, room, 'states');	
 }
 
+
+//firebase.database().ref("finishes").remove();
+//firebase.database().ref("players/vNx2vRus1XIPlMFllQmDnqWfV3YZp7Ff5hYis5eKllc=/rating").set(2100);
 function get_state_tint(s) {
 	
 	switch(s) {
@@ -432,11 +442,16 @@ var my_table = {
 				
 				if (param_name === 'state')				{
 					row.style.backgroundColor = get_state_tint(c);	
+				} else if (param_name ==='uid'){
+					var cell = row.insertCell();
+					cell.style.paddingLeft = '5px';
+					cell.textContent = c.substring(0, 10);	
 				} else {
 					var cell = row.insertCell();
 					cell.style.paddingLeft = '5px';
 					cell.textContent = c;			
 				}
+
 				
 			})
 		})
@@ -460,14 +475,15 @@ var my_table = {
 			}
 			
 		});
-				
+		
+		
 
 		this.table_element.addEventListener('click', my_table.clicked);
 		
 		document.body.appendChild(my_table.table_element);
 	
 	},
-			
+		
 	sort : function(h) {
 		
 		let col_num = this.header.indexOf(h);
@@ -494,12 +510,14 @@ var my_table = {
 		let uid = my_table.data[i-1][0];
 		let name = my_table.data[i-1][1];
 		
-		if (confirm("Удалить "+name +" ?")) {
-				firebase.database().ref(my_table.room +'/' + uid).remove();
-				my_table.table_element.deleteRow(i);		
-				my_table.data.splice(i - 1, 1);			
-
-		} 
+		
+		
+		//получаем фидбэки
+		let _fb = await firebase.database().ref("fb/" + uid).once('value');
+		let fb_obj =_fb.val();
+		if (fb_obj === null) {console.log('Нету отзывов');return};
+		var fb = Object.keys(fb_obj).map((key) => [fb_obj[key][0],fb_obj[key][1],fb_obj[key][2]]);
+		console.table(fb);
 
 		
 	},
@@ -520,12 +538,9 @@ var my_table = {
 		
 	}
 
+
 }
 
 	
 </script>
 
-<body onload="update_room_quick_stat()">
-
-</body>
-</html>

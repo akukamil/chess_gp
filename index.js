@@ -1486,10 +1486,10 @@ online_player={
 		move_data.y2=7-move_data.y2;
 
 		//отправляем ход сопернику
-		clearTimeout(this.write_fb_timer);
-		this.write_fb_timer=setTimeout(function(){online_player.stop('my_no_connection');}, 8000);  
+		clearTimeout(online_player.write_fb_timer);
+		online_player.write_fb_timer=setTimeout(function(){online_player.stop('my_no_connection');}, 8000);  
 		firebase.database().ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'MOVE',tm:Date.now(),data:move_data}).then(()=>{	
-			clearTimeout(this.write_fb_timer);			
+			clearTimeout(online_player.write_fb_timer);
 		});	
 		
 		//также фиксируем данные стола

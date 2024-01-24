@@ -554,15 +554,17 @@ sound={
 	
 	on : 1,
 	
-	play(snd_res,is_loop) {
+	play(res_name, res_src) {
+		
+		res_src=res_src||gres;
 		
 		if (!this.on||document.hidden)
 			return;
 		
-		if (!gres[snd_res]?.data)
+		if (!res_src[res_name]?.data)
 			return;
 		
-		gres[snd_res].sound.play({loop:is_loop||false});	
+		res_src[res_name].sound.play();	
 		
 	},
 	
@@ -6059,4 +6061,3 @@ function main_loop() {
 
 	requestAnimationFrame(main_loop);
 }
-

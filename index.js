@@ -4087,8 +4087,6 @@ pref={
 	
 	async reset_avatar(){
 		
-		if(!this.check_time(my_data.avatar_tm)) return;
-		
 		this.avatar_changed=1;
 		this.cur_pic_url=my_data.orig_pic_url;
 		objects.pref_avatar.texture=await players_cache.load_pic(my_data.uid,my_data.orig_pic_url);

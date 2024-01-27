@@ -2327,7 +2327,7 @@ mk={
 
 
 		//инициируем общие ресурсы игры		
-		sf.new_game(this.cur_enemy.skill_level,this.depth);
+		sf.new_game(this.cur_enemy.skill_level,this.cur_enemy.depth);
 		game.activate(role,mk);
 		
 	},

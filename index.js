@@ -4551,27 +4551,7 @@ lobby={
 		}
 
 	},
-
-	async get_texture(pic_url) {
-		
-		if (!pic_url) PIXI.Texture.WHITE;
-		
-		//меняем адрес который невозможно загрузить
-		if (pic_url==="https://vk.com/images/camera_100.png")
-			pic_url = "https://i.ibb.co/fpZ8tg2/vk.jpg";	
-				
-		if (PIXI.utils.TextureCache[pic_url]===undefined || PIXI.utils.TextureCache[pic_url].width===1) {
-					
-			let loader=new PIXI.Loader();
-			loader.add('pic', pic_url,{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 5000});			
-			await new Promise((resolve, reject)=> loader.load(resolve))	
-			return loader.resources.pic.texture||PIXI.Texture.WHITE;
-
-		}		
-		
-		return PIXI.utils.TextureCache[pic_url];		
-	},
-		
+	
 	async load_avatar2 (params={}) {		
 		
 		//обновляем или загружаем аватарку

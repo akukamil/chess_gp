@@ -1705,7 +1705,7 @@ sf={
 	
 	response(sf_data){
 		
-		console.log(sf_data.data);
+		//console.log(sf_data.data);
 		if (sf_data.data.substring(0, 8) !== 'bestmove') return;
 		if (this.move_resolver) {
 			this.move_resolver(sf_data);

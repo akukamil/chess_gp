@@ -1459,7 +1459,7 @@ online_player={
 
 		//отправляем ход сопернику
 		clearTimeout(online_player.write_fb_timer);
-		online_player.write_fb_timer=setTimeout(function(){online_player.stop('my_no_connection');}, 3000);  
+		online_player.write_fb_timer=setTimeout(function(){online_player.stop('my_no_connection');}, 8000);  
 		firebase.database().ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'MOVE',tm:Date.now(),data:move_data}).then(()=>{	
 			clearTimeout(online_player.write_fb_timer);
 		});	

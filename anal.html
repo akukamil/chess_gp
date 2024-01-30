@@ -5,8 +5,8 @@
 
 
 <meta name="http-equiv" content="Content-type: text/html; charset=windows-1251">
-<script src="https://www.gstatic.com/firebasejs/8.3.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.2.10/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 
 <style> 
@@ -301,7 +301,7 @@ async function get_games(ref) {
 	let _data = [];
 	for (let i = 0 ; i < uids.length ; i++) {
 				
-		_data.push([data[uids[i]].uid,data[uids[i]].player1, data[uids[i]].player2, data[uids[i]].fin_type,data[uids[i]].res, data[uids[i]].duration,data[uids[i]].client_id, data[uids[i]].rating, data[uids[i]].ts ])		
+		_data.push([data[uids[i]].uid,data[uids[i]].player1, data[uids[i]].player2, data[uids[i]].fin_type,data[uids[i]].res, data[uids[i]].made_moves_both,data[uids[i]].client_id, data[uids[i]].rating, data[uids[i]].ts ])		
 		
 	}	
 	

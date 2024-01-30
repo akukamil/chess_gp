@@ -704,12 +704,13 @@ chat={
 	block_next_click:0,
 	kill_next_click:0,
 	delete_message_mode:0,
+	games_to_chat:200,
 	
 	activate() {	
 
 		anim2.add(objects.chat_cont,{alpha:[0, 1]}, true, 0.1,'linear');
 		objects.desktop.texture=gres.desktop.texture;
-		objects.chat_enter_button.visible=!my_data.blocked && my_data.games>150;
+		objects.chat_enter_button.visible=!my_data.blocked && my_data.games>=this.games_to_chat;
 
 	},
 	
@@ -727,6 +728,9 @@ chat={
 			rec.msg_id = -1;	
 			rec.tm=0;
 		}			
+		
+		objects.chat_rules.text='Правила чата!\n\n1. Будьте вежливы: Общайтесь с другими игроками с уважением. Избегайте угроз, грубых выражений, оскорблений, конфликтов.\n\n2. Отправлять сообщения в чат могут игроки сыгравшие более 200 онлайн партий.\n\n3. За нарушение правил игрок может попасть в черный список.'
+		if(my_data.blocked) objects.chat_rules.text+='\n\n4. Вы не можете писать в чат, так как вы находитесь в черном списке';
 		
 		//загружаем чат
 		fbs.ref(chat_path).orderByChild('tm').limitToLast(20).once('value', snapshot => {chat.chat_load(snapshot.val());});		

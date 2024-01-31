@@ -5659,6 +5659,9 @@ async function init_game_env(lang) {
 	await players_cache.update(my_data.uid,{pic_url:my_data.pic_url});
 	await players_cache.update_avatar(my_data.uid);
 	
+	my_data.blocked=await fbs_once('blocked/'+my_data.uid)||0;
+	
+	
 	//устанавливаем фотки в попап
 	objects.id_avatar.texture=players_cache.players[my_data.uid].texture;
 	objects.id_name.set2(my_data.name,150);

@@ -186,23 +186,12 @@ class chat_record_class extends PIXI.Container {
 		this.tm=0;
 		this.hash=0;
 		this.index=0;
-		this.uid='';
-	
+		this.uid='';	
 		
-		this.msg_bcg_left = new PIXI.Sprite(gres.msg_bcg_left.texture);
-		this.msg_bcg_left.width=100;
-		this.msg_bcg_left.height=70;
-		this.msg_bcg_left.x=100;
-		
-		this.msg_bcg_cen = new PIXI.Sprite(gres.msg_bcg_cen.texture);
-		this.msg_bcg_cen.width=160;
-		this.msg_bcg_cen.height=70;
-		this.msg_bcg_cen.x=170;
-		
-		this.msg_bcg_right = new PIXI.Sprite(gres.msg_bcg_right.texture);
-		this.msg_bcg_right.width=70;
-		this.msg_bcg_right.height=70;
-		this.msg_bcg_right.x=300;
+		this.msg_bcg = new PIXI.NineSlicePlane(gres.msg_bcg.texture,90,50,45,50);
+		this.msg_bcg.width=200;
+		this.msg_bcg.height=70;	
+		this.msg_bcg.x=100;	
 
 		this.name = new PIXI.BitmapText('Имя Фамил', {fontName: 'mfont',fontSize: gdata.chat_record_name_font_size});
 		this.name.anchor.set(0.5,0.5);
@@ -236,7 +225,7 @@ class chat_record_class extends PIXI.Container {
 		this.msg_tm.anchor.set(0,0);
 		
 		this.visible = false;
-		this.addChild(this.msg_bcg_left,this.msg_bcg_right,this.msg_bcg_cen,this.avatar,this.name,this.msg,this.msg_tm);
+		this.addChild(this.msg_bcg,this.avatar,this.name,this.msg,this.msg_tm);
 		
 	}
 	
@@ -264,16 +253,12 @@ class chat_record_class extends PIXI.Container {
 		this.name.set2(msg_data.name,110)
 		this.msg.text=msg_data.msg;		
 		
-		const t_overflow=Math.max(this.msg.width-180,0);
-		
+		const msg_bcg_width=Math.max(this.msg.width,100)+100;		
 		
 		//бэкграунд сообщения в зависимости от длины
-		this.msg_bcg_cen.width=160+t_overflow;
-		const cen_end_x=this.msg_bcg_cen.x+this.msg_bcg_cen.width;
-		this.msg_bcg_right.x=cen_end_x-30;
+		this.msg_bcg.width=msg_bcg_width				
 				
-				
-		this.msg_tm.x=cen_end_x-73;
+		this.msg_tm.x=msg_bcg_width-15;
 		this.msg_tm.text = new Date(msg_data.tm).toLocaleString();
 		this.visible = true;	
 		

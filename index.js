@@ -2473,14 +2473,15 @@ game={
 			else
 				g_board = [['r','n','b','k','q','b','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','K','Q','B','N','R']];
 		
-			/*g_board = [["r","x","b","x","k","x","x","r"],
-			["x","p","p","p","n","p","p","x"],
-			["x","R","x","x","p","x","x","p"],
-			["x","x","x","x","x","x","x","x"],
-			["P","x","P","x","P","x","P","P"],
-			["x","x","x","q","x","P","x","x"],
-			["x","P","x","x","x","x","x","x"],
-			["x","K","B","x","x","x","x","x"]];
+			/*g_board = [
+			['x','x','x','x','x','x','x','x'],
+			['x','x','n','x','x','x','x','x'],
+			['x','x','x','x','x','x','x','k'],
+			['x','x','x','x','x','x','x','P'],
+			['x','x','x','x','x','x','x','x'],
+			['x','q','x','x','x','x','x','x'],
+			['q','x','x','K','x','x','x','x'],
+			['x','x','x','x','x','x','x','x']];
 			
 			if (role === 'slave')
 				board_func.rotate_board(g_board);*/
@@ -2734,7 +2735,7 @@ game={
 			new_board[y2][x2] = new_board[y1][x1];
 			new_board[y1][x1] = 'x';
 			
-			const is_check = this.check_fin(new_board, 'w');
+			const is_check = this.check_fin(new_board, 'w')==='check';
 			if (is_check) {
 				castling==='ok_castling'
 					? message.add(['Рокировка невозможна.Так вам шах','Castling is impossible. Check!'][LANG])

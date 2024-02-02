@@ -4204,7 +4204,7 @@ lobby={
 			
 			//создаем заголовки
 			const room_desc=['КОМНАТА #','ROOM #'][LANG]+{'states':1,'states2':2,'states3':3,'states4':4,'states5':5}[room_name];
-			this.sw_header.header_list=[['ДОБРО ПОЖАЛОВАТЬ В ИГРУ ШАХМАТЫ БЛИЦ-ОНЛАЙН!','WELCOME!!!'][LANG],room_desc]
+			this.sw_header.header_list=[['ДОБРО ПОЖАЛОВАТЬ В ИГРУ ШАХМАТЫ БЛИЦ ОНЛАЙН!','WELCOME!!!'][LANG],room_desc]
 			objects.lobby_header.text=this.sw_header.header_list[0];
 			this.sw_header.time=Date.now()+12000;
 			this.activated=true;

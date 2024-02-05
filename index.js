@@ -4241,6 +4241,12 @@ lobby={
 		
 		//это свободные игроки
 		let single = {};
+		
+		//удаляем инвалидных игроков
+		for (let uid in players){	
+			if(!players[uid].name||!players[uid].rating||!players[uid].state)
+				delete players[uid];
+		}
 
 		//делаем дополнительный объект с игроками и расширяем id соперника
 		let p_data = JSON.parse(JSON.stringify(players));

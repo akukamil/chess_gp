@@ -4354,7 +4354,7 @@ lobby={
 				if (single[card_uid] === undefined)					
 					objects.mini_cards[i].visible = false;
 				else
-					this.update_existing_card({id:i, state:players[card_uid].state, rating:players[card_uid].rating, name:players[card_uid].name, uid:players[card_uid].uid});
+					this.update_existing_card({id:i, state:players[card_uid].state, rating:players[card_uid].rating, name:players[card_uid].name, uid:card_uid});
 			}
 		}
 		

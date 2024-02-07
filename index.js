@@ -5302,8 +5302,7 @@ auth2={
 				my_data.name = this.get_random_name(my_data.uid);
 			
 			//если английский яндекс до добавляем к имени страну
-			let country_code = await this.get_country_code();
-			my_data.name = my_data.name + ' (' + country_code + ')';			
+			my_data.name = my_data.name;			
 
 			
 			return;
@@ -5331,9 +5330,8 @@ auth2={
 		
 		if (game_platform === 'GOOGLE_PLAY') {	
 
-			let country_code = await this.get_country_code();
 			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('GP_');
-			my_data.name = this.get_random_name(my_data.uid) + ' (' + country_code + ')';
+			my_data.name = this.get_random_name(my_data.uid);
 			my_data.orig_pic_url = 'mavatar'+my_data.uid;		
 			return;
 		}

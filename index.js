@@ -4354,7 +4354,7 @@ lobby={
 				if (single[card_uid] === undefined)					
 					objects.mini_cards[i].visible = false;
 				else
-					this.update_existing_card({id:i, state:players[card_uid].state, rating:players[card_uid].rating, name:players[card_uid].name});
+					this.update_existing_card({id:i, state:players[card_uid].state, rating:players[card_uid].rating, name:players[card_uid].name, uid:players[card_uid].uid});
 			}
 		}
 		
@@ -4504,7 +4504,7 @@ lobby={
 		
 	},
 
-	update_existing_card(params={id:0, state:'o' , rating:1400, name:''}) {
+	update_existing_card(params={id:0, state:'o' , rating:1400, name:'',uid:0}) {
 
 		//устанавливаем цвет карточки в зависимости от состояния( аватар не поменялись)
 		const card=objects.mini_cards[params.id];

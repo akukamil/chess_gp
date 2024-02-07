@@ -5238,12 +5238,25 @@ auth2={
 	},	
 	
 	async get_country_code() {
-		
+
 		let country_code = ''
 		try {
 			let resp1 = await fetch("https://ipinfo.io/json");
 			let resp2 = await resp1.json();			
-			country_code = resp2.country;			
+			country_code = resp2.country || '';			
+		} catch(e){}
+
+		return country_code;
+		
+	},
+	
+	async get_country_code2() {
+
+		let country_code = ''
+		try {
+			let resp1 = await fetch("https://api.ipgeolocation.io/ipgeo?apiKey=1efc1ba695434f2ab24129a98a72a1d4");
+			let resp2 = await resp1.json();			
+			country_code = resp2.country_code2 || '';			
 		} catch(e){}
 
 		return country_code;
@@ -5660,6 +5673,9 @@ async function init_game_env(lang) {
 	my_data.avatar_tm = other_data?.avatar_tm || 0;
 	my_data.pic_url=other_data?.pic_url || my_data.orig_pic_url;
 	my_data.name=other_data?.name || my_data.name;
+	my_data.country = other_data?.country || await auth2.get_country_code() || await auth2.get_country_code2() 
+	
+	
 	
 	//загружаем мои данные в кэш
 	await players_cache.update(my_data.uid,{pic_url:my_data.pic_url});
@@ -5667,6 +5683,8 @@ async function init_game_env(lang) {
 	
 	my_data.blocked=await fbs_once('blocked/'+my_data.uid);
 	
+	//добавляем страну
+	if(my_data.country&&!/\(.{2}\)/.test(my_data.name)) my_data.name=`${my_data.name} (${my_data.country})`
 	
 	//устанавливаем фотки в попап
 	objects.id_avatar.texture=players_cache.players[my_data.uid].texture;

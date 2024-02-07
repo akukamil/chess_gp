@@ -63,9 +63,16 @@ class player_mini_card_class extends PIXI.Container {
 		this.rating_text=new PIXI.BitmapText('', {fontName: 'mfont',fontSize: 30,align: 'center'});
 		this.rating_text.tint=0xffff00;
 		this.rating_text.anchor.set(0,0.5);
-		this.rating_text.x=100;
+		this.rating_text.x=95;
 		this.rating_text.y=65;		
 		this.rating_text.tint=0xffff00;
+
+		this.t_country=new PIXI.BitmapText('', {fontName: 'mfont',fontSize: 25,align: 'center'});
+		this.t_country.tint=0xffff00;
+		this.t_country.anchor.set(1,0.5);
+		this.t_country.x=190;
+		this.t_country.y=70;		
+		this.t_country.tint=0xaaaa99;
 
 		//аватар первого игрока
 		this.avatar1=new PIXI.Sprite();
@@ -95,7 +102,7 @@ class player_mini_card_class extends PIXI.Container {
 		this.name1="";
 		this.name2="";
 
-		this.addChild(this.bcg,this.avatar, this.avatar1, this.avatar2,this.rating_text,this.table_rating_hl,this.rating_text1,this.rating_text2, this.name_text);
+		this.addChild(this.bcg,this.avatar, this.avatar1, this.avatar2,this.rating_text,this.t_country,this.table_rating_hl,this.rating_text1,this.rating_text2, this.name_text);
 	}
 
 }
@@ -2435,7 +2442,7 @@ game={
 		if (game_watching.on) game_watching.close();		
 		
 		//показываем и заполняем мою карточку	
-		objects.my_card_name.set2(my_data.name,110);
+		objects.my_card_name.set2(my_data.name,150);
 		objects.my_card_rating.text=my_data.rating;
 		objects.my_avatar.texture=players_cache.players[my_data.uid].texture;	
 		anim2.add(objects.my_card_cont,{x:[-100, objects.my_card_cont.sx]}, true, 0.5,'linear');		
@@ -3780,7 +3787,7 @@ pref={
 		if (name.length>1){
 			my_data.name=name;
 
-			objects.my_card_name.set2(my_data.name,110);
+			objects.my_card_name.set2(my_data.name,150);
 			set_state({});			
 			objects.pref_info.text=['Имя изменено','Name has been changed'][LANG];
 			anim2.add(objects.pref_info,{alpha:[0,1]}, false, 3,'easeBridge',false);		
@@ -4146,6 +4153,13 @@ players_cache={
 		
 		if (!player.name) player.name=await fbs_once('players/'+uid+'/name');
 		if (!player.rating) player.rating=await fbs_once('players/'+uid+'/rating');
+		
+		//извлекаем страну если она есть в отдельную категорию и из имени убираем
+		const country =auth2.get_country_from_name(player.name);
+		if (country){			
+			player.country=country;
+			player.name=player.name.slice(0, -4);
+		}	
 	},
 	
 	async update_avatar(uid){
@@ -4497,7 +4511,11 @@ lobby={
 		card.bcg.texture=this.get_state_texture(params.state);
 		card.state=params.state;
 
-		card.name_text.set2(params.name,105);
+		//добавляем страну и имя из кэша
+		const cached_player=players_cache.players[params.uid];
+		card.name=params.name;
+		card.name_text.set2(cached_player.name,105);
+		
 		card.rating=params.rating;
 		card.rating_text.text=params.rating;
 		card.visible=true;
@@ -4532,14 +4550,16 @@ lobby={
 				//включаем элементы свободного стола
 				card.rating_text.visible = true;
 				card.avatar.visible = true;
-				//card.avatar_frame.visible = true;
 				card.name_text.visible = true;
 
+				//добавляем страну и имя из кэша
+				const cached_player=players_cache.players[params.uid];
+				card.t_country.text = cached_player.country||'';;
 				card.name=params.name;
-				card.name_text.set2(params.name,105);
-				card.rating=params.rating;
-				card.rating_text.text=params.rating;
+				card.name_text.set2(cached_player.name,105);
 
+				card.rating=params.rating;				
+				card.rating_text.text=params.rating;
 				card.visible=true;
 
 				//стираем старые данные
@@ -5351,8 +5371,17 @@ auth2={
 			my_data.name = this.get_random_name(my_data.uid);
 			my_data.orig_pic_url = 'mavatar'+my_data.uid;		
 		}
-	}
+	},
 	
+	get_country_from_name(name){
+		
+		const have_country_code=/\(.{2}\)/.test(name);
+		if(have_country_code)
+			return name.slice(-3, -1);
+		return '';
+		
+	}
+
 }
 
 var kill_game = function() {
@@ -5673,16 +5702,16 @@ async function init_game_env(lang) {
 	my_data.name=other_data?.name || my_data.name;
 	my_data.country = other_data?.country || await auth2.get_country_code() || await auth2.get_country_code2() 
 	
-	
+	//добавляем страну к имени если ее нет
+	if (!auth2.get_country_from_name(my_data.name)&&my_data.country)
+		my_data.name=`${my_data.name} (${my_data.country})`	
 	
 	//загружаем мои данные в кэш
-	await players_cache.update(my_data.uid,{pic_url:my_data.pic_url});
+	await players_cache.update(my_data.uid,{pic_url:my_data.pic_url,country:my_data.country,name:my_data.name,rating:my_data.rating});
 	await players_cache.update_avatar(my_data.uid);
 	
 	my_data.blocked=await fbs_once('blocked/'+my_data.uid);
-	
-	//добавляем страну
-	if(my_data.country&&!/\(.{2}\)/.test(my_data.name)) my_data.name=`${my_data.name} (${my_data.country})`
+
 	
 	//устанавливаем фотки в попап
 	objects.id_avatar.texture=players_cache.players[my_data.uid].texture;

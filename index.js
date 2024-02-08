@@ -5189,7 +5189,7 @@ auth1={
 
 			
 			my_data.name 	= _player.first_name + ' ' + _player.last_name;
-			my_data.uid 	= "vk"+_player.id;
+			my_data.uid 	= 'vk'+_player.id;
 			my_data.orig_pic_url = _player.photo_100;
 			
 			return;
@@ -5320,11 +5320,7 @@ auth2={
 			
 			if (my_data.name === '')
 				my_data.name = this.get_random_name(my_data.uid);
-			
-			//если английский яндекс до добавляем к имени страну
-			my_data.name = my_data.name;			
-
-			
+		
 			return;
 		}
 		
@@ -5341,7 +5337,7 @@ auth2={
 
 			
 			my_data.name 	= _player.first_name + ' ' + _player.last_name;
-			my_data.uid 	= "vk"+_player.id;
+			my_data.uid 	= 'vk'+_player.id;
 			my_data.orig_pic_url = _player.photo_100;
 			
 			return;
@@ -5698,9 +5694,14 @@ async function init_game_env(lang) {
 	my_data.quiz_level=other_data?.quiz_level || 0;
 	my_data.nick_tm = other_data?.nick_tm || 0;
 	my_data.avatar_tm = other_data?.avatar_tm || 0;
-	my_data.pic_url=other_data?.pic_url || my_data.orig_pic_url;
 	my_data.name=other_data?.name || my_data.name;
 	my_data.country = other_data?.country || await auth2.get_country_code() || await auth2.get_country_code2() 
+		
+	//правильно определяем аватарку
+	if (other_data.pic_url && other_data.pic_url.includes('mavatar'))
+		my_data.pic_url=other_data.pic_url
+	else
+		my_data.pic_url=my_data.orig_pic_url
 	
 	//добавляем страну к имени если ее нет
 	if (!auth2.get_country_from_name(my_data.name)&&my_data.country)

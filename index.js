@@ -3850,8 +3850,7 @@ pref={
 			
 			players_cache.players[my_data.uid].texture=0;
 			players_cache.players[my_data.uid].pic_url=this.cur_pic_url;
-			
-			
+						
 			fbs.ref(`players/${my_data.uid}/pic_url`).set(this.cur_pic_url);
 			
 			my_data.avatar_tm=Date.now();

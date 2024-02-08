@@ -5697,7 +5697,7 @@ async function init_game_env(lang) {
 	my_data.country = other_data?.country || await auth2.get_country_code() || await auth2.get_country_code2() 
 		
 	//правильно определяем аватарку
-	if (other_data.pic_url && other_data.pic_url.includes('mavatar'))
+	if (other_data?.pic_url && other_data.pic_url.includes('mavatar'))
 		my_data.pic_url=other_data.pic_url
 	else
 		my_data.pic_url=my_data.orig_pic_url

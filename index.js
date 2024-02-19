@@ -1685,7 +1685,7 @@ online_player={
 			firebase.database().ref('players/'+[my_data.uid]+'/games').set(my_data.games);	
 	
 			//контрольные концовки
-			if (my_data.rating>2130 || opp_data.rating>2130) {
+			if (my_data.rating>2500 || opp_data.rating>2500) {
 				fbs.ref('finishes2').push({uid:my_data.uid,player1:objects.my_card_name.text,player2:objects.opp_card_name.text, res:res_info[1],fin_type:final_state,made_moves_both:game.made_moves_both, rating: [old_rating,my_data.rating],ts:firebase.database.ServerValue.TIMESTAMP});	
 			}
 	
@@ -5722,9 +5722,9 @@ async function init_game_env(lang) {
 		room_name = 'states'		
 	if (my_data.rating >= 1410 && my_data.rating < 1553)
 		room_name = 'states2'		
-	if (my_data.rating >= 1553 && my_data.rating < 1760)
+	if (my_data.rating >= 1553 && my_data.rating < 1800)
 		room_name = 'states3'		
-	if (my_data.rating >= 1760)
+	if (my_data.rating >= 1800)
 		room_name= 'states4';
 
 	//room_name= 'states5';	

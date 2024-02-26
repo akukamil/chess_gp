@@ -1640,8 +1640,9 @@ online_player={
 						
 		let res_db = {
 			'my_no_connection' 		: [['Потеряна связь!\nИспользуйте надежное интернет соединение.','Lost connection!\nuse a reliable internet connection'], LOSE],
-			'stalemate' : [['Пат!\nИгра закончилась ничьей.','Stalemate!\nthe game ended in a draw'], DRAW],
+			'stalemate' 			: [['Пат!\nИгра закончилась ничьей.','Stalemate!\nthe game ended in a draw'], DRAW],
 			'draw' 					: [['Игра закончилась ничьей.','The game ended in a draw'], DRAW],
+			'draw_ins' 				: [['Игра закончилась ничьей (недостаточно фигур)','The game ended in a draw (insufficient_material)'], DRAW],
 			'checkmate_to_opponent' : [['Победа!\nВы поставили мат!','Victory!\nYou checkmated'], WIN],
 			'checkmate_to_player' 	: [['Поражение!\nВам поставили мат!','Defeat!\nYou have been checkmated'], LOSE],
 			'op_gave_up' 			: [['Победа!\nСоперник сдался.','Victory!\nThe opponent gave up'], WIN],
@@ -2167,6 +2168,9 @@ mk={
 		if (final_state === 'draw_50')			
 			t = [['Ничья!','Draw!'],DRAW]		
 		
+		if (final_state === 'draw_ins')			
+			t = [['Ничья! (недостаточно фигур)','Draw! (insufficient_material)'],DRAW]	
+		
 		if (final_state === 'checkmate_to_opponent'){
 			
 			sound.play(['mk_impressive','mk_outstanding','mk_excelent'][irnd(0,2)]);
@@ -2335,8 +2339,6 @@ mk={
 			players_cache.players[opp_data.uid]={};
 			players_cache.players[opp_data.uid].texture=new PIXI.Texture(gres[this.cur_enemy.pic_res].texture.baseTexture, new PIXI.Rectangle(40,0,160,160));			
 		}
-				
-
 		
 		//устанавливаем статус в базе данных а если мы не видны то установливаем только скрытое состояние
 		set_state({state : 'b'});
@@ -2923,7 +2925,9 @@ game={
 		if(this.made_moves_both%2===0){
 			this.empty_moves++;
 			if([30,35,40,45,46,47,48,49].includes(this.empty_moves))
-				message.add([`Ходов до ничьи: ${50-this.empty_moves}. Если не будет взятий или движения пешек.`,`Moves to a draw: ${50-this.empty_moves}. If there are no takeaways or pawn movements.`][LANG])				
+				message.add([`Ходов до ничьи: ${50-this.empty_moves}. Если не будет взятий или движения пешек.`,`Moves to a draw: ${50-this.empty_moves}. If there are no takeaways or pawn movements.`][LANG])
+			
+			
 		}
 		if (eaten_figure_spr||fig==='p') this.empty_moves=0;		
 			
@@ -2932,8 +2936,8 @@ game={
 		g_board[y1][x1] = 'x'	
 		
 		//удаления взятой на проходе пешки в массиве
-		if (pass_taken_pawn_pos_y) g_board[pass_taken_pawn_pos_y][x2] = 'x';
-		
+		if (pass_taken_pawn_pos_y) g_board[pass_taken_pawn_pos_y][x2] = 'x';		
+
 	},
 
 	async process_my_move(move_data, castling){
@@ -2989,6 +2993,7 @@ game={
 		if (final_state==='checkmate') {opponent.stop(final_state+'_to_opponent');return}
 		if (final_state==='stalemate') {opponent.stop(final_state);return}
 		if (final_state==='draw_50') {opponent.stop(final_state);return}
+		if (final_state==='draw_ins') {opponent.stop(final_state);return}
 	},
 
 	async process_op_move (move_data) {
@@ -3061,6 +3066,7 @@ game={
 		if (final_state==='checkmate') {opponent.stop(final_state+'_to_player');return}
 		if (final_state==='stalemate') {opponent.stop(final_state);return}
 		if (final_state==='draw_50') {opponent.stop(final_state);return}
+		if (final_state==='draw_ins') {opponent.stop(final_state);return}
 
 	},
 
@@ -3069,6 +3075,10 @@ game={
 		//проверяем завершение игры
 		const fen = board_func.get_fen(brd) + ' ' + fig_to_move + ' - - 1 1';
 		chess.load(fen);
+		
+		//недостаточно материала
+		if (chess.insufficient_material())
+			return 'draw_ins';
 		
 		const is_check = chess.in_check();
 		const is_checkmate = chess.in_checkmate();	

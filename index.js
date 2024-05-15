@@ -4670,6 +4670,7 @@ lobby={
 		this.show_feedbacks(lobby._opp_data.uid);
 		
 		objects.invite_button_title.text=['ПРИГЛАСИТЬ','SEND INVITE'][LANG];
+		objects.invite_cont.ready_to_invite=1;
 
 		let invite_available=lobby._opp_data.uid !== my_data.uid;
 		invite_available=invite_available && (card.state==="o" || card.state==="b");
@@ -4745,7 +4746,7 @@ lobby={
 		
 		//кнопка удаления комментариев
 		//objects.fb_delete_button.visible=false;
-		
+		objects.invite_cont.ready_to_invite=1;
 		objects.invite_button_title.text=['ПРИГЛАСИТЬ','SEND INVITE'][LANG];
 
 		let invite_available = 	lobby._opp_data.uid !== my_data.uid;
@@ -4942,7 +4943,7 @@ lobby={
 		if (!objects.invite_cont.ready||!objects.invite_cont.visible)
 			return;
 
-		if (anim2.any_on() === true) {
+		if (anim2.any_on()||!objects.invite_cont.ready_to_invite) {
 			sound.play('locked');
 			return
 		};
@@ -4959,7 +4960,9 @@ lobby={
 		}
 		else
 		{
+			
 			sound.play('click');
+			objects.invite_cont.ready_to_invite=0;
 			objects.invite_button_title.text=['Ждите ответ..','Waiting...'][LANG];
 			fbs.ref('inbox/'+lobby._opp_data.uid).set({sender:my_data.uid,message:"INV",tm:Date.now()});
 			pending_player=lobby._opp_data.uid;

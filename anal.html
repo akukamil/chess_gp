@@ -67,7 +67,7 @@
   		<div class="two_buttons_area">
 
 			<div class="button_with_text">
-				<button class="button"  id ="but_ref1"  onclick="states_room('states')">Комната №1</button>
+				<button class="button"  id ="but_ref1"  onclick="states_room('states1')">Комната №1</button>
 			</div>
 
 			<div class="button_with_text">
@@ -172,7 +172,7 @@ async function update_room_quick_stat() {
 	console.timeEnd();
 	
 
-	firebase.database().ref('states').once('value').then((snapshot) => {
+	firebase.database().ref('states1').once('value').then((snapshot) => {
 		document.getElementById("but_ref1").textContent = Object.keys(snapshot.val()).length;
 	})
 	

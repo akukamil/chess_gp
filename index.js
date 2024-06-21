@@ -5536,7 +5536,7 @@ async function define_platform_and_language() {
 	
 	let s = window.location.href;
 	
-	if (s.includes('yandex')) {
+	if (s.includes('yandex')||s.includes('app-id=179400')) {
 		
 		game_platform = 'YANDEX';
 		

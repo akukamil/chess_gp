@@ -3793,7 +3793,9 @@ pref={
 		
 		//провряем можно ли менять ник
 		if(!this.check_time(my_data.nick_tm)) return;
-									
+			
+		if(my_data.blocked) return;
+			
 		const name=await keyboard.read(15);
 		if (name.length>1){
 			my_data.name=name;

@@ -3247,6 +3247,10 @@ game_watching={
 		objects.my_card_cont.visible = true;	
 		objects.opp_card_cont.visible = true;	
 		objects.board_cont.visible=true;
+		objects.board_cont.scale_xy=1;
+		objects.board_cont.x=0;
+		objects.board_cont.y=0;
+		objects.board_cont.angle=0;
 		my_turn=0;
 		
 		const main_data=await fbs_once('tables/'+this.game_id);
@@ -6379,7 +6383,7 @@ async function init_game_env(lang) {
 	}
 	
 
-	//room_name= 'states5';	
+	room_name= 'states5';	
 	
 	//устанавливаем рейтинг в попап
 	objects.id_rating.text=objects.my_card_rating.text=my_data.rating;

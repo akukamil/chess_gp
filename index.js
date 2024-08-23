@@ -4685,6 +4685,8 @@ lobby={
 		anim2.add(objects.lobby_header_cont,{y:[-50, objects.lobby_header_cont.sy]}, true, 0.1,'linear');
 		objects.cards_cont.x=0;
 		
+		no_invite = false;
+		
 		//отключаем все карточки
 		for(let i=0;i<objects.mini_cards.length;i++)
 			objects.mini_cards[i].visible=false;

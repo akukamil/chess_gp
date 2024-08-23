@@ -6383,7 +6383,7 @@ async function init_game_env(lang) {
 	}
 	
 
-	room_name= 'states5';	
+	//room_name= 'states5';	
 	
 	//устанавливаем рейтинг в попап
 	objects.id_rating.text=objects.my_card_rating.text=my_data.rating;

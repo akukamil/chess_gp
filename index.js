@@ -2789,7 +2789,7 @@ game={
 
 		//координаты указателя на игровой доске
 		const new_x=Math.floor(8*(mx-objects.board.x-20)/400);
-		const new_y=Math.floor(8*(my-objects.board.y-10)/400);
+		const new_y=Math.floor(8*(my-objects.board.y-20)/400);
 		
 		//убираем хайлайты
 		objects.move_hl[0].visible=objects.move_hl[1].visible=false;

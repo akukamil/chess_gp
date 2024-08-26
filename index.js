@@ -768,7 +768,7 @@ chat={
 
 		anim2.add(objects.chat_cont,{alpha:[0, 1]}, true, 0.1,'linear');
 		objects.bcg.texture=gres.bcg.texture;
-		objects.chat_enter_button.visible=!my_data.blocked&&my_data.games>=this.games_to_chat;
+		objects.chat_enter_button.visible=my_data.games>=this.games_to_chat;
 		
 		if(my_data.blocked)		
 			objects.chat_enter_button.texture=gres.chat_blocked_img.texture;
@@ -1055,8 +1055,7 @@ chat={
 					message.add(['Ошибка при покупке!','Error!'][LANG]);
 				});			
 			
-			};	
-		
+			};			
 				
 			return;
 		}

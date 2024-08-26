@@ -1038,8 +1038,11 @@ chat={
 		//оплача разблокировки чата
 		if (my_data.blocked){	
 			this.payments.purchase({ id: 'unblock' }).then(purchase => {
+				objects.chat_rules.text='Правила чата!\n\n1. Будьте вежливы: Общайтесь с другими игроками с уважением. Избегайте угроз, грубых выражений, оскорблений, конфликтов.\n\n2. Отправлять сообщения в чат могут игроки сыгравшие более 200 онлайн партий.\n\n3. За нарушение правил игрок может попасть в черный список.'
+				objects.chat_enter_button.texture=gres.chat_enter_img.texture;				
+				my_data.blocked=0;
 				message.add('Вы разблокировали чат');
-				sound.play('confirm_dialog');				
+				sound.play('mini_dialog');				
 			}).catch(err => {
 				message.add(['Ошибка при покупке!','Error!'][LANG]);
 			})				

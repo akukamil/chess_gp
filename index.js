@@ -1035,17 +1035,29 @@ chat={
 		};
 		
 		
-		//оплача разблокировки чата
+		//оплата разблокировки чата
 		if (my_data.blocked){	
-			this.payments.purchase({ id: 'unblock' }).then(purchase => {
-				objects.chat_rules.text='Правила чата!\n\n1. Будьте вежливы: Общайтесь с другими игроками с уважением. Избегайте угроз, грубых выражений, оскорблений, конфликтов.\n\n2. Отправлять сообщения в чат могут игроки сыгравшие более 200 онлайн партий.\n\n3. За нарушение правил игрок может попасть в черный список.'
-				objects.chat_enter_button.texture=gres.chat_enter_img.texture;				
-				my_data.blocked=0;
-				message.add('Вы разблокировали чат');
-				sound.play('mini_dialog');				
-			}).catch(err => {
-				message.add(['Ошибка при покупке!','Error!'][LANG]);
-			})				
+		
+			if(game_platform==='YANDEX'){
+				
+				this.payments.purchase({ id: 'unblock' }).then(purchase => {
+					this.unblock_chat();
+				}).catch(err => {
+					message.add(['Ошибка при покупке!','Error!'][LANG]);
+				})				
+			}
+			
+			if (game_platform==='VK') {
+				
+				vkBridge.send('VKWebAppShowOrderBox', { type: 'item', item: 'unblock'}).then(data =>{
+					this.unblock_chat();
+				}).catch((err) => {
+					message.add(['Ошибка при покупке!','Error!'][LANG]);
+				});			
+			
+			};	
+		
+				
 			return;
 		}
 		
@@ -1072,6 +1084,15 @@ chat={
 			fbs.ref(chat_path+'/'+index).set({uid:my_data.uid,name:my_data.name,msg, tm:firebase.database.ServerValue.TIMESTAMP,index, hash});
 		}	
 		
+	},
+	
+	unblock_chat(){
+		objects.chat_rules.text='Правила чата!\n\n1. Будьте вежливы: Общайтесь с другими игроками с уважением. Избегайте угроз, грубых выражений, оскорблений, конфликтов.\n\n2. Отправлять сообщения в чат могут игроки сыгравшие более 200 онлайн партий.\n\n3. За нарушение правил игрок может попасть в черный список.'
+		objects.chat_enter_button.texture=gres.chat_enter_img.texture;	
+		fbs.ref('blocked/'+my_data.uid).remove();
+		my_data.blocked=0;
+		message.add('Вы разблокировали чат');
+		sound.play('mini_dialog');	
 	},
 		
 	close() {

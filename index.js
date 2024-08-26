@@ -762,12 +762,18 @@ chat={
 	kill_next_click:0,
 	delete_message_mode:0,
 	games_to_chat:200,
+	payments:0,
 	
 	activate() {	
 
 		anim2.add(objects.chat_cont,{alpha:[0, 1]}, true, 0.1,'linear');
 		objects.bcg.texture=gres.bcg.texture;
-		objects.chat_enter_button.visible=!my_data.blocked && my_data.games>=this.games_to_chat;
+		objects.chat_enter_button.visible=!my_data.blocked&&my_data.games>=this.games_to_chat;
+		
+		if(my_data.blocked)		
+			objects.chat_enter_button.texture=gres.chat_blocked_img.texture;
+		else
+			objects.chat_enter_button.texture=gres.chat_enter_img.texture;
 
 	},
 	
@@ -787,12 +793,25 @@ chat={
 		}			
 		
 		objects.chat_rules.text='Правила чата!\n\n1. Будьте вежливы: Общайтесь с другими игроками с уважением. Избегайте угроз, грубых выражений, оскорблений, конфликтов.\n\n2. Отправлять сообщения в чат могут игроки сыгравшие более 200 онлайн партий.\n\n3. За нарушение правил игрок может попасть в черный список.'
-		if(my_data.blocked) objects.chat_rules.text+='\n\n4. Вы не можете писать в чат, так как вы находитесь в черном списке';
+		if(my_data.blocked) objects.chat_rules.text='Вы не можете писать в чат, так как вы находитесь в черном списке';
 		
-		//загружаем чат
+		//загружаем чат		
 		fbs.ref(chat_path).orderByChild('tm').limitToLast(20).once('value', snapshot => {chat.chat_load(snapshot.val());});		
 		
-	},			
+		this.init_yandex_payments();
+	},		
+
+	init_yandex_payments(){
+				
+		if (game_platform!=='YANDEX') return;			
+				
+		if(this.payments) return;
+		
+		ysdk.getPayments({ signed: true }).then(_payments => {
+			chat.payments = _payments;
+		}).catch(err => {})			
+		
+	},	
 
 	get_oldest_index () {
 		
@@ -1013,8 +1032,15 @@ chat={
 			return
 		};
 		
-		if (my_data.blocked){			
-			message.add('Закрыто');
+		
+		//оплача разблокировки чата
+		if (my_data.blocked){	
+			this.payments.purchase({ id: 'unblock' }).then(purchase => {
+				message.add('Вы разблокировали чат');
+				sound.play('confirm_dialog');				
+			}).catch(err => {
+				message.add(['Ошибка при покупке!','Error!'][LANG]);
+			})				
 			return;
 		}
 		
@@ -1529,8 +1555,16 @@ online_game={
 	},
 	
 	disable_chat(){
-		if (!this.chat_in) return;		
-		this.chat_in=0;
+		if (!this.chat_in) return;
+
+		if (my_data.blocked){
+			message.add(['Эта опция недоступна, так как вы находитесь в черном списке'][LANG]);			
+			sound.play('locked');
+			return;				
+		}
+
+		
+		this.chat_in=0;		
 		objects.no_chat_button.alpha=0.3;
 		fbs.ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:'NOCHAT',tm:Date.now()});
 		message.add(['Вы отключили чат','Chat disabled'][LANG]);
@@ -1637,7 +1671,13 @@ online_game={
 	
 	async send_message() {
 				
-		if (my_data.blocked || !this.chat_out||objects.chat_keyboard_cont.visible){
+		if (!this.chat_out||objects.chat_keyboard_cont.visible){
+			sound.play('locked');
+			return;				
+		}
+		
+		if (my_data.blocked){
+			message.add(['Вы не можете писать в чат, так как вы находитесь в черном списке'][LANG]);			
 			sound.play('locked');
 			return;				
 		}

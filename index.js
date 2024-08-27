@@ -727,7 +727,7 @@ big_message={
 		const fb = await keyboard.read();		
 		if (fb.length>0) {
 			const fb_id = irnd(0,50);			
-			await firebase.database().ref('fb/'+opp_data.uid+'/'+fb_id).set([fb, firebase.database.ServerValue.TIMESTAMP, my_data.name]);
+			await fbs.ref('fb/'+opp_data.uid+'/'+fb_id).set([fb, firebase.database.ServerValue.TIMESTAMP, my_data.name]);
 		
 		}		
 		this.p_resolve('close');
@@ -1560,14 +1560,14 @@ online_game={
 		//вычиcляем рейтинг при проигрыше и устанавливаем его в базу он потом изменится
 		let lose_rating = this.calc_new_rating(my_data.rating, LOSE);
 		if (lose_rating >100 && lose_rating<9999)
-			firebase.database().ref("players/"+my_data.uid+"/rating").set(lose_rating);
+			fbs.ref("players/"+my_data.uid+"/rating").set(lose_rating);
 		
 
 		game.activate(role,online_game)
 		
 		//обновляем стол
-		firebase.database().ref('tables/'+game_id+'/master').set(my_data.uid);
-		firebase.database().ref('tables/'+game_id+'/slave').set(opp_data.uid);
+		fbs.ref('tables/'+game_id+'/master').set(my_data.uid);
+		fbs.ref('tables/'+game_id+'/slave').set(opp_data.uid);
 		
 		//возможность чата
 		this.chat_out=1;
@@ -1608,12 +1608,12 @@ online_game={
 		//отправляем ход сопернику
 		clearTimeout(online_game.write_fb_timer);
 		online_game.write_fb_timer=setTimeout(function(){online_game.stop('my_no_connection');}, 8000);  
-		firebase.database().ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'MOVE',tm:Date.now(),data:move_data}).then(()=>{	
+		fbs.ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'MOVE',tm:Date.now(),data:move_data}).then(()=>{	
 			clearTimeout(online_game.write_fb_timer);
 		});	
 		
 		//также фиксируем данные стола
-		firebase.database().ref('tables/'+game_id+'/board').set({uid:my_data.uid,f_str:board_func.brd_to_str(g_board),tm:firebase.database.ServerValue.TIMESTAMP});
+		fbs.ref('tables/'+game_id+'/board').set({uid:my_data.uid,f_str:board_func.brd_to_str(g_board),tm:firebase.database.ServerValue.TIMESTAMP});
 		
 		this.reset_timer();
 	},
@@ -1645,7 +1645,7 @@ online_game={
 	
 	giveup(){
 		//это когда я сдаюсь
-		firebase.database().ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'GIVEUP',tm:Date.now(),data:{}});		
+		fbs.ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'GIVEUP',tm:Date.now(),data:{}});		
 		this.stop('player_gave_up');
 	},
 	
@@ -1677,7 +1677,7 @@ online_game={
 		
 		const res=await mini_dialog.show(['Предложить ничью?','Offer a draw?'][LANG]);
 		if(res==='yes')
-			firebase.database().ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"DRAWREQ",tm:Date.now(),data:{}});
+			fbs.ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"DRAWREQ",tm:Date.now(),data:{}});
 		
 	},
 	
@@ -1686,11 +1686,11 @@ online_game={
 		const res=await mini_dialog.show(['Согласны на ничью?','Agree to a draw?'][LANG]);
 		
 		if(res==='yes'){
-			firebase.database().ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'DRAWOK',tm:Date.now(),data:{}});
+			fbs.ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'DRAWOK',tm:Date.now(),data:{}});
 			this.stop('draw');
 		}			
 		if(res==='no')
-			firebase.database().ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'DRAWNO',tm:Date.now()});			
+			fbs.ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'DRAWNO',tm:Date.now()});			
 		
 	},
 	
@@ -1838,10 +1838,10 @@ online_game={
 		//обновляем рейтинг
 		const old_rating = my_data.rating;
 		my_data.rating = this.calc_new_rating (my_data.rating, res_info[1]);
-		firebase.database().ref('players/'+my_data.uid+'/rating').set(my_data.rating);
+		fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
 
 		//также фиксируем данные стола
-		firebase.database().ref('tables/'+game_id+'/board').set('fin');
+		fbs.ref('tables/'+game_id+'/board').set('fin');
 
 		//обновляем даные на карточке
 		objects.my_card_rating.text=my_data.rating;
@@ -1855,11 +1855,11 @@ online_game={
 		if (res_info[1] === DRAW || res_info[1] === LOSE || res_info[1] === WIN) {
 			
 			//записываем результат в базу данных
-			firebase.database().ref('finishes/' + game_id + my_role).set({'player1':objects.my_card_name.text,'player2':objects.opp_card_name.text, 'res':res_info[1], 'fin_type':final_state,made_moves_both:game.made_moves_both, 'ts':firebase.database.ServerValue.TIMESTAMP});
+			fbs.ref('finishes/' + game_id + my_role).set({'player1':objects.my_card_name.text,'player2':objects.opp_card_name.text, 'res':res_info[1], 'fin_type':final_state,made_moves_both:game.made_moves_both, 'ts':firebase.database.ServerValue.TIMESTAMP});
 		
 			//увеличиваем количество игр
 			my_data.games++;
-			firebase.database().ref('players/'+[my_data.uid]+'/games').set(my_data.games);	
+			fbs.ref('players/'+[my_data.uid]+'/games').set(my_data.games);	
 	
 			//контрольные концовки
 			if (my_data.rating>2500 || opp_data.rating>2500) {
@@ -2044,7 +2044,7 @@ quiz={
 		
 		//смотрим сколько людей решили
 		if (!this.solved_data[this.quiz_level]){
-			let pc=await firebase.database().ref('quizes/'+this.quiz_level ).once('value'); 
+			let pc=await fbs.ref('quizes/'+this.quiz_level ).once('value'); 
 			pc=pc.val();			
 			this.solved_data[this.quiz_level]=pc;			
 		}
@@ -2076,11 +2076,11 @@ quiz={
 	async update_quiz_stat(quiz_id){
 		
 		//смотрим сколько людей решили
-		let pc=await firebase.database().ref("quizes/"+quiz_id ).once('value'); 
+		let pc=await fbs.ref("quizes/"+quiz_id ).once('value'); 
 		pc=pc.val();
 		
 		if (pc!==null && pc!==undefined)
-			firebase.database().ref("quizes/"+quiz_id ).set(pc+1); 
+			fbs.ref("quizes/"+quiz_id ).set(pc+1); 
 	},
 	
 	exit_down(){
@@ -2140,7 +2140,7 @@ quiz={
 				if (this.quiz_level===my_data.quiz_level){
 					this.update_quiz_stat(my_data.quiz_level);	
 					my_data.quiz_level++;
-					firebase.database().ref("players/"+my_data.uid+"/quiz_level").set(my_data.quiz_level);			
+					fbs.ref("players/"+my_data.uid+"/quiz_level").set(my_data.quiz_level);			
 				}				
 			}
 
@@ -2360,7 +2360,7 @@ mk={
 			const next_level=this.cur_mk_level-1;
 			if (this.cur_mk_level>0)
 				my_data.mk_level=Math.min(next_level,my_data.mk_level);
-			firebase.database().ref("players/"+my_data.uid+"/mk_level").set(my_data.mk_level);
+			fbs.ref("players/"+my_data.uid+"/mk_level").set(my_data.mk_level);
 			
 		} else {
 			
@@ -2378,7 +2378,7 @@ mk={
 				this.played_num=0;
 				my_data.mk_sback_num++;
 				if (my_data.mk_sback_num>3)my_data.mk_sback_num=3;			
-				firebase.database().ref("players/"+my_data.uid+"/mk_sback_num").set(my_data.mk_sback_num);
+				fbs.ref("players/"+my_data.uid+"/mk_sback_num").set(my_data.mk_sback_num);
 			} 			
 		}
 		
@@ -2442,7 +2442,7 @@ mk={
 			anim2.add(objects.step_back_button,{x:[objects.step_back_button.x, 900]},false,0.6,'easeInBack');
 		objects.sback_title.text=['Шаг назад ','Step back '][LANG];
 		
-		firebase.database().ref("players/"+my_data.uid+"/mk_sback_num").set(my_data.mk_sback_num);
+		fbs.ref("players/"+my_data.uid+"/mk_sback_num").set(my_data.mk_sback_num);
 		
 		objects.selected_frame.visible=false;
 		this.selected_piece=0;
@@ -3200,7 +3200,7 @@ game={
 		//проверка ошибок
 		try {
 			if (opponent===online_game&&(my_pieces.includes(g_board[y1][x1])||g_board[y1][x1]==='x')) {			
-				firebase.database().ref('errors').push([my_data.name, opp_data.name, g_board, move_data]);
+				fbs.ref('errors').push([my_data.name, opp_data.name, g_board, move_data]);
 				opponent.stop('move_error');
 				return;
 			}			
@@ -3375,7 +3375,7 @@ game_watching={
 		objects.board.texture=pref.cur_board_texture;
 		board_func.update_board();
 		
-		firebase.database().ref('tables/'+this.game_id+'/board').on('value',(snapshot) => {
+		fbs.ref('tables/'+this.game_id+'/board').on('value',(snapshot) => {
 			game_watching.new_move(snapshot.val());
 		})
 		
@@ -3529,7 +3529,7 @@ game_watching={
 		objects.board_cont.visible=false;
 		objects.my_card_cont.visible = false;	
 		objects.opp_card_cont.visible = false;	
-		firebase.database().ref('tables/'+this.game_id+'/board').off();
+		fbs.ref('tables/'+this.game_id+'/board').off();
 		this.on=false;
 
 	}
@@ -3706,14 +3706,14 @@ keep_alive=function(){
 		//убираем из списка если прошло время с момента перехода в скрытое состояние		
 		let cur_ts = Date.now();	
 		let sec_passed = (cur_ts - hidden_state_start)/1000;		
-		if ( sec_passed > 70 )	firebase.database().ref(room_name +"/"+my_data.uid).remove();
+		if ( sec_passed > 70 )	fbs.ref(room_name +"/"+my_data.uid).remove();
 		return;		
 	}
 
 
-	firebase.database().ref('players/'+my_data.uid+'/tm').set(firebase.database.ServerValue.TIMESTAMP);
-	firebase.database().ref('inbox/'+my_data.uid).onDisconnect().remove();
-	firebase.database().ref(room_name+'/'+my_data.uid).onDisconnect().remove();
+	fbs.ref('players/'+my_data.uid+'/tm').set(firebase.database.ServerValue.TIMESTAMP);
+	fbs.ref('inbox/'+my_data.uid).onDisconnect().remove();
+	fbs.ref(room_name+'/'+my_data.uid).onDisconnect().remove();
 	set_state({});
 }
 
@@ -3857,7 +3857,7 @@ req_dialog={
 		
 		
 		anim2.add(objects.req_cont,{y:[objects.req_cont.y, -260]},false,0.4,'easeInBack');
-		firebase.database().ref("inbox/"+req_dialog._opp_data.uid).set({sender:my_data.uid,message:"REJECT",tm:Date.now()});
+		fbs.ref("inbox/"+req_dialog._opp_data.uid).set({sender:my_data.uid,message:"REJECT",tm:Date.now()});
 	},
 	
 	deny_all_btn_down() {
@@ -3881,8 +3881,8 @@ req_dialog={
 		anim2.add(objects.req_cont,{y:[objects.req_cont.y, -260]},false,0.4,'easeInBack');
 		
 		//удаляем из комнаты
-		firebase.database().ref(room_name + "/" + my_data.uid).remove();
-		firebase.database().ref("inbox/"+req_dialog._opp_data.uid).set({sender:my_data.uid,message:"REJECT_ALL",tm:Date.now()});
+		fbs.ref(room_name + "/" + my_data.uid).remove();
+		fbs.ref("inbox/"+req_dialog._opp_data.uid).set({sender:my_data.uid,message:"REJECT_ALL",tm:Date.now()});
 	},
 
 	accept_btn_down() {
@@ -3905,7 +3905,7 @@ req_dialog={
 
 		//отправляем информацию о согласии играть с идентификатором игры
 		game_id=~~(Math.random()*99999);
-		firebase.database().ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"ACCEPT",tm:Date.now(),game_id:game_id});
+		fbs.ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"ACCEPT",tm:Date.now(),game_id:game_id});
 
 
 		main_menu.close();
@@ -5720,7 +5720,7 @@ stickers={
 
 		this.hide_panel();
 
-		firebase.database().ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"MSG",tm:Date.now(),data:id});
+		fbs.ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"MSG",tm:Date.now(),data:id});
 		message.add(['Стикер отправлен сопернику','The sticker was sent to the opponent'][LANG]);
 		
 
@@ -6060,7 +6060,7 @@ set_state=function(params){
 		small_opp_id=opp_data.uid.substring(0,10);
 
 	if(!no_invite || state==='p')
-		firebase.database().ref(room_name + '/' + my_data.uid).set({state, name:my_data.name, rating : my_data.rating, hidden:h_state, opp_id:small_opp_id, game_id});
+		fbs.ref(room_name + '/' + my_data.uid).set({state, name:my_data.name, rating : my_data.rating, hidden:h_state, opp_id:small_opp_id, game_id});
 
 }
 
@@ -6246,6 +6246,21 @@ main_loader={
 	
 }
 
+async function check_admin_info(){
+	
+	//проверяем и показываем инфо от админа и потом удаляем
+	const admin_msg_path=`players/${my_data.uid}/admin_info`;
+	const data=await fbs_once(admin_msg_path);
+	if (data){
+		if (data.type='FIXED_MATCH'){
+			my_data.rating=1400;
+			fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
+			message.add('Ваш рейтинг обнулен. Причина - договорные игры.',7000);
+		}				
+		fbs.ref(admin_msg_path).remove();		
+	}		
+}
+
 async function init_game_env(lang) {
 		
 	git_src="https://akukamil.github.io/chess_gp/"
@@ -6400,7 +6415,7 @@ async function init_game_env(lang) {
 	anim2.add(objects.id_cont,{y:[-200,objects.id_cont.sy]}, true, 0.5,'easeOutBack');
 	
 	//получаем остальные данные об игроке
-	const _other_data = await firebase.database().ref('players/'+my_data.uid).once('value');
+	const _other_data = await fbs.ref('players/'+my_data.uid).once('value');
 	const other_data = _other_data.val();
 	
 	//делаем защиту от неопределенности
@@ -6459,14 +6474,18 @@ async function init_game_env(lang) {
 	objects.id_loup.visible=false;
 
 	//обновляем почтовый ящик
-	firebase.database().ref("inbox/"+my_data.uid).set({sender:"-",message:"-",tm:"-",data:{x1:0,y1:0,x2:0,y2:0,board_state:0}});
+	fbs.ref("inbox/"+my_data.uid).set({sender:"-",message:"-",tm:"-",data:{x1:0,y1:0,x2:0,y2:0,board_state:0}});
 
 	//подписываемся на новые сообщения
-	firebase.database().ref("inbox/"+my_data.uid).on('value', (snapshot) => { process_new_message(snapshot.val());});
+	fbs.ref("inbox/"+my_data.uid).on('value', (snapshot) => { process_new_message(snapshot.val());});
 
 	//обновляем данные в файербейс так как могли поменяться имя или фото
-	firebase.database().ref('players/'+my_data.uid).set({name:my_data.name, pic_url: my_data.pic_url, rating : my_data.rating,country : my_data.country, quiz_level : my_data.quiz_level, games : my_data.games, games : my_data.games, mk_level : my_data.mk_level,mk_sback_num:my_data.mk_sback_num,avatar_tm:my_data.avatar_tm,nick_tm:my_data.nick_tm, tm:firebase.database.ServerValue.TIMESTAMP});
-
+	fbs.ref('players/'+my_data.uid+'/name').set(my_data.name);
+	fbs.ref('players/'+my_data.uid+'/pic_url').set(my_data.pic_url);
+	fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
+	fbs.ref('players/'+my_data.uid+'/country').set(my_data.country);
+	fbs.ref('players/'+my_data.uid+'/tm').set(firebase.database.ServerValue.TIMESTAMP);
+	
 	//устанавливаем мой статус в онлайн
 	set_state({state : 'o'});
 	
@@ -6475,8 +6494,8 @@ async function init_game_env(lang) {
 	fbs.ref('inbox/'+my_data.uid).set({message:'CLIEND_ID',tm:Date.now(),client_id});
 
 	//отключение от игры и удаление не нужного
-	firebase.database().ref("inbox/"+my_data.uid).onDisconnect().remove();
-	firebase.database().ref(room_name+"/"+my_data.uid).onDisconnect().remove();
+	fbs.ref("inbox/"+my_data.uid).onDisconnect().remove();
+	fbs.ref(room_name+"/"+my_data.uid).onDisconnect().remove();
 
 	//это событие когда меняется видимость приложения
 	document.addEventListener("visibilitychange", vis_change);
@@ -6493,7 +6512,7 @@ async function init_game_env(lang) {
 	anim2.add(objects.id_cont,{y:[objects.id_cont.y,-180]}, false, 0.6,'easeInBack');	
 	
 	//контроль за присутсвием
-	var connected_control = firebase.database().ref(".info/connected");
+	var connected_control = fbs.ref(".info/connected");
 	connected_control.on("value", (snap) => {
 	  if (snap.val() === true) {
 		connected = 1;
@@ -6508,6 +6527,8 @@ async function init_game_env(lang) {
 	});	
 	window.addEventListener('keydown',function(event){keyboard.keydown(event.key)});
 
+	//сообщение от админа
+	check_admin_info();
 	
 	//показыаем основное меню
 	main_menu.activate();

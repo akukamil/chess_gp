@@ -159,6 +159,14 @@ firebase.initializeApp({
 });
 
 
+const fbs=firebase.database();
+
+fbs_once=async function(path){
+	const info=await fbs.ref(path).once('value');
+	return info.val();	
+}
+
+
 //количество игроков в комнатах. показывает при загрузке
 async function update_room_quick_stat() {
 

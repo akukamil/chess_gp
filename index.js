@@ -700,7 +700,7 @@ big_message={
 
 		objects.big_message_text.text=t1;
 		
-		objects.feedback_button.visible = feedback_on;
+		objects.feedback_button.visible = feedback_on&&!my_data.blocked;
 		
 		anim2.add(objects.big_message_cont,{y:[-180, objects.big_message_cont.sy]},true,0.4,'easeOutBack');
 
@@ -4640,7 +4640,7 @@ players_cache={
 		if(pic_url.includes('mavatar')) pic_url=multiavatar(pic_url);
 	
 		try{
-			const texture = await PIXI.Texture.fromURL(pic_url);	
+			const texture = await PIXI.Texture.fromURL(pic_url);				
 			return texture;
 		}catch(er){
 			return PIXI.Texture.WHITE;

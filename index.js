@@ -3438,8 +3438,10 @@ game_watching={
 		
 		if(!board_data) return;
 		
-		if(board_data==='fin'){			
+		if(board_data==='fin'){
+			anim2.add(objects.board_cont,{x:[0,-70],y:[0,255],scale_xy:[1,0.45],angle:[0,-5]},true,0.25,'linear');
 			await big_message.show(['Эта игра завершена','This game is over'][LANG],')))');
+			anim2.add(objects.board_cont,{x:[-70,-300],y:[255,355],angle:[-5,-50]},false,0.15,'linear');
 			this.close();
 			lobby.activate();
 			return;

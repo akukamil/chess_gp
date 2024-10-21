@@ -6254,11 +6254,19 @@ async function check_admin_info(){
 	const admin_msg_path=`players/${my_data.uid}/admin_info`;
 	const data=await fbs_once(admin_msg_path);
 	if (data){
-		if (data.type='FIXED_MATCH'){
+		if (data.type==='FIXED_MATCH'){
 			my_data.rating=1400;
 			fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
 			message.add('Ваш рейтинг обнулен. Причина - договорные игры.',7000);
-		}				
+		}		
+		
+		if (data.type==='CUT_RATING'){
+			my_data.rating=data.rating;
+			fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
+			//message.add('Ваш рейтинг обнулен. Причина - договорные игры.',7000);
+		}	
+
+		
 		fbs.ref(admin_msg_path).remove();		
 	}		
 }

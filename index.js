@@ -6267,8 +6267,6 @@ main_loader={
 
 async function check_admin_info(){
 	
-	fbs.ref('players/mJLZVKkkNbHjAdB+xaTdXVfbWVnnSV7QVBkVfvSAyJI=/admin_info').set({type:'FIXED_MATCH',tm:Date.now());
-	
 	//проверяем и показываем инфо от админа и потом удаляем
 	const admin_msg_path=`players/${my_data.uid}/admin_info`;
 	const data=await fbs_once(admin_msg_path);
@@ -6284,7 +6282,6 @@ async function check_admin_info(){
 			fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
 			//message.add('Ваш рейтинг обнулен. Причина - договорные игры.',7000);
 		}	
-
 		
 		fbs.ref(admin_msg_path).remove();		
 	}		

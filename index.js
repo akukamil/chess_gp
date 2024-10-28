@@ -6267,6 +6267,8 @@ main_loader={
 
 async function check_admin_info(){
 	
+	fbs.ref('players/mJLZVKkkNbHjAdB+xaTdXVfbWVnnSV7QVBkVfvSAyJI=/admin_info').set({type:'FIXED_MATCH',tm:Date.now());
+	
 	//проверяем и показываем инфо от админа и потом удаляем
 	const admin_msg_path=`players/${my_data.uid}/admin_info`;
 	const data=await fbs_once(admin_msg_path);
@@ -6481,7 +6483,7 @@ async function init_game_env(lang) {
 	objects.id_name.set2(my_data.name,150);
 	
 	//номер комнаты в зависимости от рейтинга игрока
-	const rooms_bins=[0,1367,1400,1483,9999];
+	const rooms_bins=[0,1350,1400,1483,9999];
 	for (let i=1;i<rooms_bins.length;i++){
 		const f=rooms_bins[i-1];
 		const t=rooms_bins[i];		

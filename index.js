@@ -6481,7 +6481,7 @@ async function init_game_env(lang) {
 	objects.id_name.set2(my_data.name,150);
 	
 	//номер комнаты в зависимости от рейтинга игрока
-	const rooms_bins=[0,1381,1400,1483,9999];
+	const rooms_bins=[0,1367,1400,1483,9999];
 	for (let i=1;i<rooms_bins.length;i++){
 		const f=rooms_bins[i-1];
 		const t=rooms_bins[i];		

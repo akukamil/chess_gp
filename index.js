@@ -906,7 +906,7 @@ chat={
 		}
 		
 		if (this.block_next_click){			
-			fbs.ref('blocked/'+player_data.uid).set(Date.now())
+			this.block_player(player_data.uid);
 			console.log('Игрок заблокирован: ',player_data.uid);
 			this.block_next_click=0;
 		}

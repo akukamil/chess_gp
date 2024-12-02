@@ -5927,7 +5927,7 @@ auth2={
 			let resp1 = await fetch("https://ipinfo.io/json?token=63f43de65702b8");
 			let resp2 = await resp1.json();			
 			country_code = resp2.country || '';			
-		} catch(e){}
+		} catch(e){return country_code}
 
 		return country_code;
 		
@@ -5940,7 +5940,7 @@ auth2={
 			let resp1 = await fetch("https://api.ipgeolocation.io/ipgeo?apiKey=1efc1ba695434f2ab24129a98a72a1d4");
 			let resp2 = await resp1.json();			
 			country_code = resp2.country_code2 || '';			
-		} catch(e){}
+		} catch(e){return country_code}
 
 		return country_code;
 		

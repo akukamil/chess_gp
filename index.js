@@ -5939,9 +5939,9 @@ auth2={
 
 		let country_code = ''
 		try {
-			let resp1 = await fetch("https://api.ipgeolocation.io/ipgeo?apiKey=1efc1ba695434f2ab24129a98a72a1d4");
+			let resp1 = await fetch("https://ipapi.co/json");
 			let resp2 = await resp1.json();			
-			country_code = resp2.country_code2 || '';			
+			country_code = resp2.country_code || '';			
 		} catch(e){
 			return country_code
 		}

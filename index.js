@@ -1,5 +1,5 @@
 var M_WIDTH=800, M_HEIGHT=450;
-var app, game_res, game,gdata={},  objects={}, state="",my_role="",client_id, game_tick=0, my_turn=false, room_name = '',chat_path='chat', move=0, game_id=0, connected = 1, LANG = 0,git_src;
+var app, assets={}, game,gdata={},  objects={}, state="",my_role="",client_id, game_tick=0, my_turn=false, room_name = '',chat_path='chat', move=0, game_id=0, connected = 1, LANG = 0,git_src;
 var some_process = {}, h_state=0, game_platform="", hidden_state_start = 0;
 var WIN = 1, DRAW = 0, LOSE = -1, NOSYNC = 2,no_invite=false;
 g_board=[];
@@ -45,14 +45,14 @@ class player_mini_card_class extends PIXI.Container {
 		this.y=y;
 		
 		
-		this.bcg=new PIXI.Sprite(game_res.resources.mini_player_card.texture);
+		this.bcg=new PIXI.Sprite(assets.mini_player_card);
 		this.bcg.width=200;
 		this.bcg.height=90;
 		this.bcg.interactive=true;
 		this.bcg.buttonMode=true;
 		this.bcg.pointerdown=function(){lobby.card_down(id)};
 		
-		this.table_rating_hl=new PIXI.Sprite(gres.table_rating_hl.texture);
+		this.table_rating_hl=new PIXI.Sprite(assets.table_rating_hl);
 		this.table_rating_hl.width=200;
 		this.table_rating_hl.height=90;
 		
@@ -61,7 +61,7 @@ class player_mini_card_class extends PIXI.Container {
 		this.avatar.y=16;
 		this.avatar.w=this.avatar.h=58.2;
 		
-		this.avatar_frame=new PIXI.Sprite(gres.circle_frame50.texture);
+		this.avatar_frame=new PIXI.Sprite(assets.circle_frame50);
 		this.avatar_frame.x=16-11.64;
 		this.avatar_frame.y=16-11.64;
 		this.avatar_frame.width=this.avatar_frame.height=81.48;
@@ -87,7 +87,7 @@ class player_mini_card_class extends PIXI.Container {
 		this.avatar1.y=16;
 		this.avatar1.w=this.avatar1.h=58.2;
 		
-		this.avatar1_frame=new PIXI.Sprite(gres.circle_frame50.texture);
+		this.avatar1_frame=new PIXI.Sprite(assets.circle_frame50);
 		this.avatar1_frame.x=this.avatar1.x-11.64;
 		this.avatar1_frame.y=this.avatar1.y-11.64;
 		this.avatar1_frame.width=this.avatar1_frame.height=81.48;
@@ -100,7 +100,7 @@ class player_mini_card_class extends PIXI.Container {
 		this.avatar2.y=16;
 		this.avatar2.w=this.avatar2.h=58.2;
 		
-		this.avatar2_frame=new PIXI.Sprite(gres.circle_frame50.texture);
+		this.avatar2_frame=new PIXI.Sprite(assets.circle_frame50);
 		this.avatar2_frame.x=this.avatar2.x-11.64;
 		this.avatar2_frame.y=this.avatar2.y-11.64;
 		this.avatar2_frame.width=this.avatar2_frame.height=81.48;
@@ -138,7 +138,7 @@ class lb_player_card_class extends PIXI.Container{
 	constructor(x,y,place) {
 		super();
 
-		this.bcg=new PIXI.Sprite(game_res.resources.lb_player_card_bcg.texture);
+		this.bcg=new PIXI.Sprite(assets.lb_player_card_bcg);
 		this.bcg.interactive=true;
 		this.bcg.pointerover=function(){this.tint=0x55ffff};
 		this.bcg.pointerout=function(){this.tint=0xffffff};
@@ -199,7 +199,7 @@ class mk_character_card_class extends PIXI.Container{
 		this.level_bt.y=30;
 		this.level_bt.tint=0xffff00;
 		
-		this.frame=new PIXI.Sprite(gres.frame.texture);
+		this.frame=new PIXI.Sprite(assets.frame);
 		this.frame.width=280;
 		this.frame.height=200;
 		
@@ -217,87 +217,189 @@ class chat_record_class extends PIXI.Container {
 		super();
 		
 		this.tm=0;
-		this.hash=0;
 		this.index=0;
 		this.uid='';	
-		
-		this.msg_bcg = new PIXI.NineSlicePlane(gres.msg_bcg.texture,90,50,45,50);
-		this.msg_bcg.width=200;
-		this.msg_bcg.height=70;	
-		this.msg_bcg.x=100;	
 
-		this.name = new PIXI.BitmapText('Имя Фамил', {fontName: 'mfont',fontSize: gdata.chat_record_name_font_size});
-		this.name.anchor.set(0.5,0.5);
-		this.name.x=60;
-		this.name.y=60;	
-		this.name.tint=0xffff00;
 		
-		
-		this.avatar = new PIXI.Sprite(PIXI.Texture.WHITE);
-		this.avatar.width=40;
-		this.avatar.height=40;
-		this.avatar.x=40;
-		this.avatar.y=10;
-		this.avatar.interactive=true;
-		const this_card=this;
-		this.avatar.pointerdown=function(){chat.avatar_down(this_card)};		
-		this.avatar.anchor.set(0,0)
+		this.avatar = new PIXI.Graphics();
+		this.avatar.w=50;
+		this.avatar.h=50;
+		this.avatar.x=30;
+		this.avatar.y=13;		
 				
+		this.avatar_bcg = new PIXI.Sprite(assets.chat_avatar_bcg_img);
+		this.avatar_bcg.width=70;
+		this.avatar_bcg.height=70;
+		this.avatar_bcg.x=this.avatar.x-10;
+		this.avatar_bcg.y=this.avatar.y-10;
+		this.avatar_bcg.interactive=true;
+		this.avatar_bcg.pointerdown=()=>chat.avatar_down(this);		
+					
+		this.avatar_frame = new PIXI.Sprite(assets.circle_frame50);
+		this.avatar_frame.width=70;
+		this.avatar_frame.height=70;
+		this.avatar_frame.x=this.avatar.x-10;
+		this.avatar_frame.y=this.avatar.y-10;
 		
-		this.msg = new PIXI.BitmapText('Имя Фамил', {fontName: 'mfont',fontSize: gdata.chat_record_text_font_size,align: 'left'}); 
-		this.msg.x=150;
-		this.msg.y=35;
+		this.name = new PIXI.BitmapText('Имя Фамил', {fontName: 'mfont',fontSize: 17});
+		this.name.anchor.set(0,0.5);
+		this.name.x=this.avatar.x+72;
+		this.name.y=this.avatar.y-1;	
+		this.name.tint=0xFBE5D6;
+		
+		this.gif=new PIXI.Sprite();
+		this.gif.x=this.avatar.x+65;	
+		this.gif.y=22;
+		
+		this.gif_bcg=new PIXI.Graphics();
+		this.gif_bcg.beginFill(0x111111)
+		this.gif_bcg.drawRect(0,0,1,1);
+		this.gif_bcg.x=this.gif.x+3;	
+		this.gif_bcg.y=this.gif.y+3;
+		this.gif_bcg.alpha=0.5;
+		
+		
+				
+		this.msg_bcg = new PIXI.NineSlicePlane(assets.msg_bcg,50,18,50,28);
+		//this.msg_bcg.width=160;
+		//this.msg_bcg.height=65;	
+		this.msg_bcg.scale_xy=0.66666;		
+		this.msg_bcg.x=this.avatar.x+45;	
+		this.msg_bcg.y=this.avatar.y+2;
+		
+		this.msg = new PIXI.BitmapText('Имя Фамил', {fontName: 'mfont',fontSize: 19,lineSpacing:55,align: 'left'}); 
+		this.msg.x=this.avatar.x+75;
+		this.msg.y=this.avatar.y+30;
 		this.msg.maxWidth=450;
 		this.msg.anchor.set(0,0.5);
-		this.msg.tint = 0x3B3838;
+		this.msg.tint = 0xffffff;
 		
-		this.msg_tm = new PIXI.BitmapText('28.11.22 12:31', {fontName: 'mfont',fontSize: gdata.chat_record_tm_font_size}); 
-		this.msg_tm.x=200;		
-		this.msg_tm.y=45;
-		this.msg_tm.tint=0x767171;
-		this.msg_tm.anchor.set(0,0);
+		this.msg_tm = new PIXI.BitmapText('28.11.22 12:31', {fontName: 'mfont',fontSize: 15}); 		
+		this.msg_tm.tint=0xffffff;
+		this.msg_tm.alpha=0.6;
+		this.msg_tm.anchor.set(1,0);
 		
 		this.visible = false;
-		this.addChild(this.msg_bcg,this.avatar,this.name,this.msg,this.msg_tm);
+		this.addChild(this.msg_bcg,this.gif_bcg,this.gif,this.avatar_bcg,this.avatar,this.avatar_frame,this.name,this.msg,this.msg_tm);
 		
 	}
-	
+		
+	nameToColor(name) {
+		  // Create a hash from the name
+		  let hash = 0;
+		  for (let i = 0; i < name.length; i++) {
+			hash = name.charCodeAt(i) + ((hash << 5) - hash);
+			hash = hash & hash; // Convert to 32bit integer
+		  }
+
+		  // Generate a color from the hash
+		  let color = ((hash >> 24) & 0xFF).toString(16) +
+					  ((hash >> 16) & 0xFF).toString(16) +
+					  ((hash >> 8) & 0xFF).toString(16) +
+					  (hash & 0xFF).toString(16);
+
+		  // Ensure the color is 6 characters long
+		  color = ('000000' + color).slice(-6);
+
+		  // Convert the hex color to an RGB value
+		  let r = parseInt(color.slice(0, 2), 16);
+		  let g = parseInt(color.slice(2, 4), 16);
+		  let b = parseInt(color.slice(4, 6), 16);
+
+		  // Ensure the color is bright enough for a black background
+		  // by normalizing the brightness.
+		  if ((r * 0.299 + g * 0.587 + b * 0.114) < 128) {
+			r = Math.min(r + 128, 255);
+			g = Math.min(g + 128, 255);
+			b = Math.min(b + 128, 255);
+		  }
+
+		  return (r << 16) + (g << 8) + b;
+	}
+		
 	async update_avatar(uid, tar_sprite) {		
 	
 		//определяем pic_url
 		await players_cache.update(uid);
 		await players_cache.update_avatar(uid);
-		tar_sprite.texture=players_cache.players[uid].texture;	
+		tar_sprite.set_texture(players_cache.players[uid].texture);	
 	}
 	
 	async set(msg_data) {
 						
 		//получаем pic_url из фб
-		this.avatar.texture=PIXI.Texture.WHITE;
+		this.avatar.set_texture(PIXI.Texture.WHITE);
 				
 		await this.update_avatar(msg_data.uid, this.avatar);
 
 		this.uid=msg_data.uid;
 		this.tm = msg_data.tm;			
-		this.hash = msg_data.hash;
-		this.index = msg_data.index;
+		this.index = msg_data.index;		
 		
-		
-		this.name.set2(msg_data.name,110)
-		this.msg.text=msg_data.msg;		
-		
-		const msg_bcg_width=Math.max(this.msg.width,100)+100;		
-		
-		//бэкграунд сообщения в зависимости от длины
-		this.msg_bcg.width=msg_bcg_width				
-				
-		this.msg_tm.x=msg_bcg_width-15;
+		this.name.set2(msg_data.name,150);
+		this.name.tint=this.nameToColor(msg_data.name);
 		this.msg_tm.text = new Date(msg_data.tm).toLocaleString();
-		this.visible = true;	
 		
+		this.visible = true;
 		
-	}	
-	
+		if (msg_data.msg.startsWith('GIF')){			
+			
+			const mp4BaseT=await new Promise((resolve, reject)=>{
+				const baseTexture = PIXI.BaseTexture.from('res/gifs/'+msg_data.msg+'.mp4');
+				if (baseTexture.width>1) resolve(baseTexture);
+				baseTexture.on('loaded', () => resolve(baseTexture));
+				baseTexture.on('error', (error) => resolve(null));
+			});
+			
+			if (!mp4BaseT) {
+				this.visible=false;
+				return 0;
+			}
+			
+			mp4BaseT.resource.source.play();
+			mp4BaseT.resource.source.loop=true;
+			
+			this.gif.texture=PIXI.Texture.from(mp4BaseT);
+			this.gif.visible=true;	
+			const aspect_ratio=mp4BaseT.width/mp4BaseT.height;
+			this.gif.height=90;
+			this.gif.width=this.gif.height*aspect_ratio;
+			this.msg_bcg.visible=false;
+			this.msg.visible=false;
+			this.msg_tm.anchor.set(0,0);
+			this.msg_tm.y=this.gif.height+9;
+			this.msg_tm.x=this.gif.width+102;
+			
+			this.gif_bcg.visible=true;
+			this.gif_bcg.height=this.gif.height;
+			this.gif_bcg.width=	this.gif.width;
+			return this.gif.height+30;
+			
+		}else{
+			
+			this.gif_bcg.visible=false;
+			this.gif.visible=false;	
+			this.msg_bcg.visible=true;
+			this.msg.visible=true;
+			
+			//бэкграунд сообщения в зависимости от длины
+			this.msg.text=msg_data.msg;	
+			const msg_bcg_width=Math.max(this.msg.width,100)+100;			
+			this.msg_bcg.width=msg_bcg_width*1.5;				
+					
+			if (msg_bcg_width>300){
+				this.msg_tm.anchor.set(1,0);
+				this.msg_tm.y=this.avatar.y+52;
+				this.msg_tm.x=msg_bcg_width+55;
+			}else{
+				this.msg_tm.anchor.set(0,0);
+				this.msg_tm.y=this.avatar.y+37;
+				this.msg_tm.x=msg_bcg_width+62;
+			}	
+			
+			return 70;
+		}		
+	}		
 }
 
 class feedback_record_class extends PIXI.Container {
@@ -330,15 +432,15 @@ class theme_class extends PIXI.Container{
 	constructor(){
 		
 		super();
-		this.shadow=new PIXI.Sprite(gres.bcg_icon_shadow.texture);
+		this.shadow=new PIXI.Sprite(assets.bcg_icon_shadow);
 		this.shadow.width=170;
 		this.shadow.height=100;	
 		
-		this.bcg=new PIXI.Sprite(gres.theme_0.texture);
+		this.bcg=new PIXI.Sprite(assets.theme_0);
 		this.bcg.width=170;
 		this.bcg.height=100;
 		
-		this.lock=new PIXI.Sprite(gres.lock.texture);
+		this.lock=new PIXI.Sprite(assets.lock);
 		this.lock.width=70;
 		this.lock.height=70;
 		this.lock.anchor.set(0.5,0.5);
@@ -359,7 +461,7 @@ class theme_class extends PIXI.Container{
 	
 	set_theme(id){
 		this.id=id;
-		this.bcg.texture=gres['theme_'+id].texture;
+		this.bcg.texture=assets['theme_'+id];
 	}
 	
 }
@@ -608,15 +710,15 @@ sound={
 	
 	play(res_name, res_src) {
 		
-		res_src=res_src||gres;
+		res_src=res_src||assets;
 		
 		if (!this.on||document.hidden)
 			return;
 		
-		if (!res_src[res_name]?.data)
+		if (!assets[res_name])
 			return;
 		
-		res_src[res_name].sound.play();	
+		assets[res_name].play();	
 		
 	},
 	
@@ -767,15 +869,15 @@ chat={
 	activate() {	
 
 		anim2.add(objects.chat_cont,{alpha:[0, 1]}, true, 0.1,'linear');
-		objects.bcg.texture=gres.bcg.texture;
+		//objects.bcg.texture=assets.lobby_bcg;
 		objects.chat_enter_button.visible=my_data.games>=this.games_to_chat;
 		
 		if(my_data.blocked)		
-			objects.chat_enter_button.texture=gres.chat_blocked_img.texture;
+			objects.chat_enter_button.texture=assets.chat_blocked_img;
 		else
-			objects.chat_enter_button.texture=gres.chat_enter_img.texture;
+			objects.chat_enter_button.texture=assets.chat_enter_img;
 
-		objects.chat_rules.text='Правила чата!\n\n1. Будьте вежливы: Общайтесь с другими игроками с уважением. Избегайте угроз, грубых выражений, оскорблений, конфликтов.\n\n2. Отправлять сообщения в чат могут игроки сыгравшие более 200 онлайн партий.\n\n3. За нарушение правил игрок может попасть в черный список.'
+		objects.chat_rules.text='Правила чата!\n1. Будьте вежливы: Общайтесь с другими игроками с уважением. Избегайте угроз, грубых выражений, оскорблений, конфликтов.\n2. Отправлять сообщения в чат могут игроки сыгравшие более 200 онлайн партий.\n3. За нарушение правил игрок может попасть в черный список.'
 		if(my_data.blocked) objects.chat_rules.text='Вы не можете писать в чат, так как вы находитесь в черном списке';
 
 	},
@@ -793,9 +895,7 @@ chat={
 			rec.visible = false;			
 			rec.msg_id = -1;	
 			rec.tm=0;
-		}			
-		
-
+		}		
 		
 		//загружаем чат		
 		fbs.ref(chat_path).orderByChild('tm').limitToLast(20).once('value', snapshot => {chat.chat_load(snapshot.val());});		
@@ -833,7 +933,7 @@ chat={
 				return rec;
 		
 		//если пустых нет то выбираем самое старое
-		let oldest = {tm:9671801786406 ,visible:true};		
+		let oldest = {tm:9671801786406};		
 		for(let rec of objects.chat_records)
 			if (rec.visible===true && rec.tm < oldest.tm)
 				oldest = rec;	
@@ -874,25 +974,26 @@ chat={
 		//console.log('receive message',data)
 		if(data===undefined) return;
 		
-		//если это сообщение уже есть в чате
-		if (objects.chat_records.find(obj => { return obj.hash === data.hash;}) !== undefined) return;
+		//если это дубликат моего сообщения из-за таймстемпа
+		if (data.uid===my_data.uid)
+			if (objects.chat_records.find(obj => { return obj.msg.text===data.msg&&obj.index===data.index})) return;
 		
 		
 		//выбираем номер сообщения
-		const new_rec=objects.chat_records[data.index||0]
-		await new_rec.set(data);
+		const new_rec=this.get_oldest_or_free_msg();
+		const y_shift=await new_rec.set(data);
 		new_rec.y=this.last_record_end;
 		
-		this.last_record_end += gdata.chat_record_h;		
+		this.last_record_end += y_shift;		
 
 		if (!first_load)
 			lobby.inst_message(data);
 		
 		//смещаем на одно сообщение (если чат не видим то без твина)
 		if (objects.chat_cont.visible)
-			await anim2.add(objects.chat_msg_cont,{y:[objects.chat_msg_cont.y,objects.chat_msg_cont.y-gdata.chat_record_h]},true, 0.05,'linear');		
+			await anim2.add(objects.chat_msg_cont,{y:[objects.chat_msg_cont.y,objects.chat_msg_cont.y-y_shift]},true, 0.05,'linear');		
 		else
-			objects.chat_msg_cont.y-=gdata.chat_record_h
+			objects.chat_msg_cont.y-=y_shift
 		
 	},
 						
@@ -1016,9 +1117,9 @@ chat={
 		
 	wheel_event(delta) {
 		
-		objects.chat_msg_cont.y-=delta*gdata.chat_record_h*0.5;	
+		objects.chat_msg_cont.y-=delta*50;	
 		const chat_bottom = this.last_record_end;
-		const chat_top = this.last_record_end - objects.chat_records.filter(obj => obj.visible === true).length*gdata.chat_record_h;
+		const chat_top = this.last_record_end - objects.chat_records.filter(obj => obj.visible === true).length*70;
 		
 		if (objects.chat_msg_cont.y+chat_bottom<430)
 			objects.chat_msg_cont.y = 430-chat_bottom;
@@ -1048,21 +1149,25 @@ chat={
 		//оплата разблокировки чата
 		if (my_data.blocked){	
 		
+			let block_num=await fbs_once('players/'+my_data.uid+'/block_num');
+			block_num=block_num||1;
+			block_num=Math.min(6,block_num);
+		
 			if(game_platform==='YANDEX'){
 				
-				this.payments.purchase({ id: 'unblock' }).then(purchase => {
+				this.payments.purchase({ id: 'unblock'+block_num}).then(purchase => {
 					this.unblock_chat();
 				}).catch(err => {
-					message.add(['Ошибка при покупке!','Error!'][LANG]);
+					message.add('Ошибка при покупке!');
 				})				
 			}
 			
 			if (game_platform==='VK') {
 				
-				vkBridge.send('VKWebAppShowOrderBox', { type: 'item', item: 'unblock'}).then(data =>{
+				vkBridge.send('VKWebAppShowOrderBox', { type: 'item', item: 'unblock'+block_num}).then(data =>{
 					this.unblock_chat();
 				}).catch((err) => {
-					message.add(['Ошибка при покупке!','Error!'][LANG]);
+					message.add('Ошибка при покупке!');
 				});			
 			
 			};			
@@ -1078,7 +1183,7 @@ chat={
 		this.recent_msg = this.recent_msg.filter(d =>cur_dt-d<60000);
 				
 		if (this.recent_msg.length>3){
-			message.add(['Подождите 1 минуту','Wait 1 minute'][LANG])
+			message.add('Подождите 1 минуту')
 			return;
 		}		
 		
@@ -1088,16 +1193,15 @@ chat={
 		//пишем сообщение в чат и отправляем его		
 		const msg = await keyboard.read(70);		
 		if (msg) {			
-			const hash=this.make_hash();
-			const index=chat.get_oldest_index();
-			fbs.ref(chat_path+'/'+index).set({uid:my_data.uid,name:my_data.name,msg, tm:firebase.database.ServerValue.TIMESTAMP,index, hash});
+			const index=irnd(1,999);
+			fbs.ref(chat_path+'/'+index).set({uid:my_data.uid,name:my_data.name,msg, tm:firebase.database.ServerValue.TIMESTAMP,index});
 		}	
 		
 	},
 	
 	unblock_chat(){
-		objects.chat_rules.text='Правила чата!\n\n1. Будьте вежливы: Общайтесь с другими игроками с уважением. Избегайте угроз, грубых выражений, оскорблений, конфликтов.\n\n2. Отправлять сообщения в чат могут игроки сыгравшие более 200 онлайн партий.\n\n3. За нарушение правил игрок может попасть в черный список.'
-		objects.chat_enter_button.texture=gres.chat_enter_img.texture;	
+		objects.chat_rules.text='Правила чата!\n1. Будьте вежливы: Общайтесь с другими игроками с уважением. Избегайте угроз, грубых выражений, оскорблений, конфликтов.\n2. Отправлять сообщения в чат могут игроки сыгравшие более 200 онлайн партий.\n3. За нарушение правил игрок может попасть в черный список.'
+		objects.chat_enter_button.texture=assets.chat_enter_img;	
 		fbs.ref('blocked/'+my_data.uid).remove();
 		my_data.blocked=0;
 		message.add('Вы разблокировали чат');
@@ -1544,7 +1648,7 @@ online_game={
 		quiz.close();
 			
 		objects.board.texture=pref.cur_board_texture;
-		objects.bcg.texture=gres.bcg.texture;
+		objects.bcg.texture=assets.bcg;
 		anim2.add(objects.bcg,{alpha:[0,1]}, true, 0.5,'linear');	
 		
 		//ни я ни оппонент пока не подтвердили игру
@@ -2242,7 +2346,7 @@ mk={
 		for(let i=0;i<15;i++){	
 			const fighter_data=this.fighters_data[i];
 			objects.mk_fighters_cards[i].y=i*200;
-			objects.mk_fighters_cards[i].avatar.texture=gres[fighter_data.pic_res].texture;
+			objects.mk_fighters_cards[i].avatar.texture=assets[fighter_data.pic_res];
 			objects.mk_fighters_cards[i].name_bt.text=fighter_data.name;
 			objects.mk_fighters_cards[i].rating_bt.text=fighter_data.rating;
 			objects.mk_fighters_cards[i].level_bt.text=15-i;
@@ -2258,7 +2362,7 @@ mk={
 		objects.mk_choose_w.texture=pref.cur_pieces_textures.wp;
 				
 		//первый запуск лесницы		
-		objects.bcg.texture=gres.bcg.texture;
+		objects.bcg.texture=assets.bcg;
 		anim2.add(objects.bcg,{alpha:[0, 1]},true,1,'linear');
 
 		objects.vs_icon.visible=false;
@@ -2530,7 +2634,7 @@ mk={
 		opp_data.uid=this.cur_enemy.name;
 		if(!players_cache.players[opp_data.uid]){
 			players_cache.players[opp_data.uid]={};
-			players_cache.players[opp_data.uid].texture=new PIXI.Texture(gres[this.cur_enemy.pic_res].texture.baseTexture, new PIXI.Rectangle(40,0,160,160));			
+			players_cache.players[opp_data.uid].texture=new PIXI.Texture(assets[this.cur_enemy.pic_res].baseTexture, new PIXI.Rectangle(40,0,160,160));			
 		}
 		
 		//устанавливаем статус в базе данных а если мы не видны то установливаем только скрытое состояние
@@ -2625,7 +2729,7 @@ game={
 
 	activate(role, op) {
 		
-		objects.bcg.texture=gres.bcg.texture;
+		objects.bcg.texture=assets.bcg;
 					
 		//если открыт лидерборд то закрываем его
 		if (objects.lb_1_cont.visible) lb.close();		
@@ -2653,23 +2757,21 @@ game={
 			this.init_eaten_panel();
 			anim2.add(objects.eaten_cont,{alpha:[0, 1]},true,0.4,'linear');
 
-
-
 			if (role === 'master')
 				g_board = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
 			else
 				g_board = [['r','n','b','k','q','b','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','K','Q','B','N','R']];
 		
-			/*g_board = [
+			/*	g_board = [
+			['r','x','x','x','k','b','n','r'],
+			['p','p','p','x','x','p','p','p'],
+			['x','x','x','p','b','x','x','x'],
 			['x','x','x','x','x','x','x','x'],
-			['x','x','n','x','x','x','x','x'],
-			['x','x','x','x','x','x','x','k'],
-			['x','x','x','x','x','x','x','P'],
-			['x','x','x','x','x','x','x','x'],
-			['x','q','x','x','x','x','x','x'],
-			['q','x','x','K','x','x','x','x'],
-			['x','x','x','x','x','x','x','x']];
-			
+			['x','n','x','x','P','x','P','x'],
+			['x','x','P','x','x','P','x','x'],
+			['P','P','x','K','q','x','x','P'],
+			['R','N','B','Q','x','B','N','R']];
+
 			if (role === 'slave')
 				board_func.rotate_board(g_board);*/
 		
@@ -2713,11 +2815,11 @@ game={
 
 
 		if (my_role==='master'){
-			objects.h_caption.texture=gres.h_caption_img1.texture;
-			objects.v_caption.texture=gres.v_caption_img1.texture;
+			objects.h_caption.texture=assets.h_caption_img1;
+			objects.v_caption.texture=assets.v_caption_img1;
 		}else{
-			objects.h_caption.texture=gres.h_caption_img2.texture;
-			objects.v_caption.texture=gres.v_caption_img2.texture;
+			objects.h_caption.texture=assets.h_caption_img2;
+			objects.v_caption.texture=assets.v_caption_img2;
 		}
 		
 		//определяем цвет фигур		
@@ -2934,8 +3036,8 @@ game={
 			new_board[y2][x2] = new_board[y1][x1];
 			new_board[y1][x1] = 'x';
 			
-			const is_check = this.check_fin(new_board, 'w')==='check';
-			if (is_check) {
+			const test_check=this.check_fin(new_board, 'w');
+			if (test_check==='check'||test_check==='checkmate') {
 				castling==='ok_castling'
 					? message.add(['Рокировка невозможна.Так вам шах','Castling is impossible. Check!'][LANG])
 					: message.add(['Так вам шах','There will be a check'][LANG]);				
@@ -3062,7 +3164,7 @@ game={
 					const figure=objects.eaten_figures[i];
 					figure.x=[5,607][f]+x*22;
 					figure.y=190+y*23;
-					figure.texture=gres.eaten_holder.texture;
+					figure.texture=assets.eaten_holder;
 					figure.width=27;			
 					figure.height=27;					
 					figure.tint=[0xffbbff,0xbbffff][f];
@@ -3311,7 +3413,7 @@ game_watching={
 		
 		this.game_id=card_data.game_id;
 		
-		objects.bcg.texture=gres.bcg.texture;
+		objects.bcg.texture=assets.bcg;
 		
 		//определяем цвет фигур
 		game.my_color='w';
@@ -3348,8 +3450,8 @@ game_watching={
 		objects.opp_avatar.texture=slave_data.texture;	
 		
 		//подписи доски
-		objects.h_caption.texture=gres.h_caption_img1.texture;
-		objects.v_caption.texture=gres.v_caption_img1.texture;
+		objects.h_caption.texture=assets.h_caption_img1;
+		objects.v_caption.texture=assets.v_caption_img1;
 
 		//имена
 		objects.my_card_name.set2(master_data.name,150);
@@ -3648,10 +3750,10 @@ keyboard={
 		
 		if (this.layout===this.ru_keys){			
 			this.layout=this.en_keys;
-			objects.chat_keyboard.texture=gres.eng_layout.texture;
+			objects.chat_keyboard.texture=assets.eng_layout;
 		}else{			
 			this.layout=this.ru_keys;
-			objects.chat_keyboard.texture=gres.rus_layout.texture;
+			objects.chat_keyboard.texture=assets.rus_layout;
 		}
 		
 	},
@@ -4372,7 +4474,7 @@ main_menu={
 		//кнопки
 		await anim2.add(objects.main_buttons_cont,{y:[450,objects.main_buttons_cont.sy],alpha:[0,1]}, true, 0.75,'linear');	
 		
-		objects.bcg.texture=gres.loader_bcg.texture;
+		objects.bcg.texture=assets.loader_bcg;
 		anim2.add(objects.bcg,{alpha:[0,1]}, true, 0.5,'linear');	
 
 	},
@@ -4469,7 +4571,7 @@ lb={
 
 	show() {
 
-		objects.bcg.texture=gres.lb_bcg.texture;
+		objects.bcg.texture=assets.lb_bcg;
 		anim2.add(objects.bcg,{alpha:[0,1]}, true, 0.5,'linear');
 		
 		anim2.add(objects.lb_1_cont,{x:[-150, objects.lb_1_cont.sx]}, true, 0.5,'easeOutBack');
@@ -4763,7 +4865,7 @@ lobby={
 			this.activated=true;
 		}
 		
-		objects.bcg.texture=gres.bcg.texture;
+		objects.bcg.texture=assets.bcg;
 		anim2.add(objects.cards_cont,{alpha:[0, 1]}, true, 0.1,'linear');
 		anim2.add(objects.lobby_footer_cont,{y:[450, objects.lobby_footer_cont.sy]}, true, 0.1,'linear');
 		anim2.add(objects.lobby_header_cont,{y:[-50, objects.lobby_header_cont.sy]}, true, 0.1,'linear');
@@ -5022,19 +5124,19 @@ lobby={
 		switch(s) {
 
 			case 'o':
-				return gres.mini_player_card.texture;
+				return assets.mini_player_card;
 			break;
 
 			case 'b':
-				return gres.mini_player_card_bot.texture;
+				return assets.mini_player_card_bot;
 			break;
 
 			case 'p':
-				return gres.mini_player_card.texture;
+				return assets.mini_player_card;
 			break;
 			
 			case 'b':
-				return gres.mini_player_card.texture;
+				return assets.mini_player_card;
 			break;
 
 		}
@@ -5057,7 +5159,7 @@ lobby={
 				card.type = "table";
 				
 				
-				card.bcg.texture = gres.mini_player_card_table.texture;
+				card.bcg.texture = assets.mini_player_card_table;
 				
 				//присваиваем карточке данные
 				//card.uid=params.uid;
@@ -5249,7 +5351,7 @@ lobby={
 		objects.invite_feedback.text = '';
 
 		//показыаем кнопку приглашения
-		objects.invite_button.texture=gres.invite_button.texture;
+		objects.invite_button.texture=assets.invite_button;
 	
 		anim2.add(objects.invite_cont,{x:[800, objects.invite_cont.sx]}, true, 0.15,'linear');
 		
@@ -5322,7 +5424,7 @@ lobby={
 		objects.invite_feedback.text = '';
 
 		//показыаем кнопку приглашения
-		objects.invite_button.texture=gres.invite_button.texture;
+		objects.invite_button.texture=assets.invite_button;
 	
 		anim2.add(objects.invite_cont,{x:[800, objects.invite_cont.sx]}, true, 0.15,'linear');
 		
@@ -5563,7 +5665,7 @@ lobby={
 			
 		} else {
 			sound.play('click');
-			objects.invite_button.texture=gres.invite_wait_img.texture;
+			objects.invite_button.texture=assets.invite_wait_img;
 			fbs.ref('inbox/'+lobby._opp_data.uid).set({sender:my_data.uid,message:'INV',tm:Date.now()});
 			pending_player=lobby._opp_data.uid;
 
@@ -5744,7 +5846,7 @@ stickers={
 		
 
 		//показываем какой стикер мы отправили
-		objects.sent_sticker_area.texture=game_res.resources['sticker_texture_'+id].texture;
+		objects.sent_sticker_area.texture=assets['sticker_texture_'+id];
 		anim2.add(objects.sent_sticker_area,{alpha:[0, 0.5]},true,0.4,'linear');
 		//objects.sticker_area.visible=true;
 		//убираем стикер через 5 секунд
@@ -5760,7 +5862,7 @@ stickers={
 		//воспроизводим соответствующий звук
 		sound.play('receive_sticker');
 
-		objects.rec_sticker_area.texture=game_res.resources['sticker_texture_'+id].texture;
+		objects.rec_sticker_area.texture=assets['sticker_texture_'+id];
 
 		anim2.add(objects.rec_sticker_area,{x:[-150, objects.rec_sticker_area.sx]},true,0.4,'easeOutBack')
 
@@ -5921,7 +6023,6 @@ auth2={
 	},	
 	
 	async get_country_code() {
-
 		let country_code = ''
 		try {
 			let resp1 = await fetch("https://ipinfo.io/json?token=63f43de65702b8");
@@ -5930,13 +6031,10 @@ auth2={
 		} catch(e){
 			return country_code
 		}
-
-		return country_code;
-		
+		return country_code;		
 	},
 	
 	async get_country_code2() {
-
 		let country_code = ''
 		try {
 			let resp1 = await fetch("https://ipapi.co/json");
@@ -5945,9 +6043,7 @@ auth2={
 		} catch(e){
 			return country_code
 		}
-
-		return country_code;
-		
+		return country_code;		
 	},
 	
 	search_in_local_storage () {
@@ -6164,21 +6260,24 @@ main_loader={
 		
 		
 		//ресурсы
-		game_res=new PIXI.Loader();
-		gres=game_res.resources;
+		const loader=new PIXI.Loader();
 		
 		//добавляем фон отдельно
-		game_res.add('loader_bcg',git_src+`res/common/loader_bcg_${['ru','en'][LANG]}_img.jpg`);
-		game_res.add('loader_bar_frame',git_src+'res/common//loader_bar_frame_img.png');	
-		game_res.add('loader_bar_bcg',git_src+'res/common/loader_bar_bcg_img.png');
-				
-		await new Promise(res=>game_res.load(res))
+		loader.add('loader_bcg',git_src+`res/common/loader_bcg_${['ru','en'][LANG]}_img.jpg`);
+		loader.add('loader_bar_frame',git_src+'res/common//loader_bar_frame_img.png');	
+		loader.add('loader_bar_bcg',git_src+'res/common/loader_bar_bcg_img.png');
+		loader.add('main_load_list',git_src+'load_list.txt');
+		
+		await new Promise(res=>loader.load(res))
+		for (const res_name in loader.resources){
+			const res=loader.resources[res_name];			
+			assets[res_name]=res.texture||res.sound||res.data;			
+		}	
 		
 		//элементы загрузки
 		objects.loader_cont=new PIXI.Container();
-		
-		
-		objects.bcg=new PIXI.Sprite(gres.loader_bcg.texture);
+				
+		objects.bcg=new PIXI.Sprite(assets.loader_bcg);
 		objects.bcg.width=820;
 		objects.bcg.height=470;
 		objects.bcg.x=-10;
@@ -6192,13 +6291,13 @@ main_loader={
 		objects.loader_bar_mask.y=370;
 		objects.loader_bar_mask.width=0;
 
-		objects.loader_bar_frame=new PIXI.Sprite(gres.loader_bar_frame.texture);
+		objects.loader_bar_frame=new PIXI.Sprite(assets.loader_bar_frame);
 		objects.loader_bar_frame.x=270;
 		objects.loader_bar_frame.y=370;
 		objects.loader_bar_frame.width=260;
 		objects.loader_bar_frame.height=50;
 		
-		objects.loader_bar_bcg=new PIXI.Sprite(gres.loader_bar_bcg.texture);
+		objects.loader_bar_bcg=new PIXI.Sprite(assets.loader_bar_bcg);
 		objects.loader_bar_bcg.x=270;
 		objects.loader_bar_bcg.y=370;
 		objects.loader_bar_bcg.width=260;
@@ -6215,56 +6314,133 @@ main_loader={
 		
 		//подпапка с ресурсами
 		const lang_pack = ['RUS','ENG'][LANG];	
-			
-		game_res.add("m2_font", git_src+"fonts/Bahnschrift/font.fnt");
-
-		game_res.add('receive_move',git_src+'sounds/receive_move.mp3');
-		game_res.add('receive_sticker',git_src+'sounds/receive_sticker.mp3');
-		game_res.add('message',git_src+'sounds/message.mp3');
-		game_res.add('lose',git_src+'sounds/lose.mp3');
-		game_res.add('draw',git_src+'sounds/draw.mp3');
-		game_res.add('eaten',git_src+'sounds/eaten.mp3');
-		game_res.add('win',git_src+'sounds/win.mp3');
-		game_res.add('click',git_src+'sounds/click.mp3');
-		game_res.add('click2',git_src+'sounds/click2.mp3');
-		game_res.add('mini_dialog',git_src+'sounds/mini_dialog.mp3');
-		game_res.add('pawn_replace_dialog',git_src+'sounds/pawn_replace_dialog.mp3');
-		game_res.add('pawn_replace',git_src+'sounds/pawn_replace.mp3');
-		game_res.add('close',git_src+'sounds/close.mp3');
-		game_res.add('move',git_src+'sounds/move.mp3');
-		game_res.add('locked',git_src+'sounds/locked.mp3');
-		game_res.add('clock',git_src+'sounds/clock.mp3');
-		game_res.add('keypress',git_src+'sounds/keypress.mp3');
-		game_res.add('test_your_might',git_src+'sounds/test_your_might.mp3');
-		game_res.add('mk_ring',git_src+'sounds/mk_ring.mp3');
-		game_res.add('mk_haha',git_src+'sounds/mk_haha.mp3');
-		game_res.add('mk_impressive',git_src+'sounds/mk_impressive.mp3');
-		game_res.add('mk_outstanding',git_src+'sounds/mk_outstanding.mp3');
-		game_res.add('mk_excelent',git_src+'sounds/mk_excelent.mp3');
-		game_res.add('hit',git_src+'sounds/hit.mp3');
-		game_res.add('mk_haha2',git_src+'sounds/mk_haha2.mp3');
-		game_res.add('inst_msg',git_src+'sounds/inst_msg.mp3');
 		
+		const loader=new PIXI.Loader();	
+			
+		loader.add("m2_font", git_src+"fonts/Bahnschrift/font.fnt");
 
-		//добавляем из листа загрузки
-		for (var i = 0; i < load_list.length; i++)
-			if (load_list[i].class === "sprite" || load_list[i].class === "image" )
-				game_res.add(load_list[i].name, git_src+'res/'+lang_pack+'/'+load_list[i].name+"."+load_list[i].image_format);	
+		loader.add('receive_move',git_src+'sounds/receive_move.mp3');
+		loader.add('receive_sticker',git_src+'sounds/receive_sticker.mp3');
+		loader.add('message',git_src+'sounds/message.mp3');
+		loader.add('lose',git_src+'sounds/lose.mp3');
+		loader.add('draw',git_src+'sounds/draw.mp3');
+		loader.add('eaten',git_src+'sounds/eaten.mp3');
+		loader.add('win',git_src+'sounds/win.mp3');
+		loader.add('click',git_src+'sounds/click.mp3');
+		loader.add('click2',git_src+'sounds/click2.mp3');
+		loader.add('mini_dialog',git_src+'sounds/mini_dialog.mp3');
+		loader.add('pawn_replace_dialog',git_src+'sounds/pawn_replace_dialog.mp3');
+		loader.add('pawn_replace',git_src+'sounds/pawn_replace.mp3');
+		loader.add('close',git_src+'sounds/close.mp3');
+		loader.add('move',git_src+'sounds/move.mp3');
+		loader.add('locked',git_src+'sounds/locked.mp3');
+		loader.add('clock',git_src+'sounds/clock.mp3');
+		loader.add('keypress',git_src+'sounds/keypress.mp3');
+		loader.add('test_your_might',git_src+'sounds/test_your_might.mp3');
+		loader.add('mk_ring',git_src+'sounds/mk_ring.mp3');
+		loader.add('mk_haha',git_src+'sounds/mk_haha.mp3');
+		loader.add('mk_impressive',git_src+'sounds/mk_impressive.mp3');
+		loader.add('mk_outstanding',git_src+'sounds/mk_outstanding.mp3');
+		loader.add('mk_excelent',git_src+'sounds/mk_excelent.mp3');
+		loader.add('hit',git_src+'sounds/hit.mp3');
+		loader.add('mk_haha2',git_src+'sounds/mk_haha2.mp3');
+		loader.add('inst_msg',git_src+'sounds/inst_msg.mp3');
+		
+		//добавляем из основного листа загрузки
+		const main_load_list=eval(assets.main_load_list);
+		for (let i = 0; i < main_load_list.length; i++)
+			if (main_load_list[i].class==='sprite' || main_load_list[i].class==='image')
+				loader.add(main_load_list[i].name, git_src+'res/RUS/' + main_load_list[i].name + "." +  main_load_list[i].image_format);
+
 
 		//добавляем текстуры стикеров
 		for (var i=0;i<16;i++)
-			game_res.add("sticker_texture_"+i, git_src+"stickers/"+i+".png");
+			loader.add("sticker_texture_"+i, git_src+"stickers/"+i+".png");
 	
-		game_res.onProgress.add(progress);
-		function progress(loader, resource) {
+		//добавляем библиотеку аватаров
+		loader.add('multiavatar', git_src+'multiavatar.min.txt');	
+	
+		loader.onProgress.add(l=>{
 			objects.loader_bar_mask.width =  240*loader.progress*0.01;
-		}
+		})
 		
-		await new Promise((resolve, reject)=> game_res.load(resolve));
+		//загружаем и переносим в assets
+		await new Promise(resolve=> loader.load(resolve));
+		for (const res_name in loader.resources){
+			const res=loader.resources[res_name];			
+			assets[res_name]=res.texture||res.sound||res.data;			
+		}	
+		
+		
+		//Включаем библиотеку аватаров
+		const script = document.createElement('script');
+		script.textContent = assets.multiavatar;
+		document.head.appendChild(script);
+		
 		//anim2.add(objects.bcg,{alpha:[1,0]}, false, 0.5,'linear');
 		await anim2.add(objects.loader_cont,{alpha:[1,0]}, false, 0.5,'linear');
 		//objects.bcg.texture=gres.bcg.texture;	
 		//await anim2.add(objects.bcg,{alpha:[0,1]}, true, 0.5,'linear');
+		
+		//создаем спрайты и массивы спрайтов и запускаем первую часть кода
+		for (var i = 0; i < main_load_list.length; i++) {
+			const obj_class = main_load_list[i].class;
+			const obj_name = main_load_list[i].name;
+			console.log('Processing: ' + obj_name)
+
+			switch (obj_class) {
+			case "sprite":
+				objects[obj_name] = new PIXI.Sprite(assets[obj_name]);
+				eval(main_load_list[i].code0);
+				break;
+
+			case "block":
+				eval(main_load_list[i].code0);
+				break;
+
+			case "cont":
+				eval(main_load_list[i].code0);
+				break;
+
+			case "array":
+				var a_size=main_load_list[i].size;
+				objects[obj_name]=[];
+				for (var n=0;n<a_size;n++)
+					eval(main_load_list[i].code0);
+				break;
+			}
+		}
+
+		//обрабатываем вторую часть кода в объектах
+		for (var i = 0; i < main_load_list.length; i++) {
+			const obj_class = main_load_list[i].class;
+			const obj_name = main_load_list[i].name;
+			console.log('Processing: ' + obj_name)
+			
+			
+			switch (obj_class) {
+			case "sprite":
+				eval(main_load_list[i].code1);
+				break;
+
+			case "block":
+				eval(main_load_list[i].code1);
+				break;
+
+			case "cont":	
+				eval(main_load_list[i].code1);
+				break;
+
+			case "array":
+				var a_size=main_load_list[i].size;
+					for (var n=0;n<a_size;n++)
+						eval(main_load_list[i].code1);	;
+				break;
+			}
+		}
+		
+		
+		
 	}
 	
 }
@@ -6293,8 +6469,8 @@ async function check_admin_info(){
 
 async function init_game_env(lang) {
 		
-	git_src="https://akukamil.github.io/chess_gp/"
-	//git_src=""
+	//git_src="https://akukamil.github.io/chess_gp/"
+	git_src=""
 		
 	await define_platform_and_language();
 	console.log(game_platform, LANG);
@@ -6317,9 +6493,6 @@ async function init_game_env(lang) {
 	await main_loader.load1();	
 	await main_loader.load2();	
 	
-	
-	//подгружаем библиотеку аватаров
-	await auth2.load_script('multiavatar.min.js');
 	
 	if ((game_platform === 'YANDEX' || game_platform === 'VK') && LANG === 0)
 		await auth1.init();
@@ -6376,66 +6549,7 @@ async function init_game_env(lang) {
 		this.endFill();		
 		
 	}
-	
-
-    //создаем спрайты и массивы спрайтов и запускаем первую часть кода
-    for (var i = 0; i < load_list.length; i++) {
-        const obj_class = load_list[i].class;
-        const obj_name = load_list[i].name;
-		console.log('Processing: ' + obj_name)
-
-        switch (obj_class) {
-        case "sprite":
-            objects[obj_name] = new PIXI.Sprite(game_res.resources[obj_name].texture);
-            eval(load_list[i].code0);
-            break;
-
-        case "block":
-            eval(load_list[i].code0);
-            break;
-
-        case "cont":
-            eval(load_list[i].code0);
-            break;
-
-        case "array":
-			var a_size=load_list[i].size;
-			objects[obj_name]=[];
-			for (var n=0;n<a_size;n++)
-				eval(load_list[i].code0);
-            break;
-        }
-    }
-
-    //обрабатываем вторую часть кода в объектах
-    for (var i = 0; i < load_list.length; i++) {
-        const obj_class = load_list[i].class;
-        const obj_name = load_list[i].name;
-		console.log('Processing: ' + obj_name)
 		
-		
-        switch (obj_class) {
-        case "sprite":
-            eval(load_list[i].code1);
-            break;
-
-        case "block":
-            eval(load_list[i].code1);
-            break;
-
-        case "cont":	
-			eval(load_list[i].code1);
-            break;
-
-        case "array":
-			var a_size=load_list[i].size;
-				for (var n=0;n<a_size;n++)
-					eval(load_list[i].code1);	;
-            break;
-        }
-    }
-		
-	
 	//анимация лупы
 	some_process.loup_anim=function() {
 		objects.id_loup.x=20*Math.sin(game_tick*8)+90;
@@ -6524,7 +6638,7 @@ async function init_game_env(lang) {
 	fbs.ref('inbox/'+my_data.uid).set({message:'CLIEND_ID',tm:Date.now(),client_id});
 
 	//отключение от игры и удаление не нужного
-	fbs.ref("inbox/"+my_data.uid).onDisconnect().remove();
+	fbs.ref('inbox/'+my_data.uid).onDisconnect().remove();
 	fbs.ref(room_name+"/"+my_data.uid).onDisconnect().remove();
 
 	//это событие когда меняется видимость приложения

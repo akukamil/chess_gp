@@ -6075,7 +6075,7 @@ auth2={
 			} catch (e) { alert(e)};
 			
 			my_data.uid = _player.getUniqueID().replace(/[\/+=]/g, '');
-			my_data.name = _player.getName();
+			my_data.name = _player.getName();		
 			my_data.orig_pic_url = _player.getPhoto('medium');
 			
 			if (my_data.orig_pic_url === 'https://games-sdk.yandex.ru/games/api/sdk/v1/player/avatar/0/islands-retina-medium')
@@ -6130,6 +6130,7 @@ auth2={
 			my_data.name = this.get_random_name(my_data.uid);
 			my_data.orig_pic_url = 'mavatar'+my_data.uid;		
 		}
+	
 	},
 	
 	get_country_from_name(name){
@@ -6493,6 +6494,9 @@ async function init_game_env(lang) {
 	await main_loader.load1();	
 	await main_loader.load2();	
 	
+	//убираем ё
+	my_data.name=my_data.name.replace(/ё/g, 'е');
+	my_data.name=my_data.name.replace(/Ё/g, 'Е');
 	
 	if ((game_platform === 'YANDEX' || game_platform === 'VK') && LANG === 0)
 		await auth1.init();

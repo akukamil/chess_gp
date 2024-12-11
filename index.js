@@ -6494,15 +6494,17 @@ async function init_game_env(lang) {
 	await main_loader.load1();	
 	await main_loader.load2();	
 	
-	//убираем ё
-	my_data.name=my_data.name.replace(/ё/g, 'е');
-	my_data.name=my_data.name.replace(/Ё/g, 'Е');
 	
 	if ((game_platform === 'YANDEX' || game_platform === 'VK') && LANG === 0)
 		await auth1.init();
 	else
 		await auth2.init();
-	
+
+	//убираем ё
+	my_data.name=my_data.name.replace(/ё/g, 'е');
+	my_data.name=my_data.name.replace(/Ё/g, 'Е');
+
+
 	//инициируем файербейс
 	if (firebase.apps.length===0) {
 		firebase.initializeApp({

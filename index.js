@@ -6351,7 +6351,7 @@ main_loader={
 		const main_load_list=eval(assets.main_load_list);
 		for (let i = 0; i < main_load_list.length; i++)
 			if (main_load_list[i].class==='sprite' || main_load_list[i].class==='image')
-				loader.add(main_load_list[i].name, git_src+'res/RUS/' + main_load_list[i].name + "." +  main_load_list[i].image_format);
+				loader.add(main_load_list[i].name, git_src+`res/${lang_pack}/` + main_load_list[i].name + "." +  main_load_list[i].image_format);
 
 
 		//добавляем текстуры стикеров

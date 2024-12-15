@@ -6528,6 +6528,7 @@ async function init_game_env(lang) {
 	await main_loader.load2();	
 	
 	//анимация лупы
+	anim2.add(objects.id_cont,{y:[-200,objects.id_cont.sy]}, true, 0.5,'easeOutBack');	
 	some_process.loup_anim=function() {
 		objects.id_loup.x=20*Math.sin(game_tick*8)+90;
 		objects.id_loup.y=20*Math.cos(game_tick*8)+150;
@@ -6619,8 +6620,7 @@ async function init_game_env(lang) {
 		
 
 	
-	anim2.add(objects.id_cont,{y:[-200,objects.id_cont.sy]}, true, 0.5,'easeOutBack');
-	
+
 	//делаем защиту от неопределенности
 	my_data.rating = other_data?.rating || 1400;
 	my_data.games = other_data?.games || 0;

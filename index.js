@@ -6690,7 +6690,7 @@ async function init_game_env(lang) {
 	fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
 	fbs.ref('players/'+my_data.uid+'/country').set(my_data.country);
 	fbs.ref('players/'+my_data.uid+'/auth_mode').set(my_data.auth_mode);
-	fbs.ref('players/'+my_data.uid+'/tm').set(firebase.database.ServerValue.TIMESTAMP);
+	await fbs.ref('players/'+my_data.uid+'/tm').set(firebase.database.ServerValue.TIMESTAMP);
 
 	
 	//устанавливаем мой статус в онлайн
@@ -6710,13 +6710,7 @@ async function init_game_env(lang) {
 	//keep-alive сервис
 	setInterval(function()	{keep_alive()}, 40000);
 
-	//убираем лупу
-	some_process.loup_anim = function(){};
-	objects.id_loup.visible=false;
-		
-	//ждем и убираем попап
-	await new Promise((resolve, reject) => setTimeout(resolve, 1000));
-	anim2.add(objects.id_cont,{y:[objects.id_cont.y,-180]}, false, 0.6,'easeInBack');	
+
 	
 	//контроль за присутсвием
 	var connected_control = fbs.ref(".info/connected");
@@ -6735,7 +6729,15 @@ async function init_game_env(lang) {
 	window.addEventListener('keydown',function(event){keyboard.keydown(event.key)});
 
 	//сообщение от админа
-	check_admin_info();
+	await check_admin_info();
+	
+	//убираем лупу
+	some_process.loup_anim = function(){};
+	objects.id_loup.visible=false;
+		
+	//ждем и убираем попап
+	await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+	anim2.add(objects.id_cont,{y:[objects.id_cont.y,-180]}, false, 0.6,'easeInBack');	
 	
 	//показыаем основное меню
 	main_menu.activate();

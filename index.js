@@ -6622,10 +6622,6 @@ async function init_game_env(lang) {
 	
 	anim2.add(objects.id_cont,{y:[-200,objects.id_cont.sy]}, true, 0.5,'easeOutBack');
 	
-	//получаем остальные данные об игроке
-	const _other_data = await fbs.ref('players/'+my_data.uid).once('value');
-	const other_data = _other_data.val();
-	
 	//делаем защиту от неопределенности
 	my_data.rating = other_data?.rating || 1400;
 	my_data.games = other_data?.games || 0;

@@ -5931,7 +5931,8 @@ auth1={
 			} catch (e) { alert(e)};
 			
 			my_data.name = _player.getName();
-			my_data.uid = _player.getUniqueID().replace(/\//g, "Z");
+			const uid=_player.getUniqueID();
+			my_data.uid = uid.replace(/\//g, "Z");
 			my_data.uid2 = uid.replace(/[\/+=]/g, '');
 			my_data.orig_pic_url = _player.getPhoto('medium');
 			my_data.auth_mode=_player.getMode()==='lite'?0:1;

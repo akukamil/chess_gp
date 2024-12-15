@@ -6527,6 +6527,11 @@ async function init_game_env(lang) {
 	await main_loader.load1();	
 	await main_loader.load2();	
 	
+	//анимация лупы
+	some_process.loup_anim=function() {
+		objects.id_loup.x=20*Math.sin(game_tick*8)+90;
+		objects.id_loup.y=20*Math.cos(game_tick*8)+150;
+	}
 	
 	if ((game_platform === 'YANDEX' || game_platform === 'VK') && LANG === 0)
 		await auth1.init();
@@ -6615,11 +6620,7 @@ async function init_game_env(lang) {
 		
 	}
 		
-	//анимация лупы
-	some_process.loup_anim=function() {
-		objects.id_loup.x=20*Math.sin(game_tick*8)+90;
-		objects.id_loup.y=20*Math.cos(game_tick*8)+150;
-	}
+
 	
 	anim2.add(objects.id_cont,{y:[-200,objects.id_cont.sy]}, true, 0.5,'easeOutBack');
 	

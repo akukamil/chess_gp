@@ -6543,9 +6543,6 @@ async function init_game_env(lang) {
 	my_data.name=my_data.name.replace(/Ё/g, 'Е');
 
 
-
-
-
 	//инициируем файербейс
 	if (firebase.apps.length===0) {
 		firebase.initializeApp({
@@ -6676,9 +6673,7 @@ async function init_game_env(lang) {
 	//устанавливаем рейтинг в попап
 	objects.id_rating.text=objects.my_card_rating.text=my_data.rating;
 
-	//убираем лупу
-	objects.id_loup.visible=false;
-
+	
 	//обновляем почтовый ящик
 	fbs.ref("inbox/"+my_data.uid).set({sender:"-",message:"-",tm:"-",data:{x1:0,y1:0,x2:0,y2:0,board_state:0}});
 

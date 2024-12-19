@@ -345,7 +345,7 @@ class chat_record_class extends PIXI.Container {
 		if (msg_data.msg.startsWith('GIF')){			
 			
 			const mp4BaseT=await new Promise((resolve, reject)=>{
-				const baseTexture = PIXI.BaseTexture.from('res/gifs/'+msg_data.msg+'.mp4');
+				const baseTexture = PIXI.BaseTexture.from('https://akukamil.github.io/common/gifs/'+msg_data.msg+'.mp4');
 				if (baseTexture.width>1) resolve(baseTexture);
 				baseTexture.on('loaded', () => resolve(baseTexture));
 				baseTexture.on('error', (error) => resolve(null));
@@ -865,6 +865,7 @@ chat={
 	delete_message_mode:0,
 	games_to_chat:200,
 	payments:0,
+	processing:0,
 	
 	activate() {	
 
@@ -971,13 +972,24 @@ chat={
 				
 	async chat_updated(data, first_load) {		
 	
-		//console.log('receive message',data)
 		if(data===undefined) return;
-		
+				
+		//ждем пока процессинг пройдет
+		for (let i=0;i<10;i++){			
+			if (this.processing)
+				await new Promise(resolve => setTimeout(resolve, 250));				
+			else
+				break;				
+		}
+		if (this.processing) return;
+				
 		//если это дубликат моего сообщения из-за таймстемпа
 		if (data.uid===my_data.uid)
-			if (objects.chat_records.find(obj => { return obj.msg.text===data.msg&&obj.index===data.index})) return;
+			if (objects.chat_records.find(obj => {return obj.msg.text===data.msg&&obj.index===data.index}))
+				return;			
 		
+		
+		this.processing=1;
 		
 		//выбираем номер сообщения
 		const new_rec=this.get_oldest_or_free_msg();
@@ -994,6 +1006,8 @@ chat={
 			await anim2.add(objects.chat_msg_cont,{y:[objects.chat_msg_cont.y,objects.chat_msg_cont.y-y_shift]},true, 0.05,'linear');		
 		else
 			objects.chat_msg_cont.y-=y_shift
+		
+		this.processing=0;
 		
 	},
 						

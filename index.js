@@ -5812,7 +5812,54 @@ lobby={
 		await this.close();
 		lobby.activate();
 
+	},
+
+	info_btn_down(){
+		
+		if (anim2.any_on()) {
+			sound.play('locked');
+			return
+		};
+		sound.play('click');
+		
+		if(!objects.info_cont.init){
+			
+			//также сразу включаем его в кэш
+			if(!players_cache.players.bot){
+				players_cache.players.bot={};
+				players_cache.players.bot.name='bot';
+				players_cache.players.bot.rating=1400;
+				players_cache.players.bot.texture=new PIXI.Texture(assets.shangtsung_img.baseTexture,new PIXI.Rectangle(40,0,160,160));			
+			}
+			
+			
+			objects.info_records[0].set({uid:'bot',name:'Админ',msg:'Новое правило - рейтинг игроков, неактивных в течение 3 дней, будет снижен до 2000.',tm:1734959027520})
+			objects.info_records[0].scale_xy=1.2;
+			objects.info_records[0].y=145;
+			
+			objects.info_records[1].set({uid:'bot',name:'Админ',msg:'Новое правило - не авторизованным игрокам не достпуен рейтинг более 2000.',tm:1734959227520})
+			objects.info_records[1].scale_xy=1.2;
+			objects.info_records[1].y=235;
+			
+			objects.info_cont.init=1;
+		}
+		
+		anim2.add(objects.info_cont,{alpha:[0,1]}, true, 0.25,'linear');
+
+	},
+	
+	info_close_down(){
+		
+		if (anim2.any_on()) {
+			sound.play('locked');
+			return
+		};
+		sound.play('close');
+		
+		anim2.add(objects.info_cont,{alpha:[1,0]}, false, 0.25,'linear');
+		
 	}
+
 
 }
 
@@ -6381,6 +6428,10 @@ main_loader={
 		//добавляем текстуры стикеров
 		for (var i=0;i<16;i++)
 			loader.add("sticker_texture_"+i, git_src+"stickers/"+i+".png");
+		
+		mk.fighters_data.forEach(f=>{
+			loader.add(f.pic_res, git_src+"res/mk/"+f.pic_res+".jpg");
+		})
 	
 		//добавляем библиотеку аватаров
 		loader.add('multiavatar', git_src+'multiavatar.min.txt');	
@@ -6612,8 +6663,8 @@ async function init_game_env(lang) {
 	
 		if(!texture) return;
 		// Get the texture's original dimensions
-		const textureWidth = texture.baseTexture.width;
-		const textureHeight = texture.baseTexture.height;
+		const textureWidth = texture.width;
+		const textureHeight = texture.height;
 
 		// Calculate the scale to fit the texture to the circle's size
 		const scaleX = this.w / textureWidth;

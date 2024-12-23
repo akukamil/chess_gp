@@ -5833,7 +5833,7 @@ lobby={
 			}
 			
 			
-			objects.info_records[0].set({uid:'bot',name:'Админ',msg:'Новое правило - рейтинг игроков, неактивных в течение 3 дней, будет снижен до 2000.',tm:1734959027520})
+			objects.info_records[0].set({uid:'bot',name:'Админ',msg:'Новое правило - рейтинг игроков, неактивных более 3-х дней, будет снижен до 2000.',tm:1734959027520})
 			objects.info_records[0].scale_xy=1.2;
 			objects.info_records[0].y=145;
 			

@@ -335,19 +335,24 @@ function show_leaders() {
 	firebase.database().ref("players").orderByChild("rating").limitToLast(30).once("value").then((snapshot) => {
 		var data = snapshot.val();
 		//меняем дату на нормальный вид
-		Object.keys(data).forEach(k=>{data[k].tm = new Date(data[k].tm).toLocaleString();delete data[k].pic_url});
+		//меняем дату на нормальный вид
+		Object.keys(data).forEach(k=>{
+			data[k].tm = new Date(data[k].tm).toLocaleString();
+			data[k].last_game_tm = new Date(data[k].last_game_tm).toLocaleString();
+			delete data[k].pic_url
+		});
 		
 		//создаем массив для последующей работы
 		let uids = Object.keys(data);
 		let _data = [];
 		for (let i = 0 ; i < uids.length ; i++) {
 					
-			_data.push([uids[i], data[uids[i]].name, data[uids[i]].rating, data[uids[i]].games,data[uids[i]].auth_mode, data[uids[i]].tm])		
+			_data.push([uids[i], data[uids[i]].name, data[uids[i]].rating, data[uids[i]].games,data[uids[i]].auth_mode,data[uids[i]].last_game_tm, data[uids[i]].tm])		
 			
 		}	
 		
 		//это заголовки
-		let header = ['uid','name','rating','games','auth_mode','last_seen'];
+		let header = ['uid','name','rating','games','auth_mode','last_game_tm','last_seen'];
 
 		my_table.create(_data, header, 'none', 'list');	
 	})

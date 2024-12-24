@@ -5837,7 +5837,7 @@ lobby={
 			objects.info_records[0].scale_xy=1.2;
 			objects.info_records[0].y=145;
 			
-			objects.info_records[1].set({uid:'bot',name:'Админ',msg:'Новое правило - не авторизованным игрокам не достпуен рейтинг более 2000.',tm:1734959227520})
+			objects.info_records[1].set({uid:'bot',name:'Админ',msg:'Новое правило - не авторизованным игрокам не доступен рейтинг более 2000.',tm:1734959227520})
 			objects.info_records[1].scale_xy=1.2;
 			objects.info_records[1].y=235;
 			

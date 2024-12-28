@@ -5612,15 +5612,7 @@ lobby={
 		//активируем просмотр игры
 		game_watching.activate(objects.td_cont.card);
 	},
-	
-	async switch_header(){
 		
-		await anim2.add(objects.lobby_header,{y:[objects.lobby_header.sy, -60],alpha:[1,0]},false,1,'linear',false);	
-		objects.lobby_header.text=this.sw_header.header_list[this.sw_header.index];		
-		anim2.add(objects.lobby_header,{y:[-60,objects.lobby_header.sy],alpha:[0,1]},true,1,'linear',false);	
-		
-	},
-	
 	wheel_event(dir) {
 		
 	},
@@ -5833,7 +5825,7 @@ lobby={
 			}
 			
 			
-			objects.info_records[0].set({uid:'bot',name:'Админ',msg:'Новое правило - рейтинг игроков, неактивных более 3-х дней, будет снижен до 2000.',tm:1734959027520})
+			objects.info_records[0].set({uid:'bot',name:'Админ',msg:'Новое правило - рейтинг игроков, неактивных более 5 дней, будет снижен до 2000.',tm:1734959027520})
 			objects.info_records[0].scale_xy=1.2;
 			objects.info_records[0].y=145;
 			
@@ -6533,7 +6525,7 @@ async function check_admin_info(){
 		
 		if (last_game_tm&&cur_tm){
 			const days_passed=(cur_tm-last_game_tm)/3600000/24;
-			if (days_passed>3){
+			if (days_passed>5){
 				my_data.rating=2000;
 				fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
 				message.add('Ваш рейтинг округлен до 2000. Причина - отсутвие игр.',7000);

@@ -1761,6 +1761,10 @@ online_game={
 		if (game_result === NOSYNC)
 			return old_rating;
 		
+		//не авторизованым игрокам нельзя выиграть более 2000
+		if (my_data.rating>2000&&!my_data.auth_mode&&game_result === WIN)
+			return old_rating;	
+		
 		var Ea = 1 / (1 + Math.pow(10, ((opp_data.rating-my_data.rating)/400)));
 		if (game_result === WIN)
 			return Math.round(my_data.rating + 16 * (1 - Ea));
@@ -1993,7 +1997,7 @@ online_game={
 			fbs.ref('players/'+my_data.uid+'/last_game_tm').set(firebase.database.ServerValue.TIMESTAMP);
 	
 			//контрольные концовки
-			if (my_data.rating>2500 || opp_data.rating>2500)
+			if (my_data.rating>2000 || opp_data.rating>2000)
 				fbs.ref('finishes2/'+irnd(1,999999)).set({uid:my_data.uid,player1:objects.my_card_name.text,player2:objects.opp_card_name.text, res:res_info[1],fin_type:final_state,made_moves_both:game.made_moves_both, rating: [old_rating,my_data.rating],ts:firebase.database.ServerValue.TIMESTAMP});	
 			
 	

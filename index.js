@@ -1838,8 +1838,7 @@ online_game={
 			sound.play('locked');
 			return;				
 		}
-		
-		
+				
 		sound.play('click');
 		const msg=await keyboard.read();
 		if (msg) fbs.ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'CHAT',tm:Date.now(),data:msg});
@@ -1997,7 +1996,7 @@ online_game={
 			fbs.ref('players/'+my_data.uid+'/last_game_tm').set(firebase.database.ServerValue.TIMESTAMP);
 	
 			//контрольные концовки
-			if (my_data.rating>2000 || opp_data.rating>2000)
+			if (my_data.rating>=2000 || opp_data.rating>=2000)
 				fbs.ref('finishes2/'+irnd(1,999999)).set({uid:my_data.uid,player1:objects.my_card_name.text,player2:objects.opp_card_name.text, res:res_info[1],fin_type:final_state,made_moves_both:game.made_moves_both, rating: [old_rating,my_data.rating],ts:firebase.database.ServerValue.TIMESTAMP});	
 			
 	
@@ -6729,7 +6728,7 @@ async function init_game_env(lang) {
 	}
 	
 
-	//room_name= 'states5';	
+	//room_name= 'states4';	
 	
 	//устанавливаем рейтинг в попап
 	objects.id_rating.text=objects.my_card_rating.text=my_data.rating;

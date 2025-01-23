@@ -6288,6 +6288,7 @@ vis_change=function(){
 	if (document.hidden === true)
 		hidden_state_start = Date.now();
 	
+	my_log.add({event:'vis_change',hidden : document.hidden,tm:Date.now()});
 	set_state({hidden : document.hidden});
 	
 		
@@ -6805,6 +6806,7 @@ async function init_game_env(lang) {
 		connected = 1;
 	  } else {
 		connected = 0;
+		my_log.add({event:'not_connected',tm:Date.now()});
 	  }
 	});
 	

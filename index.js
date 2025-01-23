@@ -1973,7 +1973,7 @@ online_game={
 		my_log.add({event:'stop',final_state,tm:Date.now()});
 
 		if (final_state==='op_timeout'&&(my_data.rating>=2000||opp_data.rating>=2000)){
-			fbs.ref('BAD_GAME/'+game_id).push(my_log.log_arr);			
+			fbs.ref('BAD_GAME/'+game_id + my_role).set(my_log.log_arr);			
 		}
 						
 		let res_db = {

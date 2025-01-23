@@ -4080,8 +4080,8 @@ req_dialog={
 		anim2.add(objects.req_cont,{y:[objects.req_cont.y, -260]},false,0.4,'easeInBack');
 
 		//отправляем информацию о согласии играть с идентификатором игры
-		game_id=~~(Math.random()*99999);
-		fbs.ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"ACCEPT",tm:Date.now(),game_id:game_id});
+		game_id=irnd(10,999999);
+		fbs.ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"ACCEPT",tm:Date.now(),game_id});
 
 
 		main_menu.close();

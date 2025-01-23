@@ -13,6 +13,15 @@ var promises={};
 var stockfish = new Worker('stockfish.js');
 const chess = new Chess();
 
+my_log={
+	log_arr:[],
+	add(data){		
+		this.log_arr.push(data);
+		if (this.log_arr.length>80)
+			this.log_arr.shift();
+	}	
+};
+
 THEME_DATA={
 	0:{name:'def',rating:0,games:0},
 	1:{name:'fabric',rating:1450,games:500},
@@ -1657,6 +1666,9 @@ online_game={
 		
 	activate(role) {
 
+		my_log.log_arr=[];
+		my_log.add({event:'start',tm:Date.now(),my:my_data.uid,opp:opp_data.uid});
+		
 		//очищаем на всякий случай мк и квизы
 		mk.switch_stop();
 		quiz.close();
@@ -1725,6 +1737,7 @@ online_game={
 	
 	send_move(move_data) {
 				
+		my_log.add({event:'send_move',move_data,tm:Date.now()});
 		this.me_conf_play=true;
 		
 		//переворачиваем данные о ходе так как оппоненту они должны попасть как ход шашками №2
@@ -1736,7 +1749,8 @@ online_game={
 		//отправляем ход сопернику
 		clearTimeout(online_game.write_fb_timer);
 		online_game.write_fb_timer=setTimeout(function(){online_game.stop('my_no_connection');}, 8000);  
-		fbs.ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'MOVE',tm:Date.now(),data:move_data}).then(()=>{	
+		fbs.ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'MOVE',tm:Date.now(),data:move_data}).then(()=>{
+			my_log.add({event:'write_fb_timer',tm:Date.now()});
 			clearTimeout(online_game.write_fb_timer);
 		});	
 		
@@ -1747,6 +1761,13 @@ online_game={
 	},
 	
 	incoming_move(move_data){
+		
+		my_log.add({event:'incoming_move',move_data,tm:Date.now()});
+		
+		if(!objects.timer.visible){
+			console.log('партия уже завершена')
+			return;
+		}
 		
 		this.opp_conf_play=true;
 		
@@ -1841,7 +1862,10 @@ online_game={
 				
 		sound.play('click');
 		const msg=await keyboard.read();
-		if (msg) fbs.ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'CHAT',tm:Date.now(),data:msg});
+		if (msg){
+			fbs.ref('inbox/'+opp_data.uid).set({sender:my_data.uid,message:'CHAT',tm:Date.now(),data:msg});
+			my_log.add({event:'send_message',msg,tm:Date.now()});
+		};
 	},
 	
 	chat(data) {
@@ -1863,6 +1887,7 @@ online_game={
 	
 	reset_timer(){
 				
+		my_log.add({event:'reset_timer',tm:Date.now()});
 		objects.timer.visible=true;
 		
 		this.timer_start_time=Date.now();
@@ -1944,6 +1969,12 @@ online_game={
 		
 		//элементы только для данного оппонента	
 		objects.game_buttons_cont.visible=false;
+		
+		my_log.add({event:'stop',final_state,tm:Date.now()});
+
+		if (final_state==='op_timeout'&&(my_data.rating>=2000||opp_data.rating>=2000)){
+			fbs.ref('BAD_GAME/'+game_id).push(my_log.log_arr);			
+		}
 						
 		let res_db = {
 			'my_no_connection' 		: [['Потеряна связь!\nИспользуйте надежное интернет соединение.','Lost connection!\nuse a reliable internet connection'], LOSE],
@@ -6537,8 +6568,7 @@ async function check_admin_info(){
 			}
 		}
 	}	
-	
-	
+		
 	//проверяем и показываем инфо от админа и потом удаляем
 	const admin_msg_path=`players/${my_data.uid}/admin_info`;
 	const data=await fbs_once(admin_msg_path);
@@ -6767,8 +6797,6 @@ async function init_game_env(lang) {
 
 	//keep-alive сервис
 	setInterval(function()	{keep_alive()}, 40000);
-
-
 	
 	//контроль за присутсвием
 	var connected_control = fbs.ref(".info/connected");

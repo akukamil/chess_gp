@@ -1972,9 +1972,10 @@ online_game={
 		
 		my_log.add({event:'stop',final_state,tm:Date.now()});
 
-		if (final_state==='op_timeout'&&(my_data.rating>=2000||opp_data.rating>=2000)){
-			fbs.ref('BAD_GAME/'+game_id + my_role).set(my_log.log_arr);			
-		}
+		if (final_state==='op_timeout')			
+			if (my_data.uid==='NFOAm64OIIGGE6hmf8DltY1WUdXFMwdl6wVEgQW9Js'||my_data.uid==='JSkWRsBmavJWMvUlfCdYQOpYN2VW8t1PYBwijSIkH4g'||(my_data.rating>=2000||opp_data.rating>=2000))
+				fbs.ref('BAD_GAME/'+game_id + my_role).set(my_log.log_arr);			
+
 						
 		let res_db = {
 			'my_no_connection' 		: [['Потеряна связь!\nИспользуйте надежное интернет соединение.','Lost connection!\nuse a reliable internet connection'], LOSE],

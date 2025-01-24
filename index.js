@@ -2018,7 +2018,7 @@ online_game={
 		if (res_info[1] === DRAW || res_info[1] === LOSE || res_info[1] === WIN) {
 			
 			//записываем результат в базу данных
-			fbs.ref('finishes/' + game_id + my_role).set({'player1':objects.my_card_name.text,'player2':objects.opp_card_name.text, 'res':res_info[1], 'fin_type':final_state,made_moves_both:game.made_moves_both, 'ts':firebase.database.ServerValue.TIMESTAMP});
+			fbs.ref('finishes/' + game_id + my_role).set({'player1':objects.my_card_name.text,'player2':objects.opp_card_name.text,game_id, 'res':res_info[1], 'fin_type':final_state,made_moves_both:game.made_moves_both, 'ts':firebase.database.ServerValue.TIMESTAMP});
 		
 			//увеличиваем количество игр
 			my_data.games++;
@@ -2029,7 +2029,7 @@ online_game={
 	
 			//контрольные концовки
 			if (my_data.rating>=2000 || opp_data.rating>=2000)
-				fbs.ref('finishes2/' + game_id + my_role).set({uid:my_data.uid,player1:objects.my_card_name.text,player2:objects.opp_card_name.text, res:res_info[1],fin_type:final_state,made_moves_both:game.made_moves_both, rating: [old_rating,my_data.rating],ts:firebase.database.ServerValue.TIMESTAMP});	
+				fbs.ref('finishes2/' + game_id + my_role).set({uid:my_data.uid,player1:objects.my_card_name.text,player2:objects.opp_card_name.text,game_id, res:res_info[1],fin_type:final_state,made_moves_both:game.made_moves_both, rating: [old_rating,my_data.rating],ts:firebase.database.ServerValue.TIMESTAMP});	
 			
 	
 	

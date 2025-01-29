@@ -6805,6 +6805,7 @@ async function init_game_env(lang) {
 	connected_control.on("value", (snap) => {
 	  if (snap.val() === true) {
 		connected = 1;
+		my_log.add({event:'connected',tm:Date.now()});
 	  } else {
 		connected = 0;
 		my_log.add({event:'not_connected',tm:Date.now()});

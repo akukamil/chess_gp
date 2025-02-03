@@ -1,14 +1,6 @@
-var M_WIDTH=800, M_HEIGHT=450;
-var app, assets={}, game,gdata={},  objects={}, state="",my_role="",client_id, game_tick=0, my_turn=false, room_name = '',chat_path='chat', move=0, game_id=0, connected = 1, LANG = 0,git_src;
-var some_process = {}, h_state=0, game_platform="", hidden_state_start = 0;
-var WIN = 1, DRAW = 0, LOSE = -1, NOSYNC = 2,no_invite=false;
-g_board=[];
-var pending_player="", opponent=null;
-var my_data={opp_id : ''},opp_data={};
-var g_process=function(){};
+let M_WIDTH=800, M_HEIGHT=450,app, assets={}, objects={}, state="",my_role="",client_id, game_tick=0, my_turn=false, room_name = '', game_id=0, connected = 1, LANG = 0,git_src,some_process = {}, h_state=0, game_platform='', hidden_state_start = 0, WIN = 1, DRAW = 0, LOSE = -1, NOSYNC = 2,no_invite=false, g_board=[], pending_player='', opponent=null, my_data={opp_id : ''}, opp_data={}, game_name='chess';
 const op_pieces = ['p','r','n','b','k','q'];
 const my_pieces = ['P','R','N','B','K','Q'];
-var promises={};
 
 var stockfish = new Worker('stockfish.js');
 const chess = new Chess();
@@ -875,7 +867,9 @@ chat={
 	games_to_chat:200,
 	payments:0,
 	processing:0,
-	
+	remote_socket:0,
+	ss:[],
+		
 	activate() {	
 
 		anim2.add(objects.chat_cont,{alpha:[0, 1]}, true, 0.1,'linear');
@@ -889,11 +883,18 @@ chat={
 
 		objects.chat_rules.text='Правила чата!\n1. Будьте вежливы: Общайтесь с другими игроками с уважением. Избегайте угроз, грубых выражений, оскорблений, конфликтов.\n2. Отправлять сообщения в чат могут игроки сыгравшие более 200 онлайн партий.\n3. За нарушение правил игрок может попасть в черный список.'
 		if(my_data.blocked) objects.chat_rules.text='Вы не можете писать в чат, так как вы находитесь в черном списке';
-
+		
+		
+	},
+		
+	new_message(data){
+		
+		console.log('new_data',data);
+		
 	},
 	
-	init(){
-		
+	async init(){	
+			
 		this.last_record_end = 0;
 		objects.chat_msg_cont.y = objects.chat_msg_cont.sy;		
 		objects.bcg.interactive=true;
@@ -901,16 +902,26 @@ chat={
 		objects.bcg.pointerdown=this.pointer_down.bind(this);
 		objects.bcg.pointerup=this.pointer_up.bind(this);
 		objects.bcg.pointerupoutside=this.pointer_up.bind(this);
+		
 		for(let rec of objects.chat_records) {
 			rec.visible = false;			
 			rec.msg_id = -1;	
 			rec.tm=0;
 		}		
 		
-		//загружаем чат		
-		fbs.ref(chat_path).orderByChild('tm').limitToLast(20).once('value', snapshot => {chat.chat_load(snapshot.val());});		
-		
 		this.init_yandex_payments();
+
+		await my_ws.init();	
+		
+		//загружаем чат		
+		const chat_data=await my_ws.get(`${game_name}/chat`,25);
+		
+		await this.chat_load(chat_data);
+		
+		//подписываемся на новые сообщения
+		my_ws.ss_child_added(`${game_name}/chat`,chat.chat_updated.bind(chat))
+		
+		console.log('Чат загружен!')
 	},		
 
 	init_yandex_payments(){
@@ -963,7 +974,7 @@ chat={
 		
 	async chat_load(data) {
 		
-		if (data === null) return;
+		if (!data) return;
 		
 		//превращаем в массив
 		data = Object.keys(data).map((key) => data[key]);
@@ -974,14 +985,12 @@ chat={
 		//покаываем несколько последних сообщений
 		for (let c of data)
 			await this.chat_updated(c,true);	
-		
-		//подписываемся на новые сообщения
-		fbs.ref(chat_path).on('child_changed', snapshot => {chat.chat_updated(snapshot.val());});
 	},	
 				
 	async chat_updated(data, first_load) {		
 	
-		if(data===undefined) return;
+		//console.log('chat_updated:',JSON.stringify(data).length);
+		if(data===undefined||!data.msg||!data.name||!data.uid) return;
 				
 		//ждем пока процессинг пройдет
 		for (let i=0;i<10;i++){			
@@ -991,13 +1000,7 @@ chat={
 				break;				
 		}
 		if (this.processing) return;
-				
-		//если это дубликат моего сообщения из-за таймстемпа
-		if (data.uid===my_data.uid)
-			if (objects.chat_records.find(obj => {return obj.msg.text===data.msg&&obj.index===data.index}))
-				return;			
-		
-		
+							
 		this.processing=1;
 		
 		//выбираем номер сообщения
@@ -1040,12 +1043,7 @@ chat={
 			console.log('Игрок убит: ',player_data.uid);
 			this.kill_next_click=0;
 		}
-		
-		if(this.delete_message_mode){			
-			fbs.ref(`${chat_path}/${player_data.index}`).remove();
-			console.log(`сообщение ${player_data.index} удалено`)
-		}
-		
+			
 		
 		if(this.moderation_mode||this.block_next_click||this.kill_next_click||this.delete_message_mode) return;
 		
@@ -1167,8 +1165,7 @@ chat={
 			sound.play('locked');
 			return
 		};
-		
-		
+				
 		//оплата разблокировки чата
 		if (my_data.blocked){	
 		
@@ -1197,8 +1194,7 @@ chat={
 				
 			return;
 		}
-		
-		
+				
 		sound.play('click');
 		
 		//убираем метки старых сообщений
@@ -1217,7 +1213,8 @@ chat={
 		const msg = await keyboard.read(70);		
 		if (msg) {			
 			const index=irnd(1,999);
-			fbs.ref(chat_path+'/'+index).set({uid:my_data.uid,name:my_data.name,msg, tm:firebase.database.ServerValue.TIMESTAMP,index});
+			my_ws.socket.send(JSON.stringify({cmd:'push',path:`${game_name}/chat`,val:{uid:my_data.uid,name:my_data.name,msg,tm:'TMS'}}))	
+			//fbs.ref(chat_path+'/'+index).set({uid:my_data.uid,name:my_data.name,msg, tm:firebase.database.ServerValue.TIMESTAMP,index});
 		}	
 		
 	},
@@ -6464,7 +6461,10 @@ main_loader={
 		})
 	
 		//добавляем библиотеку аватаров
-		loader.add('multiavatar', git_src+'multiavatar.min.txt');	
+		loader.add('multiavatar', 'https://akukamil.github.io/common/multiavatar.min.txt');	
+		
+		//добавляем смешные загрузки
+		loader.add('fun_logs', 'https://akukamil.github.io/common/fun_logs.txt');	
 	
 		loader.onProgress.add(l=>{
 			objects.loader_bar_mask.width =  240*loader.progress*0.01;
@@ -6544,8 +6544,6 @@ main_loader={
 				break;
 			}
 		}
-		
-		
 		
 	}
 	
@@ -6637,7 +6635,6 @@ async function init_game_env(lang) {
 	my_data.name=my_data.name.replace(/ё/g, 'е');
 	my_data.name=my_data.name.replace(/Ё/g, 'Е');
 
-
 	//инициируем файербейс
 	if (firebase.apps.length===0) {
 		firebase.initializeApp({
@@ -6654,7 +6651,6 @@ async function init_game_env(lang) {
 	
 	//коротко файрбейс
 	fbs=firebase.database();
-
 
 	//конвертируем юид
 	let other_data;
@@ -6676,7 +6672,6 @@ async function init_game_env(lang) {
 	}else{
 		other_data=await fbs_once('players/' + my_data.uid);
 	}
-
 
 	//доп функция для текста битмап
 	PIXI.BitmapText.prototype.set2=function(text,w){		
@@ -6711,9 +6706,7 @@ async function init_game_env(lang) {
 		this.endFill();		
 		
 	}
-		
-
-	
+			
 
 	//делаем защиту от неопределенности
 	my_data.rating = other_data?.rating || 1400;
@@ -6761,12 +6754,10 @@ async function init_game_env(lang) {
 		}
 	}
 	
-
 	//room_name= 'states5';	
 	
 	//устанавливаем рейтинг в попап
 	objects.id_rating.text=objects.my_card_rating.text=my_data.rating;
-
 	
 	//обновляем почтовый ящик
 	fbs.ref("inbox/"+my_data.uid).set({sender:"-",message:"-",tm:"-",data:{x1:0,y1:0,x2:0,y2:0,board_state:0}});
@@ -6781,7 +6772,6 @@ async function init_game_env(lang) {
 	fbs.ref('players/'+my_data.uid+'/country').set(my_data.country);
 	fbs.ref('players/'+my_data.uid+'/auth_mode').set(my_data.auth_mode);
 	await fbs.ref('players/'+my_data.uid+'/tm').set(firebase.database.ServerValue.TIMESTAMP);
-
 	
 	//устанавливаем мой статус в онлайн
 	set_state({state : 'o'});
@@ -6801,22 +6791,29 @@ async function init_game_env(lang) {
 	setInterval(function()	{keep_alive()}, 40000);
 	
 	//контроль за присутсвием
-	var connected_control = fbs.ref(".info/connected");
-	connected_control.on("value", (snap) => {
-	  if (snap.val() === true) {
-		connected = 1;
-		my_log.add({event:'connected',tm:Date.now()});
-	  } else {
-		connected = 0;
-		my_log.add({event:'not_connected',tm:Date.now()});
-	  }
+	const connected_control = fbs.ref('.info/connected');
+	connected_control.on('value', (snap) => {
+		if (snap.val() === true) {
+			connected = 1;
+			my_log.add({event:'connected',tm:Date.now()});
+		} else {
+			connected = 0;
+			my_log.add({event:'not_connected',tm:Date.now()});
+		}
 	});
 	
 	//событие ролика мыши в карточном меню и нажатие кнопки
-	window.addEventListener("wheel", (event) => {	
-		chat.wheel_event(Math.sign(event.deltaY));
-	});	
+	window.addEventListener("wheel", (event) => {chat.wheel_event(Math.sign(event.deltaY))});	
 	window.addEventListener('keydown',function(event){keyboard.keydown(event.key)});
+
+	//загрузка сокета
+	await auth2.load_script('https://akukamil.github.io/common/my_ws.js');	
+	
+	//ждем загрузки чата
+	await Promise.race([
+		chat.init(),
+		new Promise(resolve=> setTimeout(() => {console.log('chat is not loaded!');resolve()}, 5000))
+	]);
 
 	//сообщение от админа
 	await check_admin_info();
@@ -6837,9 +6834,6 @@ async function init_game_env(lang) {
 }
 
 function main_loop() {
-
-	//глобальная функция
-	g_process();
 
 	game_tick+=0.016666666;
 	

@@ -2248,7 +2248,7 @@ quiz={
 			
 			const player=players_cache.players[uid];
 			objects.puzzle_leaders_icons[i].avatar.set_texture(player.texture);
-			objects.puzzle_leaders_icons[i].t_name.text=player.name;
+			objects.puzzle_leaders_icons[i].t_name.set2(player.name,180);
 			objects.puzzle_leaders_icons[i].t_level.text=['Уровень: ','Level: '][LANG]+level;	
 			i++;
 		}	

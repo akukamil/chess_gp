@@ -4605,7 +4605,10 @@ main_menu={
 			sound.play('locked');
 			return;
 		}
-		
+		sound.play('locked');
+		return;
+			
+			
 		sound.play('click2');
 		this.close();
 		quiz.activate();

@@ -93,8 +93,6 @@ class player_mini_card_class extends PIXI.Container {
 		this.avatar1_frame.y=this.avatar1.y-11.64;
 		this.avatar1_frame.width=this.avatar1_frame.height=81.48;
 
-
-
 		//аватар второго игрока
 		this.avatar2=new PIXI.Graphics();
 		this.avatar2.x=121;
@@ -132,6 +130,38 @@ class player_mini_card_class extends PIXI.Container {
 		this.addChild(this.bcg,this.avatar,this.avatar_frame,this.avatar1, this.avatar1_frame, this.avatar2,this.avatar2_frame,this.rating_text,this.table_rating_hl,this.rating_text1,this.rating_text2, this.name_text,this.t_country);
 	}
 
+}
+
+class puzzle_leader_class extends PIXI.Container{
+	
+	constructor(x,y,id) {
+		super();
+		this.avatar=new PIXI.Graphics();
+		this.avatar.w=this.avatar.h=60;
+		
+		this.avatar_frame=new PIXI.Sprite(assets.circle_frame50);
+		this.avatar_frame.x=-12;
+		this.avatar_frame.y=-12;
+		this.avatar_frame.width=this.avatar_frame.height=84;
+		
+		this.t_name=new PIXI.BitmapText('', {fontName: 'mfont',fontSize: 22,align: 'center'});
+		this.t_name.anchor.set(0.5,0.5);
+		this.t_name.x=30;
+		this.t_name.y=70;
+		this.t_name.tint=0xffffff;		
+
+		this.rating=0;
+		this.t_level=new PIXI.BitmapText('', {fontName: 'mfont',fontSize: 22,align: 'center'});
+		this.t_level.tint=0xffff00;
+		this.t_level.anchor.set(0.5,0.5);
+		this.t_level.x=30;
+		this.t_level.y=85;		
+		this.t_level.tint=0xaaaaaa;
+		
+		this.addChild(this.avatar,this.avatar_frame,this.t_name,this.t_level);
+		
+	}
+	
 }
 
 class lb_player_card_class extends PIXI.Container{
@@ -2138,79 +2168,31 @@ quiz={
 	made_moves:0,
 	quiz_level:0,
 	solved_data:{},
+	lb_update_time:0,
 	
-	quiz_data:[
-	['8/6k1/8/6N1/5K2/7Q/8/8','Bajtay, Jozsef\nL_Italia Scacchistica\nSep 1971',2],
-	['8/8/k7/5R2/4K3/3R4/8/8','Burbach, Johannes Jacob\nDeutsche Schachzeitung\nApr 1983',2],
-	['6R1/7k/5K2/8/6N1/8/8/8','Cabrera, Darwin\nChess, 18\nDec 1964',2],	
-	['8/8/8/8/4R3/6k1/8/4K2R','Candy, W. E.\nUnknown\n1911',2],	
-	['8/8/3K4/8/3k4/5Q2/2R5/8','Carpenter, George Edward\nDubuque Chess Journal\nOct 1873 (724)',2],	
-	['7K/3Q4/8/6k1/8/6N1/8/8','Chiasson, Joseph Emile\nEchec+\n1992',2],		
-	['8/4K3/8/5k2/8/4B3/4Q3/8','Conroy, J. A.\nHome Circle\n1850',2],	
-	['8/Q7/8/8/8/6N1/4K2k/8','Gruber, Hans\nSachsische Zeitung\n5 Jun 1981 (1087)',2],	
-	['8/8/5Q2/3k4/8/1K6/2R5/8','Holladay, Edgar Dinwiddie\nThe Problemist\nJul 1990 (7904)',2],	
-	['8/6P1/P7/8/8/8/8/k1K5','Speckmann, Werner\nEurope Echecs\n1965 (494)',3],
-	['k5N1/8/8/8/8/5K2/8/1Q6','Libis, Zdenek\nSachove umeni\nFeb 1971 (2655)',3],
-	['8/8/8/8/k7/7R/1K6/5B2','Klager, K. M.\nWormser Zeitung\n1964 (527)',3],
-	['8/8/8/8/8/R3K3/8/2B1k3','Mabmann, Wilhelm Karl Heinrich\nBasler Nachrichten\n10 Jul 1954 (4326)',3],
-	['5b1k/3P4/5K2/8/8/8/8/8','Olausson, Michel\nTroll, 1991',3],
-	['2k5/5R2/8/2K5/8/8/8/2B5','Kakabadze, Ferad\nTroll\n29 Aug 2001 (551)',3],
-	['8/8/8/8/6K1/8/5P1Q/5k2','Erdenbrecher, Hans Michael\nDie Schwalbe\nFeb 1971 (321)',3],
-	['1K6/4kP2/2Q5/8/8/8/8/8','Демидюк, Степан Иосифович\nTT Apprenti Sorcier\n1993',3],
-	['k1n5/2QK4/8/8/8/8/8/8','Богданов, Евгений Михайлович\nMat-64Comm.Mat-64\n2000 (81)',3],
-	['8/1Q6/2p5/4K3/8/k7/8/8','Havel, Miroslav\nSachove umeni\n20 Sep 1951',3],
-	['8/8/8/8/p7/3N4/2K5/k7','Kollarik, Gorazd\nHlas Iudu\n13 Mar 1975 (459)',3],
-	['5B1k/8/6K1/8/8/7N/8/8','Majoros, Bela\nSakkelet\n1994 (5-6/5971)',3],
-	['7k/8/6Qn/6K1/8/8/8/8','Румянцев, Сергей Юрьевич\nЮный ленинец (Кишинев)\n1974',3],
-	['3r4/3kPK2/2R5/8/8/8/8/8','Teixeira, Nelson\nO Globo\n1982',3],
-	['8/3p1N2/K7/2k5/4Q3/8/8/8','Makaronez, Leonid\nL_Italia Scacchistica\nMar 1998 (8256)',3],
-	['1k6/1P3QK1/8/8/8/8/P7/8','Максимовских, Александр Петрович\nШахматы в СССР\nFeb 1966 (12)',3],
-	['8/K2p4/2k5/6Q1/8/1B6/8/8','Кожакин, Владимир Владимирович\nL_Italia Scacchistica\nDec 1998 (8609)',3],
-	['8/5k2/8/4Q3/3P4/8/8/2B4K','Кулигин, Микола Володимирович\nКудесник, 1993',3],
-	['3k4/3N4/3K4/8/8/3N4/8/3B4','Fargette, Bruno\nThemes-64\nJul 1966 (1478)',4],
-	['7k/7B/7K/8/8/8/8/R6b','Meynsbrughen, Michel\nperso.infonie.fr/clafouti\n1999',4],
-	['8/8/7K/B4Q2/3k4/8/4P3/8','Havel, Miroslav\nParallele 50\n22 Nov 1951',4],
-	['8/7R/8/8/8/8/5K1p/3b3k','Mlynka, Karol\nSmer\n1968',4],
-	['8/8/8/8/8/7p/7R/1kNK4','Zucker, Manfred\nMagyar Sakkelet\n1984 (1/4752)',4],
-	['Q7/1B6/1k6/3K4/8/8/1p6/8','Пипа, Володимир Иосифович\nШах-ВВ (Боровичи)\n1991',4],
-	['8/8/8/8/8/3p2K1/3N4/4N2k','Brieger, Robert Sinclair\nThe Joy of Mate\n1985 (33)',4],
-	['k1K5/4R3/4P3/P7/8/8/8/8','Speckmann, Werner\nstella polaris\nMar 1966 (123)',4],
-	['8/B7/8/3K1k2/8/5NR1/8/8','Makaronez, Leonid\nThe Problemist Supplement\nJul 2006 (83/1817)',4],  //5 фигур	
-	['N7/5k2/N6Q/6p1/8/6K1/8/8','Havel, Miroslav\nParallele 50, 3 Jul 1952',4],//6фигур
-	['3Q4/8/8/2p5/2p5/3B1K2/3k4/8','Carpenter, George Edward\nSchachminiaturen, 1902',4],
-	['r3k3/5R1K/8/8/1n6/8/8/6R1','Poisson, Olivier\ndiagrammes, Sep 1981 (53/1169)',4],
-	['6K1/7P/7P/1R6/8/8/kP6/8','Makaronez, Leonid\nProblemas, Jul 1994 (7/1112)',4],
-	['8/8/8/8/7R/1P1kp3/7R/1K6','Богданов, Е.М.\nMat-64, Mar 2000 (45)',4],
-	['4Q3/8/8/3k4/3p4/3P4/3B4/K7','Кожакин, Владимир Владимирович\nMat-64, 2001 (259)',4],
-	['8/8/8/8/3NK3/4N3/8/2B1k2B','Clavero, P.\nEurope Echecs, Apr 1990 (376/10)',4],
-	['7k/5p2/8/5BR1/5K2/6B1/8/8','Кардымон, Геннадий П.\nКудесник, 1992',4],
-	['8/3k4/1BN2PB1/1K6/8/8/8/8','Pajor, Andras\nMagyar Sakkelet, 1989 (3/5347)',4],
-	['2B5/8/1B1k1N2/8/3NK3/8/8/8','Majoros, Bela\nSakkelet, 1995 (4/6075)',4],
-	['8/8/6B1/6B1/6kp/7N/6K1/8','Barna, Laszlo\nSakkelet, 1997 (9-10/6358)',4],
-	['7K/3B4/8/8/1Bk5/4R3/2N5/8','Кожакин, Владимир Владимирович\nSakkelet, 1999 (1-2/6517)',4],
-	['8/1K6/8/B1k2N2/2B5/4N3/8/8','Shahaf, Noam\nProblemas, Mar 2000 (27/1615)',4],
-	['7R/8/3K4/8/3k4/3P3p/1R6/8','Богданов, Евгений Михайлович\nTroll, 2000',4],
-	['1R6/3N4/2N1k3/8/4K3/8/8/B7','Иванов, Валерий Алексеевич\nЗадачи и этюды, Apr 2006 (38/2478)',4],
-	['8/3N4/K7/8/4k1N1/b1Q5/8/8','Навроцкий, Игорь\nШаховий Леополіс, 2006 (7)',4]
-	
-	],
+	quiz_data:null,
+				
+	word_form(number) {
+		const cases = [2, 0, 1, 1, 1, 2];
+		return ['ход', 'хода', 'ходов'][
+			(number % 100 > 4 && number % 100 < 20) 
+				? 2 
+				: cases[(number % 10 < 5) ? number % 10 : 5]
+		];
+	},
 		
-	async activate(quiz_level){				
+	async activate(quiz_level){
+		
+		if (!this.quiz_data) this.quiz_data=eval(assets.quizes_db);
 					
 		set_state({state:'b'});
 		
 		this.on=true;
 		if (quiz_level!==undefined)
-			this.quiz_level=quiz_level;
+			this.quiz_level=quiz_level;	
 		else
 			this.quiz_level=my_data.quiz_level;
 		
-		//смотрим сколько людей решили
-		if (!this.solved_data[this.quiz_level]){
-			let pc=await fbs.ref('quizes/'+this.quiz_level ).once('value'); 
-			pc=pc.val();			
-			this.solved_data[this.quiz_level]=pc;			
-		}
 						
 		//новая игра стокфиша
 		sf.new_game(10,7);	
@@ -2224,26 +2206,53 @@ quiz={
 		const q=this.quiz_data[this.quiz_level];
 		g_board = board_func.fen_to_board(q[0]);
 		
-		this.moves_to_mate=q[2];
-		objects.quiz_title0.text=['Задача №','Problem №'][LANG]+(this.quiz_level+1);
-		objects.quiz_title1.text=[`**Мат за ${q[2]} хода**`,`**Mate in ${q[2]} moves**`][LANG];
-		objects.quiz_title2.text=q[1];
-		objects.quiz_title3.text=['Количество игроков решивших данную задачу:\n','The number of players who solved this problem:\n'][LANG]+(this.solved_data[this.quiz_level]||0);
+		this.moves_to_mate=q[1];
+		objects.quiz_my_level.text=['Уровень: ','Level: '][LANG]+(this.quiz_level+1);
+		objects.quiz_desc.text=[`Мат за ${q[1]} ${quiz.word_form(q[1])}`,`Mate in ${q[1]} moves`][LANG];
+		
+		
 		if(!objects.quiz_title_cont.visible)
-		anim2.add(objects.quiz_title_cont,{alpha:[0,1]},true,1,'linear');
+			anim2.add(objects.quiz_title_cont,{alpha:[0,1]},true,1,'linear');
+		
+		this.update_lb();
 		
 		game.activate('master',quiz)
 		
 	},
 	
-	async update_quiz_stat(quiz_id){
+	async update_lb(){	
+
+	
+		const tm=Date.now();
+		
+		//не обновляем слишком часто
+		if (tm-this.lb_update_time<60000) {
+			console.log('лидеры не обновлялись');
+			return;
+		}
+		
+		this.lb_update_time=tm;
 		
 		//смотрим сколько людей решили
-		let pc=await fbs.ref("quizes/"+quiz_id ).once('value'); 
-		pc=pc.val();
+		const cur_top=await my_ws.get('chess/top3');
 		
-		if (pc!==null && pc!==undefined)
-			fbs.ref("quizes/"+quiz_id ).set(pc+1); 
+		//в виде массива
+		const lb_data=Object.entries(cur_top);
+		lb_data.sort((a, b) => b[1] - a[1]);
+		
+		let i=0;
+		for (const [uid, level] of lb_data) {
+			
+			await players_cache.update(uid);
+			await players_cache.update_avatar(uid);
+			
+			const player=players_cache.players[uid];
+			objects.puzzle_leaders_icons[i].avatar.set_texture(player.texture);
+			objects.puzzle_leaders_icons[i].t_name.text=player.name;
+			objects.puzzle_leaders_icons[i].t_level.text=['Уровень: ','Level: '][LANG]+level;	
+			i++;
+		}	
+		
 	},
 	
 	exit_down(){
@@ -2301,9 +2310,9 @@ quiz={
 				
 				//только если мы прошли последнюю задачу
 				if (this.quiz_level===my_data.quiz_level){
-					this.update_quiz_stat(my_data.quiz_level);	
-					my_data.quiz_level++;
-					fbs.ref("players/"+my_data.uid+"/quiz_level").set(my_data.quiz_level);			
+					my_ws.socket.send(JSON.stringify({cmd:'top3',path:'chess/top3',val:{uid:my_data.uid,val:my_data.quiz_level+1}}));
+					my_data.quiz_level++;					
+					fbs.ref('players/'+my_data.uid+'/quiz_level').set(my_data.quiz_level);			
 				}				
 			}
 
@@ -6465,6 +6474,9 @@ main_loader={
 		
 		//добавляем смешные загрузки
 		loader.add('fun_logs', 'https://akukamil.github.io/common/fun_logs.txt');	
+		
+		//добавляем задачки
+		loader.add('quizes_db', 'quizes_db.txt');	
 	
 		loader.onProgress.add(l=>{
 			objects.loader_bar_mask.width =  240*loader.progress*0.01;
@@ -6625,6 +6637,18 @@ async function init_game_env(lang) {
 		objects.id_loup.x=20*Math.sin(game_tick*8)+90;
 		objects.id_loup.y=20*Math.cos(game_tick*8)+150;
 	}
+	
+	//смешные логи
+	const runScyfiLogs=async () => {
+		const scyfi_logs=JSON.parse(assets.fun_logs);	
+		for (let i=0;i<10;i++){				
+			const log_index=irnd(0,scyfi_logs.length-1);
+			objects.scyfi_log.text=scyfi_logs[log_index];
+			await new Promise(resolve=>setTimeout(resolve, irnd(300,700)));		
+		}
+	};
+	runScyfiLogs();
+	
 	
 	if ((game_platform === 'YANDEX' || game_platform === 'VK') && LANG === 0)
 		await auth1.init();

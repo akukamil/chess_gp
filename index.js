@@ -2166,7 +2166,7 @@ quiz={
 	on:false,
 	moves_to_mate:0,
 	made_moves:0,
-	quiz_level:0,
+	quiz_level2:0,
 	solved_data:{},
 	lb_update_time:0,
 	
@@ -2181,17 +2181,17 @@ quiz={
 		];
 	},
 		
-	async activate(quiz_level){
+	async activate(quiz_level2){
 		
 		if (!this.quiz_data) this.quiz_data=eval(assets.quizes_db);
 					
 		set_state({state:'b'});
 		
 		this.on=true;
-		if (quiz_level!==undefined)
-			this.quiz_level=quiz_level;	
+		if (quiz_level2!==undefined)
+			this.quiz_level2=quiz_level2;	
 		else
-			this.quiz_level=my_data.quiz_level;
+			this.quiz_level2=my_data.quiz_level2;
 		
 						
 		//новая игра стокфиша
@@ -2203,11 +2203,11 @@ quiz={
 		objects.sb_bcg.pointerdown=this.exit_down.bind(quiz);
 		anim2.add(objects.stop_bot_button,{x:[800,objects.stop_bot_button.sx]},true,0.5,'linear');
 		
-		const q=this.quiz_data[this.quiz_level];
+		const q=this.quiz_data[this.quiz_level2];
 		g_board = board_func.fen_to_board(q[0]);
 		
 		this.moves_to_mate=q[1];
-		objects.quiz_my_level.text=['Уровень: ','Level: '][LANG]+(this.quiz_level+1);
+		objects.quiz_my_level.text=['Уровень: ','Level: '][LANG]+(this.quiz_level2+1);
 		objects.quiz_desc.text=[`Мат за ${q[1]} ${quiz.word_form(q[1])}`,`Mate in ${q[1]} moves`][LANG];
 		
 		
@@ -2304,15 +2304,15 @@ quiz={
 		if (final_state === 'checkmate_to_opponent'){
 						
 			//омечаем что эта задача решена
-			if(this.quiz_level>=this.quiz_data.length-1){
+			if(this.quiz_level2>=this.quiz_data.length-1){
 				message.add(['Это последняя задача, но скоро будут новые...','This is the last problem, but there will be new ones soon...'][LANG])		
 			} else {
 				
 				//только если мы прошли последнюю задачу
-				if (this.quiz_level===my_data.quiz_level){
-					my_ws.socket.send(JSON.stringify({cmd:'top3',path:'chess/top3',val:{uid:my_data.uid,val:my_data.quiz_level+1}}));
-					my_data.quiz_level++;					
-					fbs.ref('players/'+my_data.uid+'/quiz_level').set(my_data.quiz_level);			
+				if (this.quiz_level2===my_data.quiz_level2){
+					my_ws.socket.send(JSON.stringify({cmd:'top3',path:'chess/top3',val:{uid:my_data.uid,val:my_data.quiz_level2+1}}));
+					my_data.quiz_level2++;					
+					fbs.ref('players/'+my_data.uid+'/quiz_level2').set(my_data.quiz_level2);			
 				}				
 			}
 
@@ -2344,18 +2344,18 @@ quiz={
 			return;			
 		}	
 
-		const next_quiz_level=this.quiz_level+dir;
+		const next_quiz_level=this.quiz_level2+dir;
 				
-		if (next_quiz_level<0 || next_quiz_level>my_data.quiz_level){
+		if (next_quiz_level<0 || next_quiz_level>my_data.quiz_level2){
 			sound.play('locked');
 			return;	
 		}		
 		
 		sound.play('click');		
 		
-		this.quiz_level=next_quiz_level;
+		this.quiz_level2=next_quiz_level;
 		
-		this.activate(this.quiz_level);
+		this.activate(this.quiz_level2);
 	},
 	
 	async send_move(){
@@ -4599,15 +4599,11 @@ main_menu={
 	},		
 
 	quiz_button_down(){
-		
-		
+				
 		if(anim2.any_on()===true){
 			sound.play('locked');
 			return;
 		}
-		sound.play('locked');
-		return;
-			
 			
 		sound.play('click2');
 		this.close();
@@ -6740,12 +6736,16 @@ async function init_game_env(lang) {
 	my_data.games = other_data?.games || 0;
 	my_data.mk_level=other_data?.mk_level || 14;
 	my_data.mk_sback_num=other_data?.mk_sback_num || 0;
-	my_data.quiz_level=other_data?.quiz_level || 0;
+	my_data.quiz_level2=other_data?.quiz_level2 || 0;
 	my_data.nick_tm = other_data?.nick_tm || 0;
 	my_data.avatar_tm = other_data?.avatar_tm || 0;
 	my_data.theme_id = other_data?.theme_id || 0;
 	my_data.name=other_data?.name || my_data.name;
 	my_data.country = other_data?.country || await auth2.get_country_code() || await auth2.get_country_code2() 
+		
+		
+	//это удалить мусор
+	fbs.ref('players/'+my_data.uid+'/quiz_level').remove();	
 		
 	//загружаем тему
 	pref.load_theme(my_data.theme_id)

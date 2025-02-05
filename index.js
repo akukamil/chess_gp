@@ -2207,7 +2207,7 @@ quiz={
 		g_board = board_func.fen_to_board(q[0]);
 		
 		this.moves_to_mate=q[1];
-		objects.quiz_my_level.text=['Уровень: ','Level: '][LANG]+(this.quiz_level2+1);
+		objects.quiz_my_level.text=['Уровень ','Level '][LANG]+(this.quiz_level2+1);
 		objects.quiz_desc.text=[`Мат за ${q[1]} ${quiz.word_form(q[1])}`,`Mate in ${q[1]} moves`][LANG];
 		
 		
@@ -2249,7 +2249,7 @@ quiz={
 			const player=players_cache.players[uid];
 			objects.puzzle_leaders_icons[i].avatar.set_texture(player.texture);
 			objects.puzzle_leaders_icons[i].t_name.set2(player.name,180);
-			objects.puzzle_leaders_icons[i].t_level.text=['уровень: ','level: '][LANG]+level;	
+			objects.puzzle_leaders_icons[i].t_level.text=['уровень ','level '][LANG]+level;	
 			i++;
 		}	
 		

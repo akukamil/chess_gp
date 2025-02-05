@@ -2327,6 +2327,8 @@ quiz={
 			t = [['Вы не решили задачу!','The problem is not solved'],999]		
 		}		
 		
+		
+		objects.big_message_cont.alpha=0.6;
 		await big_message.show(t[0][LANG],'---)))---', false);
 				
 		game.clear_elements();

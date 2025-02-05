@@ -2914,6 +2914,7 @@ game={
 		objects.my_card_cont.visible=false;
 		objects.eaten_cont.visible=false;
 		objects.selected_frame.visible=false;
+		if (objects.pawn_replace_cont.visible) pawn_replace_dialog.close(null);
 		message.close();
 		
 	},
@@ -4757,14 +4758,19 @@ pawn_replace_dialog={
 	async close(x) {
 
 		this.on=0;
-		if (this.p_resolver) this.p_resolver(0);
-		this.p_resolver=0;
-
-
+		
+		const s=objects.pawn_replace_cont;
+		
+		//экстренный выход
+		if(!x&&this.p_resolve) {
+			this.p_resolve(0);
+			anim2.add(s,{y:[s.y,-300]}, false, 0.2,'easeInBack');
+			return;
+		};
+		
 		objects.pawn_replace_hl.x=x;
 		await anim2.add(objects.pawn_replace_hl,{alpha:[0,1]}, false, 0.25,'ease3peaks');
 		
-		const s = objects.pawn_replace_cont;		
 		await anim2.add(s,{y:[s.y,-300]}, false, 0.3,'easeInBack');
 	
 	}, 

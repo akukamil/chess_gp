@@ -2592,7 +2592,7 @@ mk={
 				
 		//воспроизводим звук
 		if (Math.random()>0.9){
-			sound.play(mk.cur_enemy.name+mk.voices_order[mk.voice_ind],mk.res.resources);		
+			sound.play(mk.cur_enemy.name+mk.voices_order[mk.voice_ind]);		
 			mk.voice_ind++;
 			mk.voice_ind=mk.voice_ind%mk.cur_enemy.sounds;
 		}	
@@ -2671,6 +2671,12 @@ mk={
 				this.res.add(sres_name,git_src+'sounds/'+this.cur_enemy.name+'/'+i+'.mp3');
 		}
 		await new Promise((resolve, reject)=> this.res.load(resolve))		
+		
+		//переносим в ассеты
+		for (const res_name in this.res.resources){
+			const res=this.res.resources[res_name];
+			assets[res_name]=res.texture||res.sound||res.data;
+		}
 		
 		this.voice_ind=0;
 		this.voices_order=Array.from(Array(this.cur_enemy.sounds).keys())

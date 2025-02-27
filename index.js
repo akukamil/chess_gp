@@ -2060,7 +2060,7 @@ online_game={
 			//контрольные концовки отправляем на виртуальную машину
 			if (my_data.rating>1800 || opp_data.rating>1800){
 				const data={uid:my_data.uid,player1:objects.my_card_name.text,player2:objects.opp_card_name.text,game_id,duration,res:res_info[1],fin_type:final_state,made_moves_both:game.made_moves_both, rating: [old_rating,my_data.rating],tm:'TMS'};
-				my_ws.safe_send({cmd:'log',logger:'corners_games',data});				
+				my_ws.safe_send({cmd:'log',logger:'chess_games',data});				
 			}	
 	
 		}

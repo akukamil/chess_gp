@@ -2045,7 +2045,7 @@ online_game={
 		if (res_info[1] === DRAW || res_info[1] === LOSE || res_info[1] === WIN) {
 			
 			//записываем результат в базу данных
-			fbs.ref('finishes/' + game_id + my_role).set({'player1':objects.my_card_name.text,'player2':objects.opp_card_name.text,game_id, 'res':res_info[1], 'fin_type':final_state,made_moves_both:game.made_moves_both, 'ts':firebase.database.ServerValue.TIMESTAMP});
+			//fbs.ref('finishes/' + game_id + my_role).set({'player1':objects.my_card_name.text,'player2':objects.opp_card_name.text,game_id, 'res':res_info[1], 'fin_type':final_state,made_moves_both:game.made_moves_both, 'ts':firebase.database.ServerValue.TIMESTAMP});
 		
 			//увеличиваем количество игр
 			my_data.games++;
@@ -2053,12 +2053,15 @@ online_game={
 	
 			//записываем дату последней игры
 			fbs.ref('players/'+my_data.uid+'/last_game_tm').set(firebase.database.ServerValue.TIMESTAMP);
-	
-			//контрольные концовки
-			if (my_data.rating>=2000 || opp_data.rating>=2000)
-				fbs.ref('finishes2/' + game_id + my_role).set({uid:my_data.uid,player1:objects.my_card_name.text,player2:objects.opp_card_name.text,game_id, res:res_info[1],fin_type:final_state,made_moves_both:game.made_moves_both, rating: [old_rating,my_data.rating],ts:firebase.database.ServerValue.TIMESTAMP});	
 			
-	
+			
+			const duration = ~~((Date.now() - this.start_time)*0.001);
+			
+			//контрольные концовки отправляем на виртуальную машину
+			if (my_data.rating>1800 || opp_data.rating>1800){
+				const data={uid:my_data.uid,player1:objects.my_card_name.text,player2:objects.opp_card_name.text,game_id,duration,res:res_info[1],fin_type:final_state,made_moves_both:game.made_moves_both, rating: [old_rating,my_data.rating],tm:'TMS'};
+				my_ws.safe_send({cmd:'log',logger:'corners_games',data});				
+			}	
 	
 		}
 		
@@ -6886,4 +6889,3 @@ function main_loop() {
 
 	requestAnimationFrame(main_loop);
 }
-

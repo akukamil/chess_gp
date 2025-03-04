@@ -1985,6 +1985,14 @@ online_game={
 		
 	},
 	
+	async bad_game_process(){
+		
+		const opp_inbox_data=await fbs_once('inbox/'+opp_data.uid);
+		my_log.add({event:'opp_inbox',opp_inbox_data,tm:Date.now()});
+		fbs.ref('BAD_GAME/'+game_id + my_role).set(my_log.log_arr);
+		
+	},
+	
 	async stop(final_state) {					
 		
 		//отключаем взаимодейтсвие с доской
@@ -1999,14 +2007,10 @@ online_game={
 		
 		my_log.add({event:'stop',final_state,tm:Date.now()});
 
-		if (final_state==='op_timeout'){
-			
+		if (final_state==='op_timeout'){			
 			if (my_data.rating>=1800||opp_data.rating>=1800)
-				fbs.ref('BAD_GAME/'+game_id + my_role).set(my_log.log_arr);				
-			
+				this.bad_game_process();	
 		}
-		
-
 						
 		let res_db = {
 			'my_no_connection' 		: [['Потеряна связь!\nИспользуйте надежное интернет соединение.','Lost connection!\nuse a reliable internet connection'], LOSE],

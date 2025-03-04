@@ -1690,7 +1690,7 @@ online_game={
 	write_fb_timer:0,
 	chat_out:1,
 	chat_in:1,
-		
+	
 	activate(role) {
 
 		my_log.log_arr=[];
@@ -1984,7 +1984,7 @@ online_game={
 		}		
 		
 	},
-		
+	
 	async stop(final_state) {					
 		
 		//отключаем взаимодейтсвие с доской
@@ -1999,9 +1999,13 @@ online_game={
 		
 		my_log.add({event:'stop',final_state,tm:Date.now()});
 
-		if (final_state==='op_timeout')			
-			if (my_data.uid==='NFOAm64OIIGGE6hmf8DltY1WUdXFMwdl6wVEgQW9Js'||my_data.uid==='JSkWRsBmavJWMvUlfCdYQOpYN2VW8t1PYBwijSIkH4g'||(my_data.rating>=2000||opp_data.rating>=2000))
-				fbs.ref('BAD_GAME/'+game_id + my_role).set(my_log.log_arr);			
+		if (final_state==='op_timeout'){
+			
+			if (my_data.rating>=1800||opp_data.rating>=1800)
+				fbs.ref('BAD_GAME/'+game_id + my_role).set(my_log.log_arr);				
+			
+		}
+		
 
 						
 		let res_db = {
@@ -6825,7 +6829,7 @@ async function init_game_env(lang) {
 	fbs.ref('inbox/'+my_data.uid).set({message:'CLIEND_ID',tm:Date.now(),client_id});
 
 	//отключение от игры и удаление не нужного
-	fbs.ref('inbox/'+my_data.uid).onDisconnect().remove();
+	//fbs.ref('inbox/'+my_data.uid).onDisconnect().remove();
 	fbs.ref(room_name+"/"+my_data.uid).onDisconnect().remove();
 
 	//это событие когда меняется видимость приложения

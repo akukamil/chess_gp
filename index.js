@@ -5548,8 +5548,8 @@ lobby={
 		//получаем фидбэки сначала из кэша, если их там нет или они слишком старые то загружаем из фб
 		let fb_obj;		
 		if (!this.fb_cache[uid] || (Date.now()-this.fb_cache[uid].tm)>120000) {
-			let _fb = await fbs.ref("fb/" + uid).once('value');
-			fb_obj =_fb.val();	
+
+			fb_obj =await fbs_once("fb/" + uid);	
 			
 			//сохраняем в кэше отзывов
 			this.fb_cache[uid]={};			

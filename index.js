@@ -2542,6 +2542,8 @@ mk={
 			
 			sound.play(['mk_impressive','mk_outstanding','mk_excelent'][irnd(0,2)]);
 			
+			t = [['Победа!\nВы поставили мат!','Victory!\nYou checkmated'],WIN]	
+			
 			const next_level=this.cur_mk_level-1;
 			if (this.cur_mk_level>0)
 				my_data.mk_level=Math.min(next_level,my_data.mk_level);

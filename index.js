@@ -2081,6 +2081,10 @@ online_game={
 			auth_msg='Выбирайте разных соперников для получения рейтинга';		
 		}
 
+
+		//записываем рейтинг в базу
+		fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
+
 		//также фиксируем данные стола
 		fbs.ref('tables/'+game_id+'/board').set('fin');
 

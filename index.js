@@ -3952,7 +3952,7 @@ keep_alive=function(){
 
 
 	fbs.ref('players/'+my_data.uid+'/tm').set(firebase.database.ServerValue.TIMESTAMP);
-	fbs.ref('inbox/'+my_data.uid).onDisconnect().remove();
+	//fbs.ref('inbox/'+my_data.uid).onDisconnect().remove();
 	fbs.ref(room_name+'/'+my_data.uid).onDisconnect().remove();
 	set_state({});
 }
@@ -3962,7 +3962,7 @@ process_new_message=function(msg){
 	//проверяем плохие сообщения
 	if (msg===null || msg===undefined)
 		return;
-
+	
 	//принимаем только положительный ответ от соответствующего соперника и начинаем игру
 	if (msg.message==='ACCEPT'&& pending_player===msg.sender&&state!=='p') {
 		//в данном случае я мастер и хожу вторым

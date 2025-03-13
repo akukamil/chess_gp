@@ -1,9 +1,14 @@
-let M_WIDTH=800, M_HEIGHT=450,app, assets={}, objects={}, state="",my_role="",client_id, game_tick=0, my_turn=false, room_name = '', game_id=0, connected = 1, LANG = 0,git_src,some_process = {}, h_state=0, game_platform='', hidden_state_start = 0, WIN = 1, DRAW = 0, LOSE = -1, NOSYNC = 2,no_invite=false, g_board=[], pending_player='', opponent=null, my_data={opp_id : ''}, opp_data={}, game_name='chess';
+let M_WIDTH=800, M_HEIGHT=450,app, assets={}, objects={}, SERV_TM_DELTA=0, state="",my_role="",client_id, game_tick=0, my_turn=false, room_name = '', game_id=0, connected = 1, LANG = 0,git_src,some_process = {}, h_state=0, game_platform='', hidden_state_start = 0, WIN = 1, DRAW = 0, LOSE = -1, NOSYNC = 2,no_invite=false, g_board=[], pending_player='', opponent=null, my_data={opp_id : ''}, opp_data={}, game_name='chess';
 const op_pieces = ['p','r','n','b','k','q'];
 const my_pieces = ['P','R','N','B','K','Q'];
 
 var stockfish = new Worker('stockfish.js');
 const chess = new Chess();
+
+const MAX_NO_AUTH_RATING=1940;
+const MAX_NO_REP_RATING=1800;
+const MAX_NO_CONF_RATING=1950;
+const DAYS_TO_CONF_RATING=7;
 
 my_log={
 	log_arr:[],
@@ -824,14 +829,12 @@ big_message={
 	
 	p_resolve : 0,
 		
-	show(t1,t2, feedback_on) {
+	show(t1,t2,t3, feedback_on) {
 				
-		if (t2!==undefined || t2!=="")
-			objects.big_message_text2.text=t2;
-		else
-			objects.big_message_text2.text='**********';
-
-		objects.big_message_text.text=t1;
+				
+		objects.big_message_text.text=t1;				
+		objects.big_message_text2.text=t2||'**********';
+		objects.big_message_text3.text=t3||'';
 		
 		objects.feedback_button.visible = feedback_on&&!my_data.blocked;
 		
@@ -1690,6 +1693,9 @@ online_game={
 	write_fb_timer:0,
 	chat_out:1,
 	chat_in:1,
+	NO_RATING_GAME:0,
+	no_rating_msg_timer:0,
+	last_opponents:[],
 	
 	activate(role) {
 
@@ -1714,8 +1720,7 @@ online_game={
 		anim2.add(objects.game_buttons_cont,{x:[900, objects.game_buttons_cont.sx]},true,0.5,'linear');
 		
 		//устанавливаем статус в базе данных а если мы не видны то установливаем только скрытое состояние
-		set_state({state : 'p'});
-			
+		set_state({state : 'p'});			
 		
 		//фиксируем врему начала игры
 		this.start_time = Date.now();
@@ -1725,9 +1730,15 @@ online_game={
 		this.timer_prv_time=Date.now();
 		
 		//вычиcляем рейтинг при проигрыше и устанавливаем его в базу он потом изменится
-		let lose_rating = this.calc_new_rating(my_data.rating, LOSE);
+		const lose_rating = this.calc_new_rating(my_data.rating, LOSE);
 		if (lose_rating >100 && lose_rating<9999)
-			fbs.ref("players/"+my_data.uid+"/rating").set(lose_rating);
+			fbs.ref('players/'+my_data.uid+'/rating').set(lose_rating);
+		
+		//сколько игрок играл с этим соперником		
+		const prv_plays=this.count_in_arr(this.last_opponents,opp_data.uid);
+		this.NO_RATING_GAME=(prv_plays>6&&my_data.rating>MAX_NO_REP_RATING)?1:0;
+		if (this.NO_RATING_GAME)
+			this.no_rating_msg_timer=setTimeout(()=>{message.add('Выбирайте разных соперников для получения и подтверждения рейтинга')},5000);
 		
 
 		game.activate(role,online_game)
@@ -1804,22 +1815,42 @@ online_game={
 		
 	},
 	
-	calc_new_rating(old_rating, game_result) {		
+	calc_new_rating(old_rating, game_result) {
 		
-		if (game_result === NOSYNC)
-			return old_rating;
+		if (game_result === NOSYNC)	return old_rating;
+				
+		const Ea = 1 / (1 + Math.pow(10, ((opp_data.rating-my_data.rating)/400)));
+		const Sa = (game_result + 1) / 2;
+		return Math.round(my_data.rating + 16 * (Sa - Ea));
 		
-		//не авторизованым игрокам нельзя выиграть более 2000
-		if (my_data.rating>2000&&!my_data.auth_mode&&game_result === WIN)
-			return old_rating;	
+	},
+	
+	count_in_arr(arr,elem){
 		
-		var Ea = 1 / (1 + Math.pow(10, ((opp_data.rating-my_data.rating)/400)));
-		if (game_result === WIN)
-			return Math.round(my_data.rating + 16 * (1 - Ea));
-		if (game_result === DRAW)
-			return Math.round(my_data.rating + 16 * (0.5 - Ea));
-		if (game_result === LOSE)
-			return Math.round(my_data.rating + 16 * (0 - Ea));
+		let count = 0;
+		for (let i = 0; i < arr.length; i++)
+			if (arr[i] === elem) count++;		
+		return count;
+		
+	},
+	
+	read_last_opps(){
+		
+		try {
+			const stored = localStorage.getItem(game_name+'_lo');
+			this.last_opponents=stored ? JSON.parse(stored) : [];
+		} catch (error) {
+			console.error('Error parsing opponents from localStorage:', error);
+			this.last_opponents=[];
+		}
+	},
+	
+	update_last_opps(opp_id){
+		
+		this.last_opponents.push(opp_id);
+        if (this.last_opponents.length > 20)
+            this.last_opponents = this.last_opponents.slice(-20);        
+		localStorage.setItem(game_name+'_lo', JSON.stringify(this.last_opponents));
 		
 	},
 	
@@ -2031,12 +2062,24 @@ online_game={
 			'draw_50' 				: [['Ничья!\nЗа последние 50 ходов не было взятий фигур и продвижения пешек','A draw!\nfor the last 50 moves there have been no taking of pieces and pawn promotion'], NOSYNC]	
 		}
 		
-		let res_info = res_db[final_state];
+		const result_data=res_db[final_state];
+		const result_number = result_data[1];
+		const result_info= result_data[0];
 		
-		//обновляем рейтинг
-		const old_rating = my_data.rating;
-		my_data.rating = this.calc_new_rating (my_data.rating, res_info[1]);
-		fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
+		//определяем новый рейтинг и сообщения
+		let auth_msg='';
+		const old_rating = my_data.rating;		
+		my_data.rating = this.calc_new_rating(my_data.rating, result_number);
+		let NO_AUTH_NO_RATING=0;
+		if (my_data.rating>MAX_NO_AUTH_RATING&&!my_data.auth_mode){
+			my_data.rating=MAX_NO_AUTH_RATING;
+			NO_AUTH_NO_RATING=1;		
+			auth_msg=`Рейтинг более ${MAX_NO_AUTH_RATING} не доступен игрокам без авторизации(((`;
+		}		
+		if (this.NO_RATING_GAME&&my_data.rating>old_rating) {
+			my_data.rating=old_rating;
+			auth_msg='Выбирайте разных соперников для получения рейтинга';		
+		}
 
 		//также фиксируем данные стола
 		fbs.ref('tables/'+game_id+'/board').set('fin');
@@ -2045,36 +2088,38 @@ online_game={
 		objects.my_card_rating.text=my_data.rating;
 
 		//играем звук
-		game.play_finish_sound(res_info[1]);
+		game.play_finish_sound(result_number);
 
 		anim2.add(objects.board_cont,{x:[0,-70],y:[0,255],scale_xy:[1,0.45],angle:[0,-5]},true,0.25,'linear');
 
 		//записываем результат игры в базу данных
-		if (res_info[1] === DRAW || res_info[1] === LOSE || res_info[1] === WIN) {
-			
-			//записываем результат в базу данных
-			//fbs.ref('finishes/' + game_id + my_role).set({'player1':objects.my_card_name.text,'player2':objects.opp_card_name.text,game_id, 'res':res_info[1], 'fin_type':final_state,made_moves_both:game.made_moves_both, 'ts':firebase.database.ServerValue.TIMESTAMP});
-		
+		if (result_number === DRAW || result_number === LOSE || result_number === WIN) {			
+
+			//записываем инфу о последних играх в LC
+			this.update_last_opps(opp_data.uid);
+
 			//увеличиваем количество игр
 			my_data.games++;
 			fbs.ref('players/'+my_data.uid+'/games').set(my_data.games);	
 	
+			//тестовые фишки
+			fbs.ref('LO/'+my_data.uid).set(this.last_opponents);
+
 			//записываем дату последней игры
-			fbs.ref('players/'+my_data.uid+'/last_game_tm').set(firebase.database.ServerValue.TIMESTAMP);
-			
-			
-			const duration = ~~((Date.now() - this.start_time)*0.001);
+			if(!this.NO_RATING_GAME){
+				fbs.ref('players/'+my_data.uid+'/last_game_tm').set(firebase.database.ServerValue.TIMESTAMP);				
+				my_data.last_game_tm=Date.now()+SERV_TM_DELTA;
+			}					
 			
 			//контрольные концовки отправляем на виртуальную машину
 			if (my_data.rating>1800 || opp_data.rating>1800){
-				const data={uid:my_data.uid,player1:objects.my_card_name.text,player2:objects.opp_card_name.text,game_id,duration,res:res_info[1],fin_type:final_state,made_moves_both:game.made_moves_both, rating: [old_rating,my_data.rating],tm:'TMS'};
+				const duration = ~~((Date.now() - this.start_time)*0.001);
+				const data={uid:my_data.uid,player1:objects.my_card_name.text,player2:objects.opp_card_name.text,game_id,duration,res:result_number,fin_type:final_state,made_moves_both:game.made_moves_both, rating: [old_rating,my_data.rating],tm:'TMS'};
 				my_ws.safe_send({cmd:'log',logger:'chess_games',data});				
-			}	
-	
+			}		
 		}
 		
-		await big_message.show(res_info[0][LANG], `${['Рейтинг:','Rating:'][LANG]} ${old_rating} > ${my_data.rating}`, true);
-		
+		await big_message.show(result_info[LANG], `${['Рейтинг:','Rating:'][LANG]} ${old_rating} > ${my_data.rating}`,auth_msg, true);		
 		await anim2.add(objects.board_cont,{x:[-70,-300],y:[255,355],angle:[-5,-50]},false,0.15,'linear');
 		
 		//останавливаем все остальное
@@ -2340,7 +2385,7 @@ quiz={
 		
 		
 		objects.big_message_cont.alpha=0.6;
-		await big_message.show(t[0][LANG],'---)))---', false);
+		await big_message.show(t[0][LANG],'---)))---','', false);
 				
 		game.clear_elements();
 		
@@ -2555,7 +2600,7 @@ mk={
 		}		
 				
 		
-		await big_message.show(t[0][LANG],'---)))---', false);
+		await big_message.show(t[0][LANG],'---)))---','', false);
 		
 		//если много раз играли даем возможность
 		const duration = ~~((Date.now() - this.start_time)*0.001);
@@ -3633,7 +3678,7 @@ game_watching={
 		
 		if(board_data==='fin'){
 			anim2.add(objects.board_cont,{x:[0,-70],y:[0,255],scale_xy:[1,0.45],angle:[0,-5]},true,0.25,'linear');
-			await big_message.show(['Эта игра завершена','This game is over'][LANG],')))');
+			await big_message.show(['Эта игра завершена','This game is over'][LANG],')))','');
 			anim2.add(objects.board_cont,{x:[-70,-300],y:[255,355],angle:[-5,-50]},false,0.15,'linear');
 			this.close();
 			lobby.activate();
@@ -4275,6 +4320,9 @@ pref={
 		//устанавливаем текущий фон
 		this.select_theme(objects.themes[my_data.theme_id]);
 						
+		//проверяем время
+		this.check_leader_downtime();
+						
 		//определяем доступные скиниы
 		for (let i in THEME_DATA){			
 			const rating_req=THEME_DATA[i].rating;
@@ -4285,7 +4333,9 @@ pref={
 		
 		anim2.add(objects.pref_info,{alpha:[0,1]}, false, 3,'easeBridge',false);	
 		objects.pref_info.text=['Менять аватар и имя можно 1 раз в 30 дней!','You can change name and avatar once per month'][LANG];
-				
+		objects.pref_rating.text=['Рейтинг: ','Rating: '][LANG]+my_data.rating;
+		objects.pref_games.text=['Игры: ','Games: '][LANG]+my_data.games;
+		
 		objects.pref_sound_slider.x=sound.on?367:322;
 		
 		//пока ничего не изменено
@@ -4319,6 +4369,37 @@ pref={
 		}
 		
 		return 1;
+	},
+			
+	async check_leader_downtime(){
+		
+		if (my_data.rating<=MAX_NO_CONF_RATING) return;
+				
+		//проверяем долгое отсутствие игру у рейтинговых игроков
+		my_data.last_game_tm=my_data.last_game_tm||await fbs_once(`players/${my_data.uid}/last_game_tm`);
+		const serv_tm=Date.now()+SERV_TM_DELTA;
+		
+		if (!my_data.last_game_tm)
+			fbs.ref('players/'+my_data.uid+'/last_game_tm').set(firebase.database.ServerValue.TIMESTAMP);	
+			
+			
+		if (my_data.last_game_tm&&serv_tm){
+			
+			const hours_since_last_game=Math.floor((serv_tm-my_data.last_game_tm)/3600000);
+			const hours_to_confirm_rating=Math.max(DAYS_TO_CONF_RATING*24-hours_since_last_game,0);
+									
+			if (!hours_to_confirm_rating){
+				my_data.rating=MAX_NO_CONF_RATING;
+				my_data.last_game_tm=Date.now()+SERV_TM_DELTA;
+				fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
+				message.add(`Ваш рейтинг снижен до ${MAX_NO_CONF_RATING}. Причина - отсутвие игр.`,7000);
+				objects.pref_rating_conf_info.text=`Ваш рейтинг снижен до ${MAX_NO_CONF_RATING}. Причина - отсутвие игр.`;		
+			}else{
+				
+				objects.pref_rating_conf_info.text=`Подтвердите ваш рейтинг в течении ${hours_to_confirm_rating} часов!`;				
+			}
+		}	
+		
 	},
 			
 	async load_theme(theme){
@@ -5758,9 +5839,9 @@ lobby={
 		lobby._opp_data={};
 		this.close_invite_dialog();
 		if(msg==='REJECT_ALL')
-			big_message.show(['Соперник пока не принимает приглашения.','The opponent refused to play.'][LANG],'---');
+			big_message.show(['Соперник пока не принимает приглашения.','The opponent refused to play.'][LANG],'---','');
 		else
-			big_message.show(['Соперник отказался от игры. Повторить приглашение можно через 1 минуту.','The opponent refused to play. You can repeat the invitation in 1 minute'][LANG],'---');
+			big_message.show(['Соперник отказался от игры. Повторить приглашение можно через 1 минуту.','The opponent refused to play. You can repeat the invitation in 1 minute'][LANG],'---','');
 
 
 	},
@@ -5885,23 +5966,7 @@ lobby={
 		
 		if(!objects.info_cont.init){
 			
-			//также сразу включаем его в кэш
-			if(!players_cache.players.bot){
-				players_cache.players.bot={};
-				players_cache.players.bot.name='bot';
-				players_cache.players.bot.rating=1400;
-				players_cache.players.bot.texture=new PIXI.Texture(assets.shangtsung_img.baseTexture,new PIXI.Rectangle(40,0,160,160));			
-			}
-			
-			
-			objects.info_records[0].set({uid:'bot',name:'Админ',msg:'Новое правило - рейтинг игроков, неактивных более 5 дней, будет снижен до 2000.',tm:1734959027520})
-			objects.info_records[0].scale_xy=1.2;
-			objects.info_records[0].y=145;
-			
-			objects.info_records[1].set({uid:'bot',name:'Админ',msg:'Новое правило - не авторизованным игрокам не доступен рейтинг более 2000.',tm:1734959227520})
-			objects.info_records[1].scale_xy=1.2;
-			objects.info_records[1].y=235;
-			
+			objects.info_msg.text=`Новые правила:\n1.Для игроков с рейтингом выше ${MAX_NO_REP_RATING}, встречающих одного и того же соперника более 6 раз за последние 20 матчей, действует особое правило: рейтинг не будет увеличиваться при победах (однако может снижаться при поражениях), подтверждение рейтинга не будет засчитано. Эта мера поощряет разнообразие поединков и поддерживает честную соревновательную среду.\n2.Игроки с рейтингом выше ${MAX_NO_CONF_RATING} должны подтвердить свой рейтинг в течении ${DAYS_TO_CONF_RATING} дней сыграв минимум одну игру.`		
 			objects.info_cont.init=1;
 		}
 		
@@ -6830,6 +6895,13 @@ async function init_game_env(lang) {
 	fbs.ref('players/'+my_data.uid+'/auth_mode').set(my_data.auth_mode);
 	await fbs.ref('players/'+my_data.uid+'/tm').set(firebase.database.ServerValue.TIMESTAMP);
 	
+	//получаем время сервера
+	const serv_tm=await fbs_once('players/'+my_data.uid+'/tm');
+	SERV_TM_DELTA=serv_tm-Date.now();
+		
+	//читаем последних соперников
+	online_game.read_last_opps();
+	
 	//устанавливаем мой статус в онлайн
 	set_state({state : 'o'});
 	
@@ -6839,17 +6911,16 @@ async function init_game_env(lang) {
 
 	//отключение от игры и удаление не нужного
 	//fbs.ref('inbox/'+my_data.uid).onDisconnect().remove();
-	fbs.ref(room_name+"/"+my_data.uid).onDisconnect().remove();
+	fbs.ref(room_name+'/'+my_data.uid).onDisconnect().remove();
 
 	//это событие когда меняется видимость приложения
-	document.addEventListener("visibilitychange", vis_change);
+	document.addEventListener('visibilitychange', vis_change);
 
 	//keep-alive сервис
 	setInterval(function()	{keep_alive()}, 40000);
 	
 	//контроль за присутсвием
-	const connected_control = fbs.ref('.info/connected');
-	connected_control.on('value', (snap) => {
+	fbs.ref('.info/connected').on('value', snap => {
 		if (snap.val() === true) {
 			connected = 1;
 			my_log.add({event:'connected',tm:Date.now()});

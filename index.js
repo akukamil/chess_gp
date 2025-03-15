@@ -6077,8 +6077,8 @@ auth1={
 	  return new Promise((resolve, reject) => {
 		const script = document.createElement('script')
 		script.type = 'text/javascript'
-		script.onload = resolve
-		script.onerror = reject
+        script.onload = () => resolve(1)
+        script.onerror = () => resolve(0)
 		script.src = src
 		document.head.appendChild(script)
 	  })
@@ -6168,8 +6168,8 @@ auth2={
 	  return new Promise((resolve, reject) => {
 		const script = document.createElement('script')
 		script.type = 'text/javascript'
-		script.onload = resolve
-		script.onerror = reject
+        script.onload = () => resolve(1)
+        script.onerror = () => resolve(0)
 		script.src = src
 		document.head.appendChild(script)
 	  })

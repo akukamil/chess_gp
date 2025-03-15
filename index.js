@@ -6140,7 +6140,7 @@ auth1={
 			
 			game_platform = 'VK';
 			
-			try {await this.load_script('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')} catch (e) {alert(e)};
+			try {await this.load_script('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')||await this.load_script('https://akukamil.github.io/common/vkbridge.js');} catch (e) {alert(e)};
 			
 			let _player;
 			
@@ -6287,7 +6287,7 @@ auth2={
 		
 		if (game_platform === 'VK') {
 			
-			try {await this.load_script('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')} catch (e) {alert(e)};
+			try {await this.load_script('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')||await this.load_script('https://akukamil.github.io/common/vkbridge.js');} catch (e) {alert(e)};
 			
 			let _player;
 			

@@ -1001,11 +1001,15 @@ chat={
 		
 	},
 		
-	block_player(uid){
+	async block_player(uid){
 		
 		fbs.ref('blocked/'+uid).set(Date.now());
 		fbs.ref('inbox/'+uid).set({message:'CHAT_BLOCK',tm:Date.now()});
 		
+		const name=await fbs_once(`players/${uid}/name`);
+		const msg=`Игрок ${name} занесен в черный список.`;
+		my_ws.socket.safe_send({cmd:'push',path:`${game_name}/chat`,val:{uid:'admin',name:'Админ',msg,tm:'TMS'}});		
+				
 		//увеличиваем количество блокировок
 		fbs.ref('players/'+uid+'/block_num').transaction(val=> {return (val || 0) + 1});
 		

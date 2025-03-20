@@ -366,7 +366,13 @@ class chat_record_class extends PIXI.Container {
 		//получаем pic_url из фб
 		this.avatar.set_texture(PIXI.Texture.WHITE);
 				
-		await this.update_avatar(msg_data.uid, this.avatar);
+		if (msg_data.uid==='admin'){
+			this.msg_bcg.tint=0xffff55;
+			this.avatar.set_texture(assets.shangtsung_img);
+		}else{
+			this.msg_bcg.tint=0xffffff;
+			await this.update_avatar(msg_data.uid, this.avatar);
+		}	
 
 		this.uid=msg_data.uid;
 		this.tm = msg_data.tm;			

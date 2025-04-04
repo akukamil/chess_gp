@@ -5,7 +5,7 @@ const my_pieces = ['P','R','N','B','K','Q'];
 var stockfish = new Worker('stockfish.js');
 const chess = new Chess();
 
-const MAX_NO_AUTH_RATING=1940;
+const MAX_NO_AUTH_RATING=1740;
 const MAX_NO_REP_RATING=1800;
 const MAX_NO_CONF_RATING=1950;
 const DAYS_TO_CONF_RATING=7;

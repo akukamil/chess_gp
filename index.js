@@ -1835,7 +1835,7 @@ online_game={
 		
 		if (game_result === NOSYNC)	return old_rating;
 				
-		const Ea = 1 / (1 + Math.pow(10, ((opp_data.rating-my_data.rating)/400)));
+		const Ea = 1 / (1 + Math.pow(10, ((opp_data.rating-my_data.rating)/220)));
 		const Sa = (game_result + 1) / 2;
 		return Math.round(my_data.rating + 16 * (Sa - Ea));
 		

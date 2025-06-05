@@ -6861,7 +6861,7 @@ async function init_game_env(lang) {
 		
 	//максимальный рейтинг как за нарушения
 	if (other_data.max_rating&&my_data.rating>other_data.max_rating){
-		my_data.rating=my_data.max_rating		
+		my_data.max_rating=my_data.rating=other_data.max_rating	
 		message.add(`Вам недоступен рейтинг более ${my_data.max_rating}`);
 	}
 

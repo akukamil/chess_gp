@@ -2092,6 +2092,11 @@ online_game={
 			my_data.rating=old_rating;
 			auth_msg='Выбирайте разных соперников для получения рейтинга';		
 		}
+		
+		//максимальный рейтинг как наказание
+		if (my_data.rating>my_data.max_rating)
+			my_data.rating=my_data.max_rating
+		
 
 
 		//записываем рейтинг в базу
@@ -6854,6 +6859,12 @@ async function init_game_env(lang) {
 	my_data.name=other_data?.name || my_data.name;
 	my_data.country = other_data?.country || await auth2.get_country_code() || await auth2.get_country_code2() 
 		
+	//максимальный рейтинг как за нарушения
+	if (other_data.max_rating&&my_data.rating>other_data.max_rating){
+		my_data.rating=my_data.max_rating		
+		message.add(`Вам недоступен рейтинг более ${my_data.max_rating}`);
+	}
+
 		
 	//это удалить мусор
 	fbs.ref('players/'+my_data.uid+'/quiz_level').remove();	

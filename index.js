@@ -6676,7 +6676,7 @@ main_loader={
 async function check_admin_info(){
 	
 	//проверяем долгое отсутствие игру у рейтинговых игроков
-	if (my_data.rating>2000){
+	if (my_data.rating>1900){
 		const last_game_tm=await fbs_once(`players/${my_data.uid}/last_game_tm`);
 		const cur_tm=await fbs_once(`players/${my_data.uid}/tm`);
 		
@@ -6686,9 +6686,9 @@ async function check_admin_info(){
 		if (last_game_tm&&cur_tm){
 			const days_passed=(cur_tm-last_game_tm)/3600000/24;
 			if (days_passed>5){
-				my_data.rating=2000;
+				my_data.rating=1900;
 				fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
-				message.add('Ваш рейтинг округлен до 2000. Причина - отсутвие игр.',7000);
+				message.add('Ваш рейтинг округлен до 1900. Причина - отсутвие игр.',7000);
 			}
 		}
 	}	

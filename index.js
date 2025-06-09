@@ -6860,7 +6860,7 @@ async function init_game_env(lang) {
 	my_data.country = other_data?.country || await auth2.get_country_code() || await auth2.get_country_code2() 
 		
 	//максимальный рейтинг как за нарушения
-	if (other_data.max_rating&&my_data.rating>other_data.max_rating){
+	if (other_data&&other_data.max_rating&&my_data.rating>other_data.max_rating){
 		my_data.max_rating=my_data.rating=other_data.max_rating	
 		message.add(`Вам недоступен рейтинг более ${my_data.max_rating}`);
 	}

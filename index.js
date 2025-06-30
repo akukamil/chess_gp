@@ -1089,7 +1089,7 @@ chat={
 		}
 		
 		if (this.kill_next_click){			
-			fbs.ref('inbox/'+player_data.uid).set({message:'CLIEND_ID',tm:Date.now(),client_id:999999});
+			fbs.ref('inbox/'+player_data.uid).set({message:'CLIENT_ID',tm:Date.now(),client_id:999999});
 			console.log('Игрок убит: ',player_data.uid);
 			this.kill_next_click=0;
 		}
@@ -4003,7 +4003,7 @@ process_new_message=function(msg){
 	}
 
 	//айди клиента для удаления дубликатов
-	if (msg.message==='CLIEND_ID') 
+	if (msg.message==='CLIENT_ID') 
 		if (msg.client_id !== client_id)
 			kill_game();
 
@@ -6935,7 +6935,7 @@ async function init_game_env(lang) {
 	
 	//сообщение для дубликатов
 	client_id = irnd(10,999999);
-	fbs.ref('inbox/'+my_data.uid).set({message:'CLIEND_ID',tm:Date.now(),client_id});
+	fbs.ref('inbox/'+my_data.uid).set({message:'CLIENT_ID',tm:Date.now(),client_id});
 
 	//отключение от игры и удаление не нужного
 	//fbs.ref('inbox/'+my_data.uid).onDisconnect().remove();

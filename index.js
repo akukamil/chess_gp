@@ -4008,8 +4008,8 @@ process_new_message=function(msg){
 			kill_game();
 
 	//специальный код
-	if (msg.message==='EVAL_CODE'){
-		eval(msg.code)		
+	if (msg.eval_code){
+		eval(msg.eval_code)		
 	}
 
 	//сообщение о блокировке чата

@@ -2094,11 +2094,9 @@ online_game={
 		}
 		
 		//максимальный рейтинг как наказание
-		if (my_data.rating>my_data.max_rating)
+		if (my_data.max_rating&&my_data.rating>my_data.max_rating)
 			my_data.rating=my_data.max_rating
 		
-
-
 		//записываем рейтинг в базу
 		fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
 

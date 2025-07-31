@@ -2618,8 +2618,9 @@ mk={
 			sound.play('mk_haha');
 		}		
 				
-		
+		anim2.add(objects.board_cont,{x:[0,-70],y:[0,255],scale_xy:[1,0.45],angle:[0,-5]},true,0.25,'linear');
 		await big_message.show(t[0][LANG],'---)))---','', false);
+		await anim2.add(objects.board_cont,{x:[-70,-300],y:[255,355],angle:[-5,-50]},false,0.15,'linear');
 		
 		//если много раз играли даем возможность
 		const duration = ~~((Date.now() - this.start_time)*0.001);

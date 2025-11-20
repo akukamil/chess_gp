@@ -1,17 +1,119 @@
 <!DOCTYPE html>
 <html>
-<head>
-</head>
  <meta name="http-equiv" content="Content-type: text/html; charset=windows-1251">
+  <link rel="shortcut icon" href="">
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+	background-image: url('res/common/bcg.jpg');
+}
+
+.pixi {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(70,70,90);
+}
+
+.loading-title {
+    color: rgb(170,170,190);
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.language-popup {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	width:50%;
+	height:50%;
+	transform: translate(-50%, -50%);
+	background-color: rgba(50, 50, 50,0.5);
+	display: none;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+	max-width: 500px;
+	border-radius: 12px;
+	box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+}
+
+.language-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+}
+
+.lang-btn {
+	flex: 1;
+  padding: 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 3rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(100, 100, 100);
+}
+
+.lang-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.rus-btn {
+  color: rgb(200, 250, 230);
+}
+
+.rus-btn:hover {
+  background-color: #bbdefb;
+}
+
+.eng-btn {
+  color: rgb(200, 250, 230);
+}
+
+.eng-btn:hover {
+  background-color: #e1bee7;
+}
+</style>
+
+<div class="loading-title"  id="loadingText">Loading...</div>
+<div class="pixi" id='pixi' </div>
+<div id="language-popup" class="language-popup">
+
+    <div class="language-buttons">
+      <button class="lang-btn rus-btn" onclick="language_dialog.click(0)" data-lang="RUS">
+        <span>RUS</span>
+      </button>
+      <button class="lang-btn eng-btn" onclick="language_dialog.click(1)" data-lang="ENG">
+        <span>ENG</span>
+      </button>
+    </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-database-compat.js"></script>
-
-<script src="chess.js"></script>
-<script src="https://akukamil.github.io/common/pixi_scale.min.js" ></script>
-<script src="pixi-sound.js"></script>
+<script src="https://mtcom.website.yandexcloud.net/pixi_scale.min.js" ></script>
+<script src="https://mtcom.website.yandexcloud.net/pixi-sound.js"></script>
+<script src="https://mtcom.website.yandexcloud.net/my_ws.js"></script>
+<script src="https://mtcom.website.yandexcloud.net/multiavatar.min.js"></script>
+<script src="chess.js" charset="utf-8"></script>
 <script src="index.js" charset="utf-8"></script>
-
+ 
 <body onload="init_game_env()">
+</body>
 
 </html>

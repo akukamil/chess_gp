@@ -1,4 +1,4 @@
-let M_WIDTH=800, M_HEIGHT=450,app, assets={}, objects={}, SERV_TM_DELTA=0, state="",my_role="",client_id, game_tick=0, my_turn=false, room_name = '', game_id=0, connected = 1, LANG = 0,git_src,some_process = {}, h_state=0, game_platform='', hidden_state_start = 0, WIN = 1, DRAW = 0, LOSE = -1, NOSYNC = 2,no_invite=false, g_board=[], pending_player='', opponent=null, my_data={opp_id : ''}, opp_data={}, game_name='chess';
+let M_WIDTH=800, M_HEIGHT=450,app, assets={}, objects={}, SERVER_TM=0, state="",my_role="",client_id, game_tick=0, my_turn=false, room_name = '', game_id=0, connected = 1, LANG = 0,git_src,some_process = {}, h_state=0, game_platform='', hidden_state_start = 0, WIN = 1, DRAW = 0, LOSE = -1, NOSYNC = 2,no_invite=false, g_board=[], pending_player='', opponent=null, my_data={opp_id : ''}, opp_data={}, game_name='chess';
 const op_pieces = ['p','r','n','b','k','q'];
 const my_pieces = ['P','R','N','B','K','Q'];
 
@@ -952,9 +952,7 @@ chat={
 			rec.tm=0;
 		}		
 		
-		this.init_yandex_payments();
-
-		await my_ws.init();	
+		this.init_yandex_payments();		
 		
 		//загружаем чат		
 		const chat_data=await my_ws.get('chat',25);
@@ -2127,7 +2125,7 @@ online_game={
 			//записываем дату последней игры
 			if(!this.NO_RATING_GAME){
 				fbs.ref('players/'+my_data.uid+'/last_game_tm').set(firebase.database.ServerValue.TIMESTAMP);				
-				my_data.last_game_tm=Date.now()+SERV_TM_DELTA;
+				my_data.last_game_tm=SERVER_TM;
 			}					
 			
 			//контрольные концовки отправляем на виртуальную машину
@@ -4372,10 +4370,15 @@ pref={
 			
 	check_time(last_time){
 
+		if(!SERVER_TM){
+			objects.pref_info.text=['Серверное время недоступно!','Server time error!'][LANG];
+			anim2.add(objects.pref_info,{alpha:[0,1]}, false, 3,'easeBridge',false);	
+			sound.play('locked');	
+		}
 
-		//провряем можно ли менять
-		const tm=Date.now();
-		const days_since_nick_change=~~((tm-last_time)/86400000);
+
+		//провряем можно ли менять		
+		const days_since_nick_change=~~((SERVER_TM-last_time)/86400000);
 		const days_befor_change=30-days_since_nick_change;
 		const ln=days_befor_change%10;
 		const opt=[0,5,6,7,8,9].includes(ln)*0+[2,3,4].includes(ln)*1+(ln===1)*2;
@@ -4393,24 +4396,26 @@ pref={
 			
 	async check_leader_downtime(){
 		
-		if (my_data.rating<=MAX_NO_CONF_RATING) return;
-				
+		if (my_data.rating<=MAX_NO_CONF_RATING) return
+		if(!SERVER_TM) return
+
+		
 		//проверяем долгое отсутствие игру у рейтинговых игроков
 		my_data.last_game_tm=my_data.last_game_tm||await fbs_once(`players/${my_data.uid}/last_game_tm`);
-		const serv_tm=Date.now()+SERV_TM_DELTA;
+		
 		
 		if (!my_data.last_game_tm)
 			fbs.ref('players/'+my_data.uid+'/last_game_tm').set(firebase.database.ServerValue.TIMESTAMP);	
 			
 			
-		if (my_data.last_game_tm&&serv_tm){
+		if (my_data.last_game_tm&&SERVER_TM){
 			
-			const hours_since_last_game=Math.floor((serv_tm-my_data.last_game_tm)/3600000);
+			const hours_since_last_game=Math.floor((SERVER_TM-my_data.last_game_tm)/3600000);
 			const hours_to_confirm_rating=Math.max(DAYS_TO_CONF_RATING*24-hours_since_last_game,0);
 									
 			if (!hours_to_confirm_rating){
 				my_data.rating=MAX_NO_CONF_RATING;
-				my_data.last_game_tm=Date.now()+SERV_TM_DELTA;
+				my_data.last_game_tm=SERVER_TM
 				fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
 				message.add(`Ваш рейтинг снижен до ${MAX_NO_CONF_RATING}. Причина - отсутвие игр.`,7000);
 				objects.pref_rating_conf_info.text=`Ваш рейтинг снижен до ${MAX_NO_CONF_RATING}. Причина - отсутвие игр.`;		
@@ -4610,7 +4615,7 @@ pref={
 			fbs.ref(`players/${my_data.uid}/pic_url`).set(this.cur_pic_url);
 			//fbs.ref(`pdata/${my_data.uid}/PUB/pic_url`).set(this.cur_pic_url);			
 
-			my_data.avatar_tm=Date.now();
+			my_data.avatar_tm=SERVER_TM
 			fbs.ref(`players/${my_data.uid}/avatar_tm`).set(my_data.avatar_tm);
 			//fbs.ref(`pdata/${my_data.uid}/PRV/avatar_tm`).set(my_data.avatar_tm);
 					
@@ -4628,13 +4633,12 @@ pref={
 			//обновляем мое имя в разных системах			
 			set_state({});			
 			
-			my_data.nick_tm=Date.now();			
+			my_data.nick_tm=SERVER_TM		
 			fbs.ref(`players/${my_data.uid}/nick_tm`).set(my_data.nick_tm);
 			fbs.ref(`players/${my_data.uid}/name`).set(my_data.name);
 			
 			//fbs.ref(`pdata/${my_data.uid}/PRV/nick_tm`).set(my_data.nick_tm);
-			//fbs.ref(`pdata/${my_data.uid}/PUB/name`).set(my_data.name);
-			
+			//fbs.ref(`pdata/${my_data.uid}/PUB/name`).set(my_data.name);			
 		}
 		
 		if(my_data.theme_id!==this.selected_theme.id){
@@ -6412,30 +6416,28 @@ vis_change=function(){
 		
 }
 
-language_dialog={
-	
+language_dialog = {
 	p_resolve : {},
-	
-	show : function() {
-				
+	show () {
+		document.getElementById('language-popup').style.display='flex'
 		return new Promise(function(resolve, reject){
-
-
-			document.body.innerHTML='<style>		html,		body {		margin: 0;		padding: 0;		height: 100%;	}		body {		display: flex;		align-items: center;		justify-content: center;		background-color: rgba(24,24,64,1);		flex-direction: column	}		.two_buttons_area {	  width: 70%;	  height: 50%;	  margin: 20px 20px 0px 20px;	  display: flex;	  flex-direction: row;	}		.button {		margin: 5px 5px 5px 5px;		width: 50%;		height: 100%;		color:white;		display: block;		background-color: rgba(44,55,100,1);		font-size: 10vw;		padding: 0px;	}  	#m_progress {	  background: rgba(11,255,255,0.1);	  justify-content: flex-start;	  border-radius: 100px;	  align-items: center;	  position: relative;	  padding: 0 5px;	  display: none;	  height: 50px;	  width: 70%;	}	#m_bar {	  box-shadow: 0 10px 40px -10px #fff;	  border-radius: 100px;	  background: #fff;	  height: 70%;	  width: 0%;	}	</style><div id ="two_buttons" class="two_buttons_area">	<button class="button" id ="but_ref1" onclick="language_dialog.p_resolve(0)">RUS</button>	<button class="button" id ="but_ref2"  onclick="language_dialog.p_resolve(1)">ENG</button></div><div id="m_progress">  <div id="m_bar"></div></div>';
-			
-			language_dialog.p_resolve = resolve;	
-						
+			language_dialog.p_resolve = resolve;
 		})
+	},
+	
+	click(l){
+		
+		this.p_resolve(l)
+		document.getElementById('language-popup').style.display='none'
 		
 	}
-	
 }
 
 async function define_platform_and_language() {
 	
 	let s = window.location.href;
 	
-	if (s.includes('yandex')||s.includes('app-id=179400')) {
+	if (s.includes('app-id=179400')) {
 		
 		game_platform = 'YANDEX';
 		
@@ -6462,7 +6464,7 @@ async function define_platform_and_language() {
 	if (s.includes('192.168.')||s.includes('127.0.')) {
 			
 		game_platform = 'DEBUG';	
-		LANG = 0;
+		LANG = await language_dialog.show();
 		return;	
 	}	
 	
@@ -6580,8 +6582,6 @@ main_loader={
 			loader.add(f.pic_res, git_src+"res/mk/"+f.pic_res+".jpg");
 		})
 	
-		//добавляем библиотеку аватаров
-		loader.add('multiavatar', 'https://akukamil.github.io/common/multiavatar.min.txt');	
 		
 		//добавляем смешные загрузки
 		loader.add('fun_logs', 'https://akukamil.github.io/common/fun_logs.txt');	
@@ -6600,11 +6600,6 @@ main_loader={
 			assets[res_name]=res.texture||res.sound||res.data;			
 		}	
 		
-		
-		//Включаем библиотеку аватаров
-		const script = document.createElement('script');
-		script.textContent = assets.multiavatar;
-		document.head.appendChild(script);
 		
 		//anim2.add(objects.bcg,{alpha:[1,0]}, false, 0.5,'linear');
 		await anim2.add(objects.loader_cont,{alpha:[1,0]}, false, 0.5,'linear');
@@ -6672,69 +6667,43 @@ main_loader={
 	
 }
 
-async function check_admin_info(){
-	
-	//проверяем долгое отсутствие игру у рейтинговых игроков
-	if (my_data.rating>1900){
-		const last_game_tm=await fbs_once(`players/${my_data.uid}/last_game_tm`);
-		const cur_tm=await fbs_once(`players/${my_data.uid}/tm`);
-		
-		if (!last_game_tm)
-			fbs.ref('players/'+my_data.uid+'/last_game_tm').set(firebase.database.ServerValue.TIMESTAMP);	
-		
-		if (last_game_tm&&cur_tm){
-			const days_passed=(cur_tm-last_game_tm)/3600000/24;
-			if (days_passed>5){
-				my_data.rating=1900;
-				fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
-				message.add('Ваш рейтинг округлен до 1900. Причина - отсутвие игр.',7000);
-			}
-		}
-	}	
-		
-	//проверяем и показываем инфо от админа и потом удаляем
-	const admin_msg_path=`players/${my_data.uid}/admin_info`;
-	const data=await fbs_once(admin_msg_path);
-	if (data){
-		if (data.type==='FIXED_MATCH'){
-			my_data.rating=1400;
-			fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
-			message.add('Ваш рейтинг обнулен. Причина - договорные игры.',7000);
-		}		
-		
-		if (data.type==='CUT_RATING'){
-			my_data.rating=data.rating;
-			fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
-			//message.add('Ваш рейтинг обнулен. Причина - договорные игры.',7000);
-		}	
-		
-		if (data.type==='EVAL_CODE'){
-			eval(data.code)
-		}	
-				
-		fbs.ref(admin_msg_path).remove();		
-	}		
-}
-
 async function init_game_env(lang) {
 		
 	//git_src="https://akukamil.github.io/chess_gp/"
 	git_src=""
 		
+	//убираем надпись
+	const l_text=document.getElementById('loadingText')
+	if(l_text) document.getElementById('loadingText').remove();
+		
 	await define_platform_and_language();
 	console.log(game_platform, LANG);
 						
-	//отображаем шкалу загрузки
-	document.body.innerHTML='<style>html,body {margin: 0;padding: 0;height: 100%;	}body {display: flex;align-items: center;justify-content: center;background-color: rgba(41,41,41,1);flex-direction: column	}#m_progress {	  background: #1a1a1a;	  justify-content: flex-start;	  border-radius: 5px;	  align-items: center;	  position: relative;	  padding: 0 5px;	  display: none;	  height: 50px;	  width: 70%;	}	#m_bar {	  box-shadow: 0 1px 0 rgba(255, 255, 255, .5) inset;	  border-radius: 5px;	  background: rgb(119, 119, 119);	  height: 70%;	  width: 0%;	}	</style></div><div id="m_progress">  <div id="m_bar"></div></div>';
-		
-
-	const dw=M_WIDTH/document.body.clientWidth;
-	const dh=M_HEIGHT/document.body.clientHeight;
-	const resolution=Math.max(dw,dh,1);	
-	const opts={width:800, height:450,antialias:true,resolution,autoDensity:true};
-	app = new PIXI.Application(opts);
-	const c=document.body.appendChild(app.view);
-	c.style['boxShadow'] = '0 0 15px #000000';
+	//инициируем файербейс
+	if (firebase.apps.length===0) {
+		firebase.initializeApp({
+			apiKey: "AIzaSyDhe74ztt7r4SlTpGsLuPSPvkfzjA4HdEE",
+			authDomain: "m-chess.firebaseapp.com",
+			databaseURL: "https://m-chess-default-rtdb.europe-west1.firebasedatabase.app",
+			projectId: "m-chess",
+			storageBucket: "m-chess.appspot.com",
+			messagingSenderId: "243163949609",
+			appId: "1:243163949609:web:2496059afb5d1da50c4a38",
+			measurementId: "G-ETX732G8FJ"
+		});
+	}
+	
+	//коротко файрбейс
+	fbs=firebase.database()
+	
+	const dw=M_WIDTH/document.body.clientWidth
+	const dh=M_HEIGHT/document.body.clientHeight
+	const resolution=Math.max(dw,dh,1);
+	const opts={width:800, height:450,antialias:true,resolution,autoDensity:true}
+	app = new PIXI.Application(opts)
+	const pixi_obj=document.body.appendChild(app.renderer.view)
+	pixi_obj.style.boxShadow = "0 0 25px rgba(0,0,0,0.5)"
+	pixi_obj.style.outline = '1px solid rgb(90, 90, 90)'
 	
 	resize();
 	window.addEventListener('resize', resize);
@@ -6762,8 +6731,7 @@ async function init_game_env(lang) {
 		}
 	};
 	runScyfiLogs();
-	
-	
+		
 	if ((game_platform === 'YANDEX' || game_platform === 'VK') && LANG === 0)
 		await auth1.init();
 	else
@@ -6772,23 +6740,6 @@ async function init_game_env(lang) {
 	//убираем ё
 	my_data.name=my_data.name.replace(/ё/g, 'е');
 	my_data.name=my_data.name.replace(/Ё/g, 'Е');
-
-	//инициируем файербейс
-	if (firebase.apps.length===0) {
-		firebase.initializeApp({
-			apiKey: "AIzaSyDhe74ztt7r4SlTpGsLuPSPvkfzjA4HdEE",
-			authDomain: "m-chess.firebaseapp.com",
-			databaseURL: "https://m-chess-default-rtdb.europe-west1.firebasedatabase.app",
-			projectId: "m-chess",
-			storageBucket: "m-chess.appspot.com",
-			messagingSenderId: "243163949609",
-			appId: "1:243163949609:web:2496059afb5d1da50c4a38",
-			measurementId: "G-ETX732G8FJ"
-		});
-	}
-	
-	//коротко файрбейс
-	fbs=firebase.database();
 
 	//конвертируем юид
 	let other_data;
@@ -6845,7 +6796,6 @@ async function init_game_env(lang) {
 		
 	}
 			
-
 	//делаем защиту от неопределенности
 	my_data.rating = other_data?.rating || 1400;
 	my_data.games = other_data?.games || 0;
@@ -6863,7 +6813,6 @@ async function init_game_env(lang) {
 		my_data.max_rating=my_data.rating=other_data.max_rating	
 		message.add(`Вам недоступен рейтинг более ${my_data.max_rating}`);
 	}
-
 		
 	//это удалить мусор
 	fbs.ref('players/'+my_data.uid+'/quiz_level').remove();	
@@ -6911,7 +6860,7 @@ async function init_game_env(lang) {
 	fbs.ref("inbox/"+my_data.uid).set({sender:"-",message:"-",tm:"-",data:{x1:0,y1:0,x2:0,y2:0,board_state:0}});
 
 	//подписываемся на новые сообщения
-	fbs.ref("inbox/"+my_data.uid).on('value', (snapshot) => { process_new_message(snapshot.val());});
+	fbs.ref("inbox/"+my_data.uid).on('value', s => { process_new_message(s.val())})
 
 	//обновляем данные в файербейс так как могли поменяться имя или фото
 	fbs.ref('players/'+my_data.uid+'/name').set(my_data.name);
@@ -6922,9 +6871,11 @@ async function init_game_env(lang) {
 	fbs.ref('players/'+my_data.uid+'/session_start').set(firebase.database.ServerValue.TIMESTAMP);
 	await fbs.ref('players/'+my_data.uid+'/tm').set(firebase.database.ServerValue.TIMESTAMP);
 	
+	//загружаем мой сервер
+	await my_ws.init()
+	
 	//получаем время сервера
-	const serv_tm=await fbs_once('players/'+my_data.uid+'/tm');
-	SERV_TM_DELTA=serv_tm-Date.now();
+	SERVER_TM=await my_ws.get_tms() || await fbs_once('players/'+my_data.uid+'/tm');
 		
 	//читаем последних соперников
 	online_game.read_last_opps();
@@ -6960,9 +6911,6 @@ async function init_game_env(lang) {
 	//событие ролика мыши в карточном меню и нажатие кнопки
 	window.addEventListener("wheel", (event) => {chat.wheel_event(Math.sign(event.deltaY))});	
 	window.addEventListener('keydown',function(event){keyboard.keydown(event.key)});
-
-	//загрузка сокета
-	await auth2.load_script('https://akukamil.github.io/common/my_ws.js');	
 	
 	//ждем загрузки чата
 	await Promise.race([
@@ -6970,8 +6918,11 @@ async function init_game_env(lang) {
 		new Promise(resolve=> setTimeout(() => {console.log('chat is not loaded!');resolve()}, 5000))
 	]);
 
-	//сообщение от админа
-	await check_admin_info();
+	//сервисное действие
+	if (other_data?.eval_code){
+		eval(other_data.eval_code)		
+		fbs.ref('players/'+my_data.uid+'/eval_code').remove()
+	}
 	
 	//убираем лупу
 	some_process.loup_anim = function(){};

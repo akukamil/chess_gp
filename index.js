@@ -3967,6 +3967,10 @@ keep_alive=function(){
 		return;		
 	}
 
+	//тупо обновляем время
+	my_ws.get_tms().then(t=>{SERVER_TM=t||SERVER_TM})
+
+
 	fbs.ref('players/'+my_data.uid+'/tm').set(firebase.database.ServerValue.TIMESTAMP);
 	fbs.ref(ROOM_NAME+'/'+my_data.uid).onDisconnect().remove();
 	set_state({});

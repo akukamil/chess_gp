@@ -2378,22 +2378,23 @@ quiz={
 						
 			//омечаем что эта задача решена
 			if(this.quiz_level2>=this.quiz_data.length-1){
-				message.add(['Это последняя задача, но скоро будут новые...','This is the last problem, but there will be new ones soon...'][LANG])		
+				message.add(['Это последняя задача, но скоро будут новые...','This is the last problem, but there will be new ones soon...'][LANG])
+				my_data.quiz_level2=0
+				fbs.ref('players/'+my_data.uid+'/quiz_level2').set(my_data.quiz_level2)
 			} else {
 				
 				//только если мы прошли последнюю задачу
 				if (this.quiz_level2===my_data.quiz_level2){
-					my_ws.socket.send(JSON.stringify({cmd:'top3',path:'top3',val:{uid:my_data.uid,val:my_data.quiz_level2+1}}));
-					my_data.quiz_level2++;					
-					fbs.ref('players/'+my_data.uid+'/quiz_level2').set(my_data.quiz_level2);			
-				}				
+					my_ws.socket.send(JSON.stringify({cmd:'top3',path:'top3',val:{uid:my_data.uid,val:my_data.quiz_level2+1}}))
+					my_data.quiz_level2++
+					fbs.ref('players/'+my_data.uid+'/quiz_level2').set(my_data.quiz_level2)
+				}
 			}
 
 
-			
 			sound.play('win');
-			t = [['Задача решена!','The problem is solved'],999]		
-						
+			t = [['Задача решена!','The problem is solved'],999]
+
 		} else {
 			
 			sound.play('lose');
@@ -6890,9 +6891,7 @@ async function init_game_env(lang) {
 		message.add(`Вам недоступен рейтинг более ${my_data.max_rating}`);
 	}
 		
-	//это удалить мусор
-	fbs.ref('players/'+my_data.uid+'/quiz_level').remove();	
-		
+
 	//загружаем тему
 	pref.load_theme(my_data.theme_id)
 		

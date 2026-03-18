@@ -5802,7 +5802,7 @@ lobby={
 	
 	get_room_index_from_rating(){		
 		//номер комнаты в зависимости от рейтинга игрока
-		const rooms_bins=[0,1366,1437,1663,9999];
+		const rooms_bins=[0,1366,1487,1663,9999];
 		let room_to_go='state1';
 		for (let i=1;i<rooms_bins.length;i++){
 			const f=rooms_bins[i-1];

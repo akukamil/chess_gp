@@ -4665,8 +4665,8 @@ main_menu={
 		await anim2.add(objects.main_buttons_cont,{y:[450,objects.main_buttons_cont.sy],alpha:[0,1]}, true, 0.75,'linear');	
 		
 		objects.bcg.texture=assets.loader_bcg;
-		anim2.add(objects.bcg,{alpha:[0,1]}, true, 0.5,'linear');	
-
+		anim2.add(objects.bcg,{alpha:[0,1]}, true, 0.5,'linear')
+		
 	},
 
 	async close() {
@@ -6193,7 +6193,7 @@ auth1={
 			my_data.uid = uid.replace(/\//g, "Z");
 			my_data.uid2 = uid.replace(/[\/+=]/g, '');
 			my_data.orig_pic_url = _player.getPhoto('medium');
-			my_data.auth_mode=_player.getMode()==='lite'?0:1;
+			my_data.auth_mode=+_player.isAuthorized()
 			
 			if (my_data.orig_pic_url === 'https://games-sdk.yandex.ru/games/api/sdk/v1/player/avatar/0/islands-retina-medium')
 				my_data.orig_pic_url = 'mavatar'+my_data.uid;	

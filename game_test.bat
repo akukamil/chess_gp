@@ -1,1 +1,0 @@
-C:\miniweb\miniweb.exe -r %cd%

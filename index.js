@@ -6984,6 +6984,11 @@ async function init_game_env(lang) {
 	main_menu.activate();
 	
 	console.clear()
+	
+	//ready api yandex
+	if (game_platform==='YANDEX')
+		window.ysdk.features.LoadingAPI.ready()
+
 
 }
 

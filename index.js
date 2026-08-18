@@ -2,6 +2,8 @@ let M_WIDTH=800, M_HEIGHT=450,app, assets={}, objects={}, SERVER_TM=0, state="",
 const op_pieces = ['p','r','n','b','k','q'];
 const my_pieces = ['P','R','N','B','K','Q'];
 
+const COM_URL='https://mtg.gitverse.site/com'
+
 var stockfish = new Worker('stockfish.js');
 const chess = new Chess();
 
@@ -387,7 +389,7 @@ class chat_record_class extends PIXI.Container {
 		if (msg_data.msg.startsWith('GIF')){			
 			
 			const mp4BaseT=await new Promise((resolve, reject)=>{
-				const baseTexture = PIXI.BaseTexture.from('https://akukamil.github.io/common/gifs/'+msg_data.msg+'.mp4');
+				const baseTexture = PIXI.BaseTexture.from(COM_URL+'/gifs/'+msg_data.msg+'.mp4');
 				if (baseTexture.width>1) resolve(baseTexture);
 				baseTexture.on('loaded', () => resolve(baseTexture));
 				baseTexture.on('error', (error) => resolve(null));
@@ -4998,7 +5000,7 @@ players_cache={
 		if (!player.pic_url) player.pic_url=await fbs_once('players/'+uid+'/pic_url');
 		
 		if(player.pic_url==='https://vk.com/images/camera_100.png')
-			player.pic_url='https://akukamil.github.io/domino/vk_icon.png';
+			player.pic_url='vk_icon.png';
 				
 		//загружаем и записываем текстуру
 		if (player.pic_url) player.texture=await this.my_texture_from(player.pic_url);		
@@ -5011,7 +5013,7 @@ players_cache={
 		if(!player) alert('Не загружены базовые параметры '+uid);
 						
 		if(pic_url==='https://vk.com/images/camera_100.png')
-			pic_url='https://akukamil.github.io/domino/vk_icon.png';
+			pic_url='vk_icon.png';
 				
 		//сохраняем
 		player.pic_url=pic_url;
@@ -6653,7 +6655,7 @@ main_loader={
 
 		//добавляем текстуры стикеров
 		for (let i=0;i<16;i++)			
-			loader.add("sticker_texture_"+i, `https://github.com/akukamil/com/stickers/${i}.png`);
+			loader.add("sticker_texture_"+i, `${COM_URL}/stickers/${i}.png`);
 		
 		mk.fighters_data.forEach(f=>{
 			loader.add(f.pic_res, git_src+"res/mk/"+f.pic_res+".jpg");

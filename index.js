@@ -6653,7 +6653,7 @@ main_loader={
 
 		//добавляем текстуры стикеров
 		for (let i=0;i<16;i++)			
-			loader.add("sticker_texture_"+i, `https://mtg.gitverse.site/com/stickers/${i}.png`);
+			loader.add("sticker_texture_"+i, `https://github.com/akukamil/com/stickers/${i}.png`);
 		
 		mk.fighters_data.forEach(f=>{
 			loader.add(f.pic_res, git_src+"res/mk/"+f.pic_res+".jpg");

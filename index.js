@@ -6652,17 +6652,14 @@ main_loader={
 
 
 		//добавляем текстуры стикеров
-		for (var i=0;i<16;i++)
-			loader.add("sticker_texture_"+i, git_src+"stickers/"+i+".png");
+		for (let i=0;i<16;i++)			
+			loader.add("sticker_texture_"+i, `https://mtg.gitverse.site/com/stickers/${i}.png`);
 		
 		mk.fighters_data.forEach(f=>{
 			loader.add(f.pic_res, git_src+"res/mk/"+f.pic_res+".jpg");
 		})
 	
-		
-		//добавляем смешные загрузки
-		loader.add('fun_logs', 'https://akukamil.github.io/common/fun_logs.txt');	
-		
+			
 		//добавляем задачки
 		loader.add('quizes_db', 'quizes_db.txt');	
 	
@@ -6798,16 +6795,6 @@ async function init_game_env(lang) {
 		objects.id_loup.y=20*Math.cos(game_tick*8)+150;
 	}
 	
-	//смешные логи
-	const runScyfiLogs=async () => {
-		const scyfi_logs=JSON.parse(assets.fun_logs);	
-		for (let i=0;i<10;i++){				
-			const log_index=irnd(0,scyfi_logs.length-1);
-			objects.scyfi_log.text=scyfi_logs[log_index];
-			await new Promise(resolve=>setTimeout(resolve, irnd(300,700)));		
-		}
-	};
-	runScyfiLogs();
 		
 	if ((game_platform === 'YANDEX' || game_platform === 'VK') && LANG === 0)
 		await auth1.init();

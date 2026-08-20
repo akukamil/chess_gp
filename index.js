@@ -2,7 +2,7 @@ let M_WIDTH=800, M_HEIGHT=450,app, assets={}, objects={}, SERVER_TM=0, state="",
 const op_pieces = ['p','r','n','b','k','q'];
 const my_pieces = ['P','R','N','B','K','Q'];
 
-const COM_URL='https://mtg.gitverse.site/com'
+const COM_URL='https://akukamil.github.io/com'
 
 var stockfish = new Worker('stockfish.js');
 const chess = new Chess();

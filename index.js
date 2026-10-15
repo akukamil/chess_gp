@@ -1752,7 +1752,9 @@ online_game={
 		if (this.NO_RATING_GAME)
 			this.no_rating_msg_timer=setTimeout(()=>{message.add('Выбирайте разных соперников для получения и подтверждения рейтинга')},5000);
 		
-
+		//убираем gid
+		fbs.ref('timeouts/'+game_id).remove()
+		
 		game.activate(role,online_game)
 		
 		//обновляем стол
@@ -2006,7 +2008,7 @@ online_game={
 		//если время закончилось у соперника
 		if(time_left<=-5&&!my_turn){			
 			this.opp_conf_play
-				? this.stop('op_timeout')
+				? this.stop('opp_timeout')
 				: this.stop('op_no_sync');
 		}
 		
@@ -2027,15 +2029,7 @@ online_game={
 		}		
 		
 	},
-	
-	async bad_game_process(){
 		
-		const opp_inbox_data=await fbs_once('inbox/'+opp_data.uid);
-		my_log.add({event:'opp_inbox',opp_inbox_data,tm:Date.now()});
-		fbs.ref('BAD_GAME/'+game_id + my_role).set(my_log.log_arr);
-		
-	},
-	
 	async stop(final_state) {					
 		
 		//отключаем взаимодейтсвие с доской
@@ -2048,12 +2042,16 @@ online_game={
 		//элементы только для данного оппонента	
 		objects.game_buttons_cont.visible=false;
 		
-		my_log.add({event:'stop',final_state,tm:Date.now()});
-
-		if (final_state==='op_timeout'){			
-			if (my_data.rating>=1800||opp_data.rating>=1800)
-				this.bad_game_process();	
+		//cheat with timeouts
+		if (final_state==='opp_timeout'){
+			const timeout_check=await fbs_once('timeouts/'+game_id)
+			if (timeout_check)
+				final_state='my_cheat'
+			else
+				fbs.ref('timeouts/'+game_id).set(1)
 		}
+				
+		my_log.add({event:'stop',final_state,tm:Date.now()});
 						
 		let res_db = {
 			'my_no_connection' 		: [['Потеряна связь!\nИспользуйте надежное интернет соединение.','Lost connection!\nuse a reliable internet connection'], LOSE],
@@ -2063,9 +2061,10 @@ online_game={
 			'checkmate_to_opponent' : [['Победа!\nВы поставили мат!','Victory!\nYou checkmated'], WIN],
 			'checkmate_to_player' 	: [['Поражение!\nВам поставили мат!','Defeat!\nYou have been checkmated'], LOSE],
 			'op_gave_up' 			: [['Победа!\nСоперник сдался.','Victory!\nThe opponent gave up'], WIN],
+			'my_cheat' 				: [['Эта игра уже была завершена.','This game already finished'], LOSE],
 			'player_gave_up' 		: [['Поражение!\nВы сдались.','Defeat!\nyou gave up'], LOSE],
 			'timer_error' 			: [['Поражение!\nОшибка таймера.','Defeat!\nTimer error'], LOSE],
-			'op_timeout' 			: [['Победа!\nСоперник не сделал ход.','Victory!\nthe opponent did not make a move'], WIN],
+			'opp_timeout' 			: [['Победа!\nСоперник не сделал ход.','Victory!\nthe opponent did not make a move'], WIN],
 			'my_timeout' 			: [['Поражение!\nУ вас закончилось время.','Defeat!\nyou have run out of time'], LOSE],
 			'op_no_sync' 			: [['Похоже соперник не смог начать игру','It looks like the opponent could not start the game'], NOSYNC],
 			'my_no_sync' 			: [['Похоже Вы не смогли начать игру','It looks like you could not start the game'], NOSYNC],
@@ -2450,7 +2449,9 @@ quiz={
 
 mk={
 	res:0,
-	cur_mk_level:0,
+	mk_level:14,
+	cur_mk_level:14,
+	mk_sback_num:0,
 	start_time:0,
 	cur_enemy:null,
 	first_run:true,
@@ -2487,7 +2488,7 @@ mk={
 			objects.mk_fighters_cards[i].rating_bt.text=fighter_data.rating;
 			objects.mk_fighters_cards[i].level_bt.text=15-i;
 			
-			if (i<my_data.mk_level)
+			if (i<this.mk_level)
 				objects.mk_fighters_cards[i].avatar.alpha=0.25;
 			else
 				objects.mk_fighters_cards[i].alpha=1;
@@ -2508,12 +2509,12 @@ mk={
 		objects.mk_my_rating.text=my_data.rating;
 		objects.mk_fighters_cards_cont.x=350;
 		
-		this.cur_mk_level=my_data.mk_level;
+		//this.cur_mk_level=my_data.mk_level;
 		
 		if (this.first_run===true)			
-			await this.shift_ladder(my_data.mk_level,4,-10);
+			await this.shift_ladder(this.mk_level,4,-10);
 		else
-			await this.shift_ladder(my_data.mk_level,1,-30);
+			await this.shift_ladder(this.mk_level,1,-30);
 		
 		
 		await anim2.add(objects.mk_my_card,{x:[-200, 170]},true,0.4,'linear');
@@ -2530,14 +2531,11 @@ mk={
 
 	},
 	
-	async shift_ladder(level, time, shift){
-		
+	async shift_ladder(level, time, shift){		
 		
 		const cur_y=objects.mk_fighters_cards_cont.y+shift;
 		const tar_y=450-200*(level+1);
-		const anim_time=Math.abs(cur_y-tar_y)/1000+0.5;
-
-		
+		const anim_time=Math.abs(cur_y-tar_y)/1000+0.5;		
 		
 		await anim2.add(objects.mk_fighters_cards_cont,{y:[objects.mk_fighters_cards_cont.y+shift, tar_y]},true,anim_time,'easeInOutCubic');
 		
@@ -2609,10 +2607,10 @@ mk={
 			
 			t = [['Победа!\nВы поставили мат!','Victory!\nYou checkmated'],WIN]	
 			
-			const next_level=this.cur_mk_level-1;
-			if (this.cur_mk_level>0)
-				my_data.mk_level=Math.min(next_level,my_data.mk_level);
-			fbs.ref("players/"+my_data.uid+"/mk_level").set(my_data.mk_level);
+			this.cur_mk_level--
+			if (this.cur_mk_level<0) this.cur_mk_level=0
+			this.mk_level=Math.min(this.cur_mk_level,this.mk_level)
+
 			
 		} else {
 			
@@ -2629,9 +2627,8 @@ mk={
 			this.played_num++;
 			if(this.played_num>3){
 				this.played_num=0;
-				my_data.mk_sback_num++;
-				if (my_data.mk_sback_num>3)my_data.mk_sback_num=3;			
-				fbs.ref("players/"+my_data.uid+"/mk_sback_num").set(my_data.mk_sback_num);
+				this.mk_sback_num++;
+				if (this.mk_sback_num>3) this.mk_sback_num=3;			
 			} 			
 		}
 		
@@ -2686,16 +2683,13 @@ mk={
 			sound.play('locked')
 			return;			
 		}
-		
-		
+				
 		sound.play('mk_haha2');
 		
-		my_data.mk_sback_num--;
-		if (my_data.mk_sback_num===0)
+		this.mk_sback_num--;
+		if (this.mk_sback_num===0)
 			anim2.add(objects.step_back_button,{x:[objects.step_back_button.x, 900]},false,0.6,'easeInBack');
 		objects.sback_title.text=['Шаг назад ','Step back '][LANG];
-		
-		fbs.ref("players/"+my_data.uid+"/mk_sback_num").set(my_data.mk_sback_num);
 		
 		objects.selected_frame.visible=false;
 		this.selected_piece=0;
@@ -2770,7 +2764,7 @@ mk={
 		objects.sb_bcg.pointerdown=mk.stop_down.bind(mk);
 		
 		//возможность вернуть доску на шаг назад
-		if(my_data.mk_sback_num>0){
+		if(this.mk_sback_num>0){
 			objects.sback_title.text=['Шаг назад ','Step back '][LANG];		
 			anim2.add(objects.step_back_button,{x:[900, objects.step_back_button.sx]},true,0.6,'linear');
 		}
@@ -2824,9 +2818,8 @@ mk={
 			return;	
 		}
 		
-
 		
-		if (this.cur_mk_level<=my_data.mk_level || this.cur_mk_level===0){
+		if (this.cur_mk_level<=this.mk_level || this.cur_mk_level===0){
 			sound.play('locked');
 			return;	
 		}
@@ -2937,8 +2930,7 @@ game={
 		my_turn=this.is_my_first_move=+(role==='master');
 		
 		//предыдущее состояние доски
-		this.prv_state={};
-		
+		this.prv_state={}		
 	
 		//надписи съеденых фигур
 		this.eaten_labels=[]
@@ -2957,7 +2949,6 @@ game={
 		anim2.add(objects.board_cont,{alpha:[0, 1]},true,0.4,'linear');
 		//anim2.add(objects.my_card_cont,{x:[-100, objects.my_card_cont.sx]},true,0.4,'linear');
 		//anim2.add(objects.opp_card_cont,{x:[900, objects.opp_card_cont.sx]},true,0.4,'linear');
-
 
 		if (my_role==='master'){
 			objects.h_caption.texture=assets.h_caption_img1;
@@ -3004,6 +2995,19 @@ game={
 		if (objects.pawn_replace_cont.visible) pawn_replace_dialog.close(null);
 		message.close();
 		
+	},
+
+	async get_safe_gid(){
+				
+		for (let i=0;i<100;i++){
+			
+			const gid=irnd(1,999)
+			const board_tm=await fbs_once('tables/'+gid+'/board/tm')
+			if (!board_tm || SERVER_TM-board_tm>300_000)
+				return gid
+		}	
+		
+		return irnd(1000,2000)
 	},
 
 	async stop() {
@@ -4050,7 +4054,7 @@ process_new_message=function(msg){
 						
 			//у соперника нет времения
 			if (msg.message==='TIME')
-				online_game.resolver(['op_timeout']);
+				online_game.resolver(['opp_timeout']);
 				
 			//получение сообщение с ходом игорка
 			if (msg.message==='CHAT')
@@ -4156,7 +4160,7 @@ req_dialog={
 		fbs.ref('inbox/'+req_dialog._opp_data.uid).set({sender:my_data.uid,message:"REJECT_ALL",tm:Date.now()});
 	},
 
-	accept_btn_down() {
+	async accept_btn_down() {
 
 		if (anim2.any_on() || objects.big_message_cont.visible|| objects.chat_keyboard_cont.visible|| objects.pawn_replace_cont.visible) {
 			sound.play('locked');
@@ -4175,13 +4179,11 @@ req_dialog={
 		anim2.add(objects.req_cont,{y:[objects.req_cont.y, -260]},false,0.4,'easeInBack');
 
 		//отправляем информацию о согласии играть с идентификатором игры
-		game_id=irnd(10,999999);
-		fbs.ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"ACCEPT",tm:Date.now(),game_id});
-
-
+		game_id=await game.get_safe_gid()
 		main_menu.close();
-		lobby.close();
-		online_game.activate('slave');
+		lobby.close();		
+		fbs.ref("inbox/"+opp_data.uid).set({sender:my_data.uid,message:"ACCEPT",tm:Date.now(),game_id});
+		online_game.activate('slave')
 
 	},
 
@@ -6865,8 +6867,6 @@ async function init_game_env(lang) {
 	//делаем защиту от неопределенности
 	my_data.rating = other_data?.rating || 1400;
 	my_data.games = other_data?.games || 0;
-	my_data.mk_level=other_data?.mk_level || 14;
-	my_data.mk_sback_num=other_data?.mk_sback_num || 0;
 	my_data.quiz_level2=other_data?.quiz_level2 || 0;
 	my_data.nick_tm = other_data?.nick_tm || 0;
 	my_data.avatar_tm = other_data?.avatar_tm || 0;
@@ -6874,13 +6874,6 @@ async function init_game_env(lang) {
 	my_data.name=other_data?.name || my_data.name;
 	my_data.country = other_data?.country || await auth2.get_country_code() || await auth2.get_country_code2() 
 		
-	//максимальный рейтинг как за нарушения
-	if (other_data&&other_data.max_rating&&my_data.rating>other_data.max_rating){
-		my_data.max_rating=my_data.rating=other_data.max_rating	
-		message.add(`Вам недоступен рейтинг более ${my_data.max_rating}`);
-	}
-		
-
 	//загружаем тему
 	pref.load_theme(my_data.theme_id)
 		

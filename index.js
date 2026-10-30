@@ -2583,7 +2583,7 @@ quiz={
 				
 				//только если мы прошли последнюю задачу
 				if (this.quiz_level2===my_data.quiz_level2){
-					my_ws.socket.send(JSON.stringify({cmd:'top3',path:'top3',val:{uid:my_data.uid,val:my_data.quiz_level2+1}}))
+					//my_ws.socket.send(JSON.stringify({cmd:'top3',path:'top3',val:{uid:my_data.uid,val:my_data.quiz_level2+1}}))
 					my_data.quiz_level2++
 					fbs.ref('players/'+my_data.uid+'/quiz_level2').set(my_data.quiz_level2)
 				}

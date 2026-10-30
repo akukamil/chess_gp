@@ -3081,11 +3081,12 @@ game={
 		objects.my_avatar.texture=players_cache[my_data.uid].texture;	
 		anim3.add(objects.my_card_cont,{x:[-100, objects.my_card_cont.sx,'linear']}, true, 0.5);		
 						
-		//обновляем данные соперника на всякий случай
-		await players_cache.update(opp_data.uid)
+
 						
 		//показываем и заполняем карточку оппонента		
 		if (params.op!==quiz){
+			//обновляем данные соперника на всякий случай
+			await players_cache.update(opp_data.uid,{source:'game'})		
 			
 			const player_data=players_cache[opp_data.uid]
 			opp_data.rating=player_data.rating||1400

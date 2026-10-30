@@ -1042,6 +1042,8 @@ chat={
 
 	gif_btn_down(){
 		
+		return
+		
 		if (anim3.any_on()) {
 			sound.play('locked');
 			return

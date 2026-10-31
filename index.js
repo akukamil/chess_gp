@@ -370,7 +370,7 @@ class chat_record_class extends PIXI.Container {
 
 		if (msg_data.uid==='admin'){
 			this.msg_bcg.tint=0x55ff55;
-			this.avatar.set_texture(assets.pc_icon);
+			this.avatar.set_texture(assets.shangtsung_img);
 		}else{
 			this.msg_bcg.tint=0xffffff;
 			this.update_avatar(msg_data.uid, this.avatar);
@@ -3081,8 +3081,7 @@ game={
 		objects.my_avatar.texture=players_cache[my_data.uid].texture;	
 		anim3.add(objects.my_card_cont,{x:[-100, objects.my_card_cont.sx,'linear']}, true, 0.5);		
 						
-
-						
+					
 		//показываем и заполняем карточку оппонента		
 		if (params.op!==quiz){
 			//обновляем данные соперника на всякий случай

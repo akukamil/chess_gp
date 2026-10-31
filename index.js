@@ -3317,8 +3317,7 @@ game={
 			if (!my_pieces.includes(piece))	return;			
 						
 			//находим шашку по координатам
-			this.selected_piece=board_func.get_checker_by_pos(new_x,new_y);
-			
+			this.selected_piece=board_func.get_checker_by_pos(new_x,new_y)			
 			anim3.add(this.selected_piece, {scale_xy:[0.5, 0.4, 'ease2back']}, true, 0.1)
 
 
@@ -3341,9 +3340,11 @@ game={
 			
 			//если нажали на выделенную шашку то отменяем выделение
 			if (new_x===this.selected_piece.ix && new_y===this.selected_piece.iy){
-				sound.play('move');
+				
+				anim3.add(this.selected_piece, {scale_xy:[0.5, 0.4, 'ease2back']}, true, 0.1)
+				anim3.add(objects.selected_frame, {scale_xy:[0.666, 0.3, 'linear'],alpha:[1,0,'linear']}, false, 0.05)
+				sound.play('moveOff');
 				this.selected_piece=0;
-				objects.selected_frame.visible=false;
 				return;
 			}						
 			
@@ -6872,6 +6873,7 @@ main_loader={
 		loader.add('pawn_replace',git_src+'sounds/pawn_replace.mp3');
 		loader.add('close',git_src+'sounds/close.mp3');
 		loader.add('move',git_src+'sounds/move.mp3');
+		loader.add('moveOff',git_src+'sounds/moveOff.mp3');
 		loader.add('locked',git_src+'sounds/locked.mp3');
 		loader.add('clock',git_src+'sounds/clock.mp3');
 		loader.add('keypress',git_src+'sounds/keypress.mp3');

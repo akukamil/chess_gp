@@ -1042,8 +1042,6 @@ chat={
 
 	gif_btn_down(){
 		
-		return
-		
 		if (anim3.any_on()) {
 			sound.play('locked');
 			return
@@ -1054,8 +1052,7 @@ chat={
 			pmsg.add({t:[`Только для игроков сыгравших более ${this.games_to_gif} игр.\nОсталось сыграть: ${left_to_play}`,`Need to play ${this.games_to_gif} games`][LANG],snd:'locked'})
 			return
 		}
-			
-		
+					
 		if (!SERVER_TM) {
 			pmsg.add({t:'Недотупно',snd:'locked'})
 			return
@@ -7162,6 +7159,7 @@ async function init_game_env(lang) {
 	})
 	
 	//загружаем мой сервер
+	//await my_ws.init2('wss://mtserver2.ru',4443)
 	await my_ws.init()
 	
 	//получаем время сервера
@@ -7177,9 +7175,6 @@ async function init_game_env(lang) {
 	//устанавливаем мой статус в онлайн
 	set_state({state:'o'});
 	
-
-
-
 	//это событие когда меняется видимость приложения
 	document.addEventListener("visibilitychange", function(){tabvis.change()})
 

@@ -3570,7 +3570,7 @@ game={
 		let y2p=y2*50+objects.board.y+45;
 		
 		await anim3.add(piece,{x:[x1p,x2p,'easeInOutCubic'],y:[y1p,y2p,'easeInOutCubic']}, true, 0.25);
-
+		await anim3.add(piece, {scale_xy:[0.5, 0.6,'ease2back']}, true, 0.16);
 
 		this.made_moves_both++;		
 		//срок ничьи после 50 ходов
